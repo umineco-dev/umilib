@@ -188,6 +188,13 @@ impl PoolShared {
                 self.run(task);
                 continue;
             }
+            // A notification left from a wake this worker did not sleep for (it
+            // was taken off the sleepers while it still saw work) is stale. It
+            // is dropped before the worker lists itself again: otherwise the
+            // worker would skip its park, list itself a second time, and later
+            // wakes would go to it, awake, instead of to a worker asleep. It is
+            // not listed here, so no wake can be lost.
+            self.notified[index].store(false, Ordering::Release);
             PoolShared::lock(&self.sleepers).push(index);
             if self.has_work() || self.stopping.load(Ordering::Acquire) {
                 PoolShared::lock(&self.sleepers).retain(|sleeper| *sleeper != index);

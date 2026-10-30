@@ -475,7 +475,9 @@ fn key_wrap(cipher: &[u8], key: &[u8], data: &[u8], padding: bool, wrap: bool) -
 
 #[test]
 fn key_wrapping_follows_kwvs() {
-    // SP 800-38F: KW, KWP and TKW against NIST KWVS, every third record.
+    // SP 800-38F: KW, KWP and TKW against NIST KWVS, every third record (under Miri, which
+    // runs the ciphers thousands of times slower, the first of each file).
+    let step = if cfg!(miri) { usize::MAX } else { 3 };
     let files: [(&str, &[u8], bool); 4] = [
         ("KW_AE_256.txt", b"umilib_crypto_aes_AES256", false),
         ("KWP_AD_192.txt", b"umilib_crypto_aes_AES192", true),
@@ -483,7 +485,7 @@ fn key_wrapping_follows_kwvs() {
         ("TKW_AD.txt", b"umilib_crypto_des_TDES", false),
     ];
     for (file, cipher, padding) in files {
-        for record in Record::all(&format!("crypto/mode/kw/{file}")).iter().step_by(3) {
+        for record in Record::all(&format!("crypto/mode/kw/{file}")).iter().step_by(step) {
             let key = record.bytes("K");
             let wrapped = record.bytes("C");
             if record.get("FAIL").is_some() {

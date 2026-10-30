@@ -86,6 +86,16 @@ The user-facing description is in
   tells `push` whether the caller is a worker of this pool. A sleeping
   worker is recorded in `sleepers` and woken with `unpark`; `notified`
   keeps a wake that comes before the park.
+- A worker is listed in `sleepers` at most once. `wake_one` may take a
+  worker off the list in the moment between its listing and its check
+  for work; the worker then sees the work and goes on, and its `notified`
+  stays set. That stale flag used to make the next sleep skip its park
+  and list the worker a second time, so two later wakes went to it,
+  awake, and the workers really asleep stayed asleep with work queued
+  (found by Miri, where the timing makes it common; natively it showed as
+  a test seeing every task on one thread). The worker now clears
+  `notified` just before listing itself: it is not listed then, so the
+  flag can only be stale.
 - `PoolTask::schedule` drops the future of a task whose pool is gone or
   stopping. Without the check, a task spawned after `shutdown` sat in a
   queue no thread ran, and `block_on` of its handle never returned.

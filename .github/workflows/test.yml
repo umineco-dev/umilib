@@ -155,7 +155,9 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - run: rustup toolchain install nightly --profile minimal --component miri,rust-src
-      - run: cargo +nightly miri test --all-features --locked --test bytes --test secret --test ffi --test platform
+      # One test at a time: Miri runs every thread on one core, so tests run together
+      # would take each other's time from the time limits some of them check.
+      - run: cargo +nightly miri test --all-features --locked --test bytes --test secret --test ffi --test platform -- --test-threads=1
         env:
           MIRIFLAGS: -Zmiri-disable-isolation
 

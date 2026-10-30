@@ -510,6 +510,7 @@ mod tls {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "whole TLS handshakes take too long under Miri")]
     fn tls_connections_through_the_c_abi() {
         unsafe {
             let mut root = ptr::null_mut();
@@ -706,6 +707,7 @@ mod quic {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "whole QUIC handshakes take too long under Miri")]
     fn quic_endpoints_through_the_c_abi() {
         unsafe {
             // The TLS configurations, with a protocol for ALPN (RFC 9001 §8.1).

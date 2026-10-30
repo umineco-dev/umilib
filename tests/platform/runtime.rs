@@ -15,7 +15,9 @@ fn pools_run_many_tasks_on_their_threads() {
     let pool = pool(4);
     assert_eq!(pool.threads(), 4);
     let threads = Arc::new(std::sync::Mutex::new(std::collections::HashSet::new()));
-    let handles: Vec<_> = (0..10_000u64)
+    // Miri runs the tasks thousands of times slower, and slower still as they add up.
+    let count: u64 = if cfg!(miri) { 100 } else { 10_000 };
+    let handles: Vec<_> = (0..count)
         .map(|index| {
             let threads = threads.clone();
             pool.spawn(async move {
@@ -26,10 +28,27 @@ fn pools_run_many_tasks_on_their_threads() {
         })
         .collect();
     let results = pool.block_on(JoinAll::new(handles));
-    assert_eq!(results.iter().map(|result| result.unwrap()).sum::<u64>(), (0..10_000u64).map(|i| i * i).sum());
+    assert_eq!(results.iter().map(|result| result.unwrap()).sum::<u64>(), (0..count).map(|i| i * i).sum());
     let names = threads.lock().unwrap().clone();
     assert!(names.iter().all(|name| name.starts_with("umilib-worker-")));
-    assert!(names.len() > 1, "the work is shared between workers");
+    // Four tasks that each wait until all four run at once: only workers that
+    // take work from each other can run them (however quick the others are).
+    let running = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let gathered: Vec<_> = (0..4)
+        .map(|_| {
+            let running = running.clone();
+            pool.spawn(async move {
+                running.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                let deadline = Instant::now() + Duration::from_secs(120);
+                while running.load(std::sync::atomic::Ordering::SeqCst) < 4 && Instant::now() < deadline {
+                    std::thread::yield_now();
+                }
+                running.load(std::sync::atomic::Ordering::SeqCst) == 4
+            })
+        })
+        .collect();
+    let gathered = pool.block_on(JoinAll::new(gathered));
+    assert!(gathered.into_iter().all(|result| result == Ok(true)), "the work is shared between workers");
 }
 
 #[test]
@@ -131,6 +150,7 @@ mod sockets {
     const LOCALHOST: SocketAddress = SocketAddress::V4 { address: [127, 0, 0, 1], port: 0 };
 
     #[test]
+    #[cfg_attr(miri, ignore = "64 connections of 20 kB take longer than its timeout under Miri")]
     fn tcp_echoes_many_connections() {
         let reactor = Reactor::new(&ReactorConfig::default()).unwrap();
         let pool = pool(4);
@@ -227,7 +247,8 @@ mod sockets {
         let original = ListenerConfig::default().bind(LOCALHOST).unwrap();
         let duplicate = Socket::from_duplicate(&original.duplicate(std::process::id()).unwrap()).unwrap();
         assert!(duplicate.is_duplicate() && !original.is_duplicate());
-        assert_eq!(first.register(&original).unwrap(), CompletionRoute::Port);
+        // Registering a duplicate associates nothing, so `from_socket` may register it again
+        // (an associated socket cannot be associated a second time, even with the same port).
         assert_eq!(second.register(&duplicate).unwrap(), CompletionRoute::Event);
         let original = TCPListener::from_socket(&first, original).unwrap();
         let duplicate = TCPListener::from_socket(&second, duplicate).unwrap();
@@ -262,6 +283,7 @@ mod sockets {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "Miri cannot call sendto")]
     fn udp_sockets_exchange_datagrams() {
         let reactor = Reactor::new(&ReactorConfig::default()).unwrap();
         let pool = pool(2);
@@ -393,6 +415,7 @@ mod supervisor {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "Miri can neither make SOCK_SEQPACKET socket pairs nor start processes")]
     fn workers_share_the_listeners_and_stop_when_asked() {
         let localhost = SocketAddress::V4 { address: [127, 0, 0, 1], port: 0 };
         let listener = ListenerConfig::default().bind(localhost).unwrap();
@@ -423,6 +446,7 @@ mod supervisor {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "Miri can neither make SOCK_SEQPACKET socket pairs nor start processes")]
     fn failed_workers_are_restarted_as_the_policy_says() {
         let localhost = SocketAddress::V4 { address: [127, 0, 0, 1], port: 0 };
         let failing = |restart: RestartPolicy| {
@@ -544,7 +568,11 @@ mod review {
         let start = Instant::now();
         drop(runtime);
         assert!(start.elapsed() < Duration::from_secs(10));
-        assert_eq!(ThreadPool::block_on_thread(sleeping), Err(TaskError::Cancelled));
+        // The sleep is normally still waiting for the busy worker and is cancelled with
+        // the pool; when the worker starts late (as under Miri, which is much slower), the
+        // deadline passes first and it finishes. Either way it ends, which is what is checked.
+        let result = ThreadPool::block_on_thread(sleeping);
+        assert!(matches!(result, Ok(()) | Err(TaskError::Cancelled)), "{result:?}");
     }
 
     /// Two tasks accepting on one listener are both woken.

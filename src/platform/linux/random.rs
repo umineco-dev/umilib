@@ -21,8 +21,11 @@ impl Random {
         let mut done = 0;
         while done < buffer.len() {
             let rest = &mut buffer[done..];
+            // Each argument has the type of `getrandom`'s prototype (`void *`, `size_t`,
+            // `unsigned int` flags), as std passes them: through `...` a wider flags argument
+            // is a mismatched variadic argument.
             // SAFETY: the bytes are writable for their length; the result is checked.
-            let result = unsafe { sys::syscall(number, rest.as_mut_ptr(), rest.len(), 0usize) };
+            let result = unsafe { sys::syscall(number, rest.as_mut_ptr(), rest.len(), 0 as core::ffi::c_uint) };
             if result < 0 {
                 let error = io::Error::last_os_error();
                 match error.raw_os_error() {

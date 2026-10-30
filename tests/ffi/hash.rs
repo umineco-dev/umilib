@@ -292,9 +292,11 @@ fn ascon_through_the_c_abi() {
     use umilib::ffi::hash::ascon::*;
 
     use crate::vectors::Record;
+    // Every seventeenth record; under Miri, which is thousands of times slower, every hundred and seventieth.
+    let step = if cfg!(miri) { 170 } else { 17 };
     unsafe {
         // Ascon-Hash256 against the known answers of the reference implementation.
-        for record in Record::all("hash/ascon/LWC_HASH_KAT_128_256.txt").iter().step_by(17) {
+        for record in Record::all("hash/ascon/LWC_HASH_KAT_128_256.txt").iter().step_by(step) {
             let (message, expected) = (record.bytes("Msg"), record.bytes("MD"));
             let mut out = [0u8; 32];
             Check::ok(ascon_hash256::digest(message.as_ptr(), message.len(), out.as_mut_ptr(), 32));
@@ -308,7 +310,7 @@ fn ascon_through_the_c_abi() {
             assert_eq!(out.to_vec(), expected);
         }
         // Ascon-XOF128, read in pieces.
-        for record in Record::all("hash/ascon/LWC_XOF_KAT_128_512.txt").iter().step_by(17) {
+        for record in Record::all("hash/ascon/LWC_XOF_KAT_128_512.txt").iter().step_by(step) {
             let (message, expected) = (record.bytes("Msg"), record.bytes("MD"));
             let mut out = vec![0u8; expected.len()];
             Check::ok(ascon_xof128::digest_xof(message.as_ptr(), message.len(), out.as_mut_ptr(), out.len()));
@@ -326,7 +328,7 @@ fn ascon_through_the_c_abi() {
             assert_eq!(pieces, expected);
         }
         // Ascon-CXOF128 with its customization string.
-        for record in Record::all("hash/ascon/LWC_CXOF_KAT_128_512.txt").iter().step_by(17) {
+        for record in Record::all("hash/ascon/LWC_CXOF_KAT_128_512.txt").iter().step_by(step) {
             let (message, customization, expected) = (record.bytes("Msg"), record.bytes("Z"), record.bytes("MD"));
             let mut state = ptr::null_mut();
             Check::ok(ascon_cxof128::umilib_hash_ascon_ascon_cxof128_new(

@@ -16,7 +16,7 @@
 | --- | --- |
 | `cargo test --all-features` | integration tests (`tests/`), corpus replay and a deterministic fuzzing pass (`fuzz/`), doc tests |
 | `python3 tools/check_features.py` | every feature compiles alone |
-| `cargo +nightly miri test --all-features --test bytes --test secret --test ffi --test platform --test runtime` (with `MIRIFLAGS=-Zmiri-disable-isolation`) | undefined behaviour and leaks in `unsafe` code. `--test ffi` takes more than an hour under Miri (the cryptography tests): run the part a change touches with a filter (`-- protocol::http::`, `-- codec::`). On macOS, Miri does not support some `fcntl` commands of `--test platform` (`datagram_sockets_send_to_and_receive_from` stops with "unsupported operation"): the platform layer's Miri run is Linux's |
+| `cargo +nightly miri test --all-features --test bytes --test secret --test ffi --test platform --test runtime -- --test-threads=1` (with `MIRIFLAGS=-Zmiri-disable-isolation`) | undefined behaviour and leaks in `unsafe` code. One test at a time: Miri runs every thread on one core, so tests run together take each other's time from the limits some check. `--test ffi` takes about an hour under Miri (the cryptography tests): run the part a change touches with a filter (`-- protocol::http::`, `-- codec::`). Tests too slow for Miri use fewer vectors under `cfg!(miri)`, or are ignored under it with the reason (`#[cfg_attr(miri, ignore = "...")]`), as are tests of system calls Miri does not emulate (`sendto`, `if_nametoindex`, some socket options, `SOCK_SEQPACKET` pairs, child processes). Run the platform part for Linux, as CI does (`--target x86_64-unknown-linux-gnu`; Miri interprets the target): on macOS, Miri does not support some `fcntl` commands |
 | `python3 tools/check_ffi.py` | the exported functions are exactly those of the manifest, the C headers compile and the C tests pass (clang, `-std=c99 -pedantic -Werror`), and the Python tests pass |
 | `cargo test --release --all-features --test crypto -- --ignored` | the vectors that need minutes or a gibibyte (PBKDF2 with 2^24 iterations, scrypt with N = 2^20, Argon2 with 1 GiB) |
 | `cargo bench --all-features -- --quick` | the benchmarks run |
@@ -118,6 +118,16 @@ Lessons so far:
   be freed before the variable is reused. An object that keeps a `&mut` to
   caller memory must never see a reference created from another pointer to
   that memory (see the writer functions in `src/ffi/bytes`).
+- Miri found, once its CI job could finish: a test passing a one-byte output
+  to a function that writes four (the C ABI tests, which then corrupted the
+  test harness under qemu), a `syscall` given a `usize` where the prototype
+  has `unsigned int` (a mismatched variadic argument), and a lost wakeup of
+  the thread pool that its timing makes common. A Miri job that never ends
+  hides all of this: when one test is slow, measure every test under Miri
+  (each in its own process, with a time limit) rather than one at a time.
+- Tests that check a time limit or an order of events in real time break
+  under Miri, which is thousands of times slower: wait on the condition
+  itself, with a deadline only to turn a hang into a failure.
 - An independent review (a second reader who does not know the author's
   reasoning) found memory-safety bugs that every automated suite missed:
   self-aliasing inputs, allocation sizes from the caller, and Python views

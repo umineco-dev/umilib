@@ -46,6 +46,7 @@ fn localhost(port: u16) -> SocketAddr {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "Miri supports few socket options (not SO_KEEPALIVE)")]
 fn sockets_set_and_get_their_options() {
     let socket = Socket::for_address(&localhost(0), SocketKind::Stream).unwrap();
     socket.set_reuse_address(true).unwrap();
@@ -126,6 +127,7 @@ fn listeners_accept_connections_with_their_backlog() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "Miri cannot call sendto")]
 fn datagram_sockets_send_to_and_receive_from() {
     let a = Socket::for_address(&localhost(0), SocketKind::Datagram).unwrap();
     a.bind(&localhost(0)).unwrap();
@@ -169,6 +171,7 @@ mod unix {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "Miri cannot call if_nametoindex")]
     fn the_loopback_interface_has_an_index() {
         let name = if cfg!(target_vendor = "apple") { "lo0" } else { "lo" };
         assert!(NetworkInterface::index(name).unwrap() > 0);
@@ -176,6 +179,7 @@ mod unix {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "Miri does not support SO_REUSEPORT")]
     fn sockets_share_a_port_with_reuse_port() {
         let first = Socket::for_address(&localhost(0), SocketKind::Stream).unwrap();
         first.set_reuse_port(true).unwrap();
@@ -193,6 +197,7 @@ mod unix {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "Miri's epoll still reports a listener readable after its connection is accepted")]
     fn pollers_report_readiness_and_notifications() {
         // A wait interrupted by a signal returns no events (the children of
         // other tests send SIGCHLD), so a wait for events is repeated until
@@ -290,9 +295,10 @@ mod linux {
     fn the_getrandom_system_call_is_known() {
         let number = Linux::SYS_GETRANDOM.expect("the architectures of the release are known");
         let mut buffer = [0u8; 64];
-        // SAFETY: the buffer is writable for its length.
-        let result =
-            unsafe { umilib::platform::linux::sys::syscall(number, buffer.as_mut_ptr(), buffer.len(), 0usize) };
+        // SAFETY: the buffer is writable for its length; the flags are `unsigned int`, as in the prototype.
+        let result = unsafe {
+            umilib::platform::linux::sys::syscall(number, buffer.as_mut_ptr(), buffer.len(), 0 as core::ffi::c_uint)
+        };
         assert_eq!(result, 64, "{}", std::io::Error::last_os_error());
         assert!(buffer.iter().any(|byte| *byte != 0));
     }
@@ -305,6 +311,7 @@ mod linux {
 
     /// Packet sockets need CAP_NET_RAW (root in a container); without it the test checks the refusal.
     #[test]
+    #[cfg_attr(miri, ignore = "Miri cannot call if_nametoindex")]
     fn packet_sockets_see_the_frames_of_the_loopback() {
         let interface = NetworkInterface::index("lo").unwrap();
         let socket = match PacketSocket::open(SocketKind::Datagram, 0x0800, Some(interface)) {

@@ -181,6 +181,10 @@ fn void_is_only_a_return_type_or_a_pointer_target() {
 }
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "builds the manifest of the whole library: too slow under Miri (safe Rust, apart from the buffer other tests reach)"
+)]
 fn manifest_json_is_exported_and_matches_the_rust_manifest() {
     let mut buffer = Buffer::EMPTY;
     Check::ok(unsafe { umilib::ffi::umilib_ffi_manifest(&mut buffer) });
@@ -220,6 +224,10 @@ fn integers_split_into_halves() {
 }
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "builds the manifest of the whole library: too slow under Miri (safe Rust, apart from the buffer other tests reach)"
+)]
 fn headers_match_the_manifest() {
     let include = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("include");
     let bless = std::env::var_os("UMILIB_BLESS").is_some();

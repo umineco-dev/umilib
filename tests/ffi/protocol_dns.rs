@@ -416,6 +416,7 @@ fn an_authority_and_a_resolver_through_the_c_abi() {
 
 #[cfg(umilib_feature = "protocol-dns-dnssec")]
 #[test]
+#[cfg_attr(miri, ignore = "validating signed zones takes too long under Miri")]
 fn dnssec_through_the_c_abi() {
     use umilib::ffi::protocol::dns::dnssec::*;
 
