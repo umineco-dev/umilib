@@ -1,0 +1,16 @@
+rfc4226.txt
+    RFC 4226, "HOTP: An HMAC-Based One-Time Password Algorithm", https://www.rfc-editor.org/rfc/rfc4226.txt,
+    downloaded on 2026-10-26.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: the text of the RFC; the tests parse tables 1 and 2 of appendix D (the HMAC-SHA-1 values, the
+    truncated values and the HOTP values of the counts 0 to 9 for the secret "12345678901234567890").
+    Used: every row of both tables.
+
+rfc6238.txt
+    RFC 6238, "TOTP: Time-Based One-Time Password Algorithm", https://www.rfc-editor.org/rfc/rfc6238.txt,
+    downloaded on 2026-10-26.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: the text of the RFC; the tests parse table 1 of appendix B (time, T, 8-digit TOTP and mode for
+    SHA1, SHA256 and SHA512). The seeds are those of the reference implementation in appendix A: the ASCII
+    string "12345678901234567890" repeated to 20, 32 and 64 bytes.
+    Used: every row.

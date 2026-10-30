@@ -1,0 +1,2 @@
+EHLO]bar.EHLO 25xxxxixxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0comMIME
+RCPT TO:<Jones@foo.comRf.hb> NOTIFY=SUCCESS,FAILURE ORCgrPT=rff8

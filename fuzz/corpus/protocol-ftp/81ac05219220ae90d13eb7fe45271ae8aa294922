@@ -1,0 +1,10 @@
+SERmp
+FEAT
+AUTH TLS an
+PASS guest
+TYPEùI
+EPSV
+t
+MLST /tmp
+FEATˇ MDTMtmp
+FEAT

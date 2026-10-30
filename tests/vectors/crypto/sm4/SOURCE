@@ -1,0 +1,17 @@
+draft-ribose-cfrg-sm4.txt
+    Extracted by a script from appendix A ("Example Calculations"), sections 6.2.3 (the example of the S-box),
+    7.3.1 (FK) and 7.3.2 (CK) of draft-ribose-cfrg-sm4-10, "The SM4 Blockcipher Algorithm And Its Modes Of
+    Operations", https://www.ietf.org/archive/id/draft-ribose-cfrg-sm4-10.txt, downloaded on 2026-10-24.
+    Appendix A.1 reproduces the examples of GB/T 32907-2016.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records; hexadecimal values. Name and Mode (SM4 for the block cipher, SM4-ECB, SM4-CBC,
+    SM4-OFB, SM4-CFB or SM4-CTR) name the example; Direction tells whether the example shows encryption or
+    decryption; RoundKeys lists rk_0 to rk_31 and RoundOutputs X_4 to X_35 of an encryption; Iterations is
+    the number of times the plaintext is encrypted again (example 2 of GB/T 32907-2016). The record "Constants"
+    holds FK, CK_0 to CK_31 and the example S(EF) = 84 of section 6.2.3 (SBoxInput, SBoxOutput).
+    Used: every record.
+
+sm4_gcm_test.json, sm4_ccm_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

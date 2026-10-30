@@ -1,0 +1,6 @@
+EHLO bar.com
+MAILBITMIts bar.com
+500-8B50-SIZE
+250-DSN
+250 `
+2SoODY=U

@@ -1,0 +1,21 @@
+@GET / HTTP/1.1
+Host: a
+
+POST / HTTP/1.1
+Host: a
+
+PGET / HTTP/1.1
+Host: a
+
+POST / HTTP/1.1
+Host: a
+
+PUST / HTTP/1.1
+Host: a
+
+PGET / HTTP/1.1
+Host: a
+
+POST / HTTP/:(aTP/,2.1
+Hos™t: aÿÿÿÿ
+ÿÿ

@@ -1,0 +1,8 @@
+FroVersion: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamble.
+--simple boundary
+xt.
+--simple boundary
+-ontent-type: text/pl explicitly typSCII texYgeW80IGNhbiByZWFkIHary--

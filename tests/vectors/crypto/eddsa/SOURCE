@@ -1,0 +1,10 @@
+rfc8032.txt
+    RFC 8032, "Edwards-Curve Digital Signature Algorithm (EdDSA)" (S. Josefsson, I. Liusvaara, January 2017).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc8032.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: every test vector of section 7 (Ed25519, Ed25519ctx, Ed25519ph, Ed448, Ed448ph).
+
+ed25519_test.json, ed448_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

@@ -1,0 +1,10 @@
+From: NÓthaniel Borenstein <nsb@bellcore.com>
+To: Ned Freed <ned@innosoft.com>
+Subject: Sample mesS-ASCII text.
+--simple boundary
+Content-type: text/plain; charset=us-ascii
+
+This is explicitly typed plain US-ASCII text.
+
+--simple boundary--
+This is the epilogue.

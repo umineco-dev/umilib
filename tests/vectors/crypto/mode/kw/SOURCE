@@ -1,0 +1,24 @@
+KW_AE_{128,192,256}.txt, KW_AD_{128,192,256}.txt, KWP_AE_{128,192,256}.txt, KWP_AD_{128,192,256}.txt, TKW_AE.txt, TKW_AD.txt
+    NIST CAVP, the key wrap validation system (KWVS) files of SP 800-38F: KW and KWP with AES, TKW with TDEA, in
+    the forward direction (wrapping with the cipher, unwrapping with its inverse).
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/kwtestvectors.zip
+    on 2026-10-26. The *_inv.txt files, which use the inverse cipher to wrap (an option of SP 800-38F §5.2 this
+    library does not offer), are not included.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Format: CAVP response files; `PLAINTEXT LENGTH` is in bits; an AD record without `P` is marked `FAIL` and must
+    not unwrap.
+    Used: every record.
+
+aes_wrap_test.json, aes_kwp_test.json
+    Project Wycheproof, testvectors_v1/aes_wrap_test.json and aes_kwp_test.json of https://github.com/C2SP/wycheproof,
+    downloaded on 2026-10-26.
+    License: Apache License 2.0.
+    Used: every test: valid wrappings both ways, and invalid ones (wrong integrity values, lengths and padding)
+    that must not unwrap.
+
+rfc3394.txt, rfc5649.txt
+    RFC 3394, "Advanced Encryption Standard (AES) Key Wrap Algorithm", and RFC 5649, "Advanced Encryption Standard
+    (AES) Key Wrap with Padding Algorithm", https://www.rfc-editor.org/rfc/rfc3394.txt and rfc5649.txt, downloaded
+    on 2026-10-26.
+    License: IETF Trust Legal Provisions; the examples are data.
+    Used: the six examples of RFC 3394 §4 and the two of RFC 5649 §6 (KEK, key data and ciphertext).

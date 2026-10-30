@@ -1,0 +1,10 @@
+APOP mrose c4c9333bac560ecc979e58001b3e22fb
+SATT
+LIST
+b
+APOP mrose c4c9333bac560ecc979e58001b3e22fb
+SATT
+REb
+ISSATT
+LIST
+REb+OK ллл

@@ -1,0 +1,9 @@
+EHLO bar.comMIME
+RCPT TO:<Jones@foo.comRhb> NOTIFY=SUCCESS,f336;Jones+2Bx@foo.comM
+DATA
+º“‹œ. etc. etc.
+TH PLO ba’.comMIME
+RCPT TO:<Jones@foo.comRhb> NOTIFY=SUCCESS,FAILURE ORCPT=rfBDAT 5 L
+helloQUIT
+ 5 L
+helloQUIT

@@ -1,0 +1,5 @@
+EHLO bar.com
+MAIL FROM:<Smit1h@bar.Ucom> SIZE=500 BODY bnN0
+BDAT 5 LAcr.com
+MAIL FROM:<Smit1h@bar.som> SIZE=500 BODY bKY=8BITMIMREP
+TloQUITloQUIT

@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<Smith@barvcom> SIZE=500 BODY=8BI
+RCPT TO:<Jonom
+MAIL FROM:<Smith@barvcom> SIZE=500 BODY=8elloQUIT

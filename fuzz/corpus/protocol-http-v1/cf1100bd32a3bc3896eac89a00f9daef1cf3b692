@@ -1,0 +1,27 @@
+ÿT / HTTP/1.1
+Host: 
+
+GEGET // HTTP/1.1
+Host: 
+st: 
+
+GEGET // HTTP/1.1
+Host: 
+
+GEGET / HTTP/1.1
+Host: 
+
+GEGET //x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POS HTTP/1.1
+
+GEG@T / HTTHost: 
+

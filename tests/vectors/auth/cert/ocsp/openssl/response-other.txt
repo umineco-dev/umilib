@@ -1,0 +1,98 @@
+OCSP Response Data:
+    OCSP Response Status: successful (0x0)
+    Response Type: Basic OCSP Response
+    Version: 1 (0x0)
+    Responder Id: C = JP, O = umilib, CN = umilib OCSP Responder
+    Produced At: Oct 25 21:33:14 2026 GMT
+    Responses:
+    Certificate ID:
+      Hash Algorithm: sha256
+      Issuer Name Hash: 08789CCA1B7FE36521CBA8B38FE6FDBDC6040160B48A4794C7973A6D68B99A58
+      Issuer Key Hash: 6DD8BCF1AF7B7EA3BDD7EDE7623DCA0B2467A98959A2FA9C204D277109885DE2
+      Serial Number: 10
+    Cert Status: good
+    This Update: Oct 25 21:33:14 2026 GMT
+    Next Update: Oct 22 21:33:14 2036 GMT
+
+    Certificate ID:
+      Hash Algorithm: sha256
+      Issuer Name Hash: 08789CCA1B7FE36521CBA8B38FE6FDBDC6040160B48A4794C7973A6D68B99A58
+      Issuer Key Hash: 6DD8BCF1AF7B7EA3BDD7EDE7623DCA0B2467A98959A2FA9C204D277109885DE2
+      Serial Number: 11
+    Cert Status: revoked
+    Revocation Time: Oct 25 21:33:14 2026 GMT
+    Revocation Reason: keyCompromise (0x1)
+    This Update: Oct 25 21:33:14 2026 GMT
+    Next Update: Oct 22 21:33:14 2036 GMT
+        Response Single Extensions:
+            Invalidity Date: 
+                Feb  1 00:00:00 2026 GMT
+
+    Certificate ID:
+      Hash Algorithm: sha256
+      Issuer Name Hash: 08789CCA1B7FE36521CBA8B38FE6FDBDC6040160B48A4794C7973A6D68B99A58
+      Issuer Key Hash: 6DD8BCF1AF7B7EA3BDD7EDE7623DCA0B2467A98959A2FA9C204D277109885DE2
+      Serial Number: 12
+    Cert Status: unknown
+    This Update: Oct 25 21:33:14 2026 GMT
+    Next Update: Oct 22 21:33:14 2036 GMT
+
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:46:02:21:00:9f:40:9d:d1:ac:25:69:ee:af:79:51:5d:d9:
+        1c:5e:fc:f2:ba:65:07:bc:84:be:8a:19:f8:33:60:78:de:15:
+        27:02:21:00:fc:d0:65:4d:99:92:b6:bf:e1:15:ac:21:1f:91:
+        cf:4c:68:dd:c8:98:7c:fc:cc:02:a7:36:e1:bc:53:bd:00:8c
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 32 (0x20)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: C=JP, O=umilib, CN=umilib Other Root CA
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: C=JP, O=umilib, CN=umilib OCSP Responder
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:89:81:7a:19:4a:a4:05:5a:1b:9c:47:2a:ec:b6:
+                    a3:54:fa:7e:f5:5d:4e:fd:03:0e:66:6c:5e:bd:96:
+                    77:d4:55:c7:50:65:ec:56:ba:6b:36:26:cf:bb:06:
+                    ca:2c:ab:a2:35:c0:04:8d:d8:f7:6e:68:9d:77:d8:
+                    b0:c8:61:1c:c4
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage: 
+                OCSP Signing
+            OCSP No Check: 
+
+            X509v3 Subject Key Identifier: 
+                62:DC:01:A1:C0:AE:87:6B:97:9F:F5:94:F7:66:D7:66:DD:F0:1C:81
+            X509v3 Authority Key Identifier: 
+                1E:5E:F8:BC:E2:6E:CB:0C:78:4E:82:B0:2B:B1:C2:E4:05:0D:12:E2
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:21:00:f8:cc:18:44:2c:6c:3a:fb:13:a1:2f:85:38:
+        be:b8:f9:fc:78:82:d1:20:05:93:da:07:43:03:cd:74:9c:e7:
+        0f:02:20:0f:d4:e4:9d:fd:cc:e0:c2:65:dd:d3:99:2f:fa:39:
+        7d:28:07:19:f7:57:92:63:8c:42:a7:ce:f8:d2:d0:c9:70
+-----BEGIN CERTIFICATE-----
+MIIB8jCCAZigAwIBAgIBIDAKBggqhkjOPQQDAjA9MQswCQYDVQQGEwJKUDEPMA0G
+A1UECgwGdW1pbGliMR0wGwYDVQQDDBR1bWlsaWIgT3RoZXIgUm9vdCBDQTAeFw0y
+NjAxMDEwMDAwMDBaFw0zNjAxMDEwMDAwMDBaMD4xCzAJBgNVBAYTAkpQMQ8wDQYD
+VQQKDAZ1bWlsaWIxHjAcBgNVBAMMFXVtaWxpYiBPQ1NQIFJlc3BvbmRlcjBZMBMG
+ByqGSM49AgEGCCqGSM49AwEHA0IABImBehlKpAVaG5xHKuy2o1T6fvVdTv0DDmZs
+Xr2Wd9RVx1Bl7Fa6azYmz7sGyiyrojXABI3Y925onXfYsMhhHMSjgYcwgYQwDAYD
+VR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwkw
+DwYJKwYBBQUHMAEFBAIFADAdBgNVHQ4EFgQUYtwBocCuh2uXn/WU92bXZt3wHIEw
+HwYDVR0jBBgwFoAUHl74vOJuywx4ToKwK7HC5AUNEuIwCgYIKoZIzj0EAwIDSAAw
+RQIhAPjMGEQsbDr7E6EvhTi+uPn8eILRIAWT2gdDA810nOcPAiAP1OSd/czgwmXd
+05kv+jl9KAcZ91eSY4xCp8740tDJcA==
+-----END CERTIFICATE-----

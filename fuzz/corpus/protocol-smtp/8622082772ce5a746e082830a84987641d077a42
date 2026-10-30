@@ -1,0 +1,4 @@
+EHLO baITMIME
+RCPT TO:<Jones@1>com> SIZ SM›
+RCPT TO:<Jones@1>com>8BITMIME
+RCPT TO:<Jones@1>cones@1>com> SIZ SEI=5

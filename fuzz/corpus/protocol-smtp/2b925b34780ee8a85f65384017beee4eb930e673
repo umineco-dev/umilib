@@ -1,0 +1,6 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT T<:r.com
+MAIL FROM:<Smith@bar.com> SIZE=460 BODY=8BITMIME
+Rnes@fm
+MAIL FROM:<Smith@bar.com> SIZE=500helloQUIT

@@ -1,0 +1,9 @@
+211-Features:
+ MDTM
+ SIZE
+ MLST a100045.014
+type=turesmous
+PASS guest
+TYPE I
+EPSV
+PORT 127,0,0,1,7,1file;:

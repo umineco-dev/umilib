@@ -1,0 +1,15 @@
+EHLO bar.om
+MAIL FROM:<Smith@bar.com> ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,s.com
+MAIL FROM:<Smit$@bar.com> SIZE=2,,,,,,,,,,,,,,,,,,,,,,,,,,s.com
+MAIL FROM:<Smit$@bar.com> SIZE=2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,(,,,,000 BODY=8BITMIME
+RCP< TO:<o@eJJJJJJJJJlah ]lah blah.
+.
+AU com
+MAIL FROM:<Smih@tbar.com> SIZE
+R,,,,,,,,,2;Jones+2Bx2foo.com
+bDATA
+Bl2Bx@foo.com
+DATA
+Blah ]lahU com
+MAIL FROM:<Smih@tbar.com> SIZE
+RCT

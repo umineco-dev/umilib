@@ -1,0 +1,16 @@
+draft-irtf-cfrg-aegis-aead.txt
+    Extracted by a script from appendix A of draft-irtf-cfrg-aegis-aead-18, "The AEGIS Family of Authenticated
+    Encryption Algorithms", https://www.ietf.org/archive/id/draft-irtf-cfrg-aegis-aead-18.txt, downloaded on
+    2026-10-24.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records with the group (AESRound, AEGIS-128L, AEGIS-256, AEGIS-128X2, AEGIS-128X4,
+    AEGIS-256X2, AEGIS-256X4, AEGISMAC-*) and the name of the vector, and the fields of the draft in hexadecimal:
+    in, rk, out; S0 to S7 and M0, M1 (or M) before an update and AfterS0 to AfterS7 after it; key, nonce,
+    ctx0 to ctx3 and AfterVj_i (V[j,i] after the initialization); key, nonce, ad, msg, ct, tag128, tag256;
+    data for the MACs. Result is fail for the tests that must fail.
+    Used: every record.
+
+aegis128L_test.json, aegis256_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

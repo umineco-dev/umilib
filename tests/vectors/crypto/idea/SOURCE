@@ -1,0 +1,7 @@
+Idea-128-64.verified.test-vectors
+    The NESSIE project (New European Schemes for Signatures, Integrity and Encryption), the verified test
+    vectors of IDEA with 128-bit keys and 64-bit blocks, from
+    https://www.cosic.esat.kuleuven.be/nessie/testvectors/bc/idea/Idea-128-64.verified.test-vectors
+    (retrieved through the Internet Archive on 2026-10-24, as the site did not answer).
+    License: published by the NESSIE project for the evaluation of the algorithms; the vectors are data.
+    Used: every vector of the eight sets: encryption, decryption, and encryption iterated 100 and 1000 times.

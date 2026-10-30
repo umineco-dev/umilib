@@ -1,0 +1,16 @@
+EHLO b
+.
+ PL@IN AHLO bar.com
+MAIL FROM:<Smith@barom> SI=500 MIME
+RCPT 
+AUTH PL@IN AO rca.om
+MAIL FROM:<Smith@bar.com> SI=501 MIME
+RCP
+.
+AUTH PL@IN AHLO bar.com
+MAIL FROM:<SHLO bar.com
+MAIL FROM:<Smith@bar.com> SI=501 BOKY=8BTcI/
+.
+MIME
+RCPT T
+O:

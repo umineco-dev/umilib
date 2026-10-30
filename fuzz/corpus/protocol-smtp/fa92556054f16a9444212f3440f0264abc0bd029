@@ -1,0 +1,5 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIÍE
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCESS,FAóÿÿÿE ORCl
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIÍE
+RCone

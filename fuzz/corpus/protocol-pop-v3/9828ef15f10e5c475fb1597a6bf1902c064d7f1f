@@ -1,0 +1,37 @@
+APOP mros
+STAT
+Tmros
+ST@T
+T>P 2 
+	P mros
+STAT
+T>P 2POP mros
+STAT
+T>P 2 
+	U000 
+STAT
+T 
+	UAfP001ros
+STAT
+T>P 2 
+	U000 
+STAT
+
+ST@T
+T>P 2 
+	P mros
+STAT
+T>P 2POP mros
+STAT
+T>P 2 
+	U000 
+STAT
+T T 
+	UA 
+STAT
+TU000 
+STAT
+T 
+	UAfP001 
+STAT
+T 

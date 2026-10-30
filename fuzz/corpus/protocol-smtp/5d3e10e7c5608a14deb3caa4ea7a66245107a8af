@@ -1,0 +1,3 @@
+EHLO bar.c
+MAIL FROM:<Smith@bar.com> SIZE=77-8BITLIEM
+250-SI6 0

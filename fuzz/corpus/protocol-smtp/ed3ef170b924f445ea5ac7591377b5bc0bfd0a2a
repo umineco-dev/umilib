@@ -1,0 +1,11 @@
+�HLO bar.comMIME
+RCPT TO:<ΐnes@focoo.mRhb> NOTIFY=S
+DTAAbar�comMIME
+RCPT TO:<ΐnes@foo.comRhb> NITOFY=S
+DATA
+B+cc bar.comMIME
+RCPT TO:<ΐnes@focoo.mRhb> NOTIFY=S
+DATAbar.comMIME
+RCPT TO:<ΐnes@foo.comRhb> NITOFY=S
+DATA
+Blah 

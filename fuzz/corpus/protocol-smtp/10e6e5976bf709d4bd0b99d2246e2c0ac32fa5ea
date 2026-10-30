@@ -1,0 +1,10 @@
+EHLO b TO:<Jones@fomMIME
+RCPT TO:<Jones@foo.comRhb> NOTIFILURE ORCPT=rfBDAT 5 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRho.comRhb> NOTIFY=SUCCESS,FAILURE ORCPT=rfBDAT 5 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRhb> NOTIFY=SUCCESS,]FAILURE ORCPT=rfBDAT 5 L
+helloQUIT
+ helloQUIT

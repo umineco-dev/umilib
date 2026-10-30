@@ -1,0 +1,2 @@
+EHLO bar.comMIMM
+RCPT TO:<Jones@foo.com> NOTIFTIT

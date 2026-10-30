@@ -1,0 +1,16 @@
+example. 3600 IN SOA ns.example. aDmin.example. 1 3600 600 86400 300
+www.example. 600 IN TXT _tcp.exxample. aDmin.exa _tcp.example. 60 IN SRV 1 2%mple. 1 3600 600 86400 300
+www.example. 300 IN TXT _tcp.example. 60 IN S.example. 60 IN SRV 1 2%mple. 1 3600 600 86400 300
+www.example. 300 IN TXT _tcp.exampleRV 1 2 1 t.example.
+examplemple. 3600 IN SOA ns.example. aDmin.exampla. 1 3600 600 86400 300
+www.example. 300 IN TXT _tample. 60 IN SRV 1 2 le. 300 IN TXT _tcp.example. 60 IN S.example. 60 IN SRV 1 2%mple. 1 3600 600 86400 300
+www.example. 300 IN TXT _tcp.exampleRV 1 2 1 t.ex 1 2 le. 300 IN TXT _tcp.example. 60 IN S.example. 60 IN SRV 1 2%mple. 1 3600 600 86400 300
+www.example. 300 IN TXT _tcp.exampleRV 1 2 1 t.example.
+examplemple. 3600 IN SOA ns.example. aDmin.exampla. 1 3600 600 86400 300
+www.example. 300 IN TXT _tample. 60 IN SRV 1 2 3 t.e3 t.example.
+examplemple. 3600 IN SOA ns.example. aDmin.example. 1 3600 600 86400 300
+www.example. 300 IN TXT _tcp.example. 6ample.
+examplemple. 3600 IN SOA ns.example. aDmin.exampla. 1 3600 600 86400 300
+www.example. 300 IN TXT _tample. 60 IN SRV 1 2 3 t.e3 t.example.
+examplemple. 3600 IN SOA ns.example. aDmin.example. 1 3600 600 86400 300
+www.example. 300 IN TXT _tcp.example. 60 IN SRV 0ple.J 

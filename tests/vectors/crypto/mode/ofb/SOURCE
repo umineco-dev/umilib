@@ -1,0 +1,8 @@
+*.rsp
+    NIST CAVP, the Advanced Encryption Standard Algorithm Validation Suite (AESAVS) response files:
+    the known-answer tests (GFSbox, KeySbox, VarKey, VarTxt), the multiblock message tests (MMT) and the
+    Monte Carlo tests (MCT) of this mode, for 128-, 192- and 256-bit keys.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/
+    (KAT_AES.zip, aesmmt.zip, aesmct.zip) on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every record, encrypt and decrypt, with the Monte Carlo procedures of AESAVS section 6.4.

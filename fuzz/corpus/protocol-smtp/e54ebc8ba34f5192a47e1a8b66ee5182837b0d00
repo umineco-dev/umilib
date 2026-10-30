@@ -1,0 +1,10 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFY=foo.com
+DATA
+Blah blah blah...
+..etc. etc. etc.
+.
+AUTH PL@IN AHRpbQB0YW5zdGFhZnRhbnN0YWFm
+BDAT 5 LAST
+helloQUIT

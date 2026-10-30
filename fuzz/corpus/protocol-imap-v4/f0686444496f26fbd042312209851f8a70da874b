@@ -1,0 +1,33 @@
+a001 LOG,a001 LO´,N {0}
+ITGIN {5}
+a:OG,N {5}
+\MITHN {5}
+SMITH {6+}
+SESGIN {5 0a
+]a001 LO´,N {0}
+ITGIN {5}
+a:OG,N {5}
+\MITHN {5}
+SMITH {6+}
+SESGIN {5 0a
+]}:LSMITGIN {5}
+a:OG,N {5}
+SMITH {6+}
+SESAME
+a002 SELECT inbox
+a003 FETCH{6+}
+ LOG,N {5}
+SMITH {6+}
+SESGIN {5}
+a:0]
+a0}:LSMITGIN {5}
+a:OG,N {5}
+SMITH {6+}
+SESAME
+a002 SELECT inbox
+a003 FETCH{6+}
+ LOG,N {5}
+SMITH {6+}
+SESGIN {5}
+a:0]
+a003 FETCH{LOGOUT

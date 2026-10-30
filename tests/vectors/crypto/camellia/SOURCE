@@ -1,0 +1,6 @@
+camellia_ccm_test.json, camellia_cbc_pkcs5_test.json, camellia_cmac_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.
+
+The examples of RFC 3713 appendix A are in tests/crypto/camellia.rs.

@@ -1,0 +1,4 @@
+EHLO bar.comMIME
+RMA>ÉSIZD=PPPÿÿÿÿÿ0Bm
+MAIL FROM:<Smith@bar.com> SIZE=6666666666
+RCPT TO:<JbP

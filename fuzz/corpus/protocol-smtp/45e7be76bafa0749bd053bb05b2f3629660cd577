@@ -1,0 +1,4 @@
+EHLO bar.comST
+heLO laHr.com
+MAIL FROM:<Smit1h@bar.com> SIZE=500 BODY bnN0YWFm
+BDAT 5 UITloQUIT

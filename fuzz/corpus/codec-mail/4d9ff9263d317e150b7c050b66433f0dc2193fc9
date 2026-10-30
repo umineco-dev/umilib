@@ -1,0 +1,12 @@
+FSmith <marom: Nathaniel Borenstein <nsb@bellcore.com>
+To: Ned Freed <ned@innosoft.com>
+Subject: Sample message
+MIME-^ersion: 1.0
+Content-ty the preamble.
+--simple boundary
+
+This is implicitly typed plain US-ASCII text.om>
+Sule boundary
+Content-type: text/plain; charset=us-ascii
+
+ThisFrom: John Doe <jdoe@machi inse.exa

@@ -1,0 +1,36 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 7119076771181778047 (0x62cc0a9adb06547f)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN=TLS Test Root
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2046 GMT
+        Subject: CN=server.example
+        Subject Public Key Info:
+            Public Key Algorithm: ED25519
+                ED25519 Public-Key:
+                pub:
+                    32:f3:4a:89:59:93:aa:c7:90:73:c6:04:73:eb:d8:
+                    34:7f:57:d7:6a:d7:ce:28:fd:f6:5b:40:06:d8:15:
+                    7c:fa
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Subject Alternative Name: 
+                DNS:server.example, DNS:*.wild.example, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
+            X509v3 Subject Key Identifier: 
+                EF:B9:16:ED:B2:A8:F0:2D:DA:4C:1F:91:F4:77:77:81:05:D3:5E:55
+            X509v3 Authority Key Identifier: 
+                06:ED:15:F8:4F:05:63:87:61:94:55:5F:E1:A7:6C:52:5B:7F:68:AB
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:44:02:20:05:e7:8d:15:33:54:a6:ae:f5:47:17:d2:82:02:
+        a5:26:d7:8c:a0:09:58:25:a8:f4:db:ed:6c:3d:50:63:79:70:
+        02:20:52:54:62:2a:27:2d:83:4d:c3:58:d6:91:11:36:f4:38:
+        05:3a:48:ad:83:a3:e8:03:17:fe:5a:6b:c4:30:79:99

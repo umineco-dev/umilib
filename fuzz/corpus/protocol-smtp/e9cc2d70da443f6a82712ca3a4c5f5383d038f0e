@@ -1,0 +1,3 @@
+EHLO .com
+MAIL FROM:<S=it1h@barc.om> SIZE=500 BODY bnN0
+BDAT l5EHL=50BIoQ

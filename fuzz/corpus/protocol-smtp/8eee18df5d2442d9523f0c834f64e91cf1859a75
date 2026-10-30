@@ -1,0 +1,20 @@
+EHSUCCESSbl SIZE=571B ODEHLO bar.com
+MAILY=8BITMIMEHLO bar.com
+MAIL FROM:<Smtih@bar.com> SIZE=025D UCC.
+.BIZMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCESSblah blah.
+5 LA
+helloQE
+RCPT TO:<Jones@foOEHLUITOom
+MAILY=8BITMIMEHLO bar.com
+MA.
+.BIZMIME
+RCPT TO:<Jones@foo.com> NOTIFY:<Jones@foOEHLUITOom
+MAILY=8BITMIMEHLO bar.com
+MAIL FROM:<Smtih@bar.com> SIZE=050D UCC.
+.BIZMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCESSblah blah.
+5 LA
+helloQE
+RCPT TO:<Jones@foOEHLUITO bar.coIIIIIIIII:<h@
+bar.col> > SIZEU

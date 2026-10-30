@@ -1,0 +1,13 @@
+¢GET / HTTP/1.1
+Host: a
+
+PO&ST /x HTTP/1.1
+Host: a
+Tran: &
+
+PO&ST /x HTTP/1.1
+Host: a
+Tanfer-ed
+
+2
+helloÿÿÿÿÿÿ

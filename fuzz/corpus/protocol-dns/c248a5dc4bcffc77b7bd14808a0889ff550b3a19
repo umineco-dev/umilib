@@ -1,0 +1,1 @@
+. 60 IN HTTPS 2 . alpn=h2,h3 ipv4hint=192.0.2.2.0.21

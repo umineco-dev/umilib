@@ -1,0 +1,34 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1 (0x1)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: C=JP, O=umilib, CN=umilib OCSP Root CA
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: C=JP, O=umilib, CN=umilib OCSP Root CA
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:42:7b:75:d0:3b:62:a5:3c:eb:02:df:a9:86:06:
+                    64:fc:ca:bf:af:02:3d:bc:c4:c2:5e:25:9a:c9:a6:
+                    a7:46:c7:9a:13:2c:45:ea:6b:4d:c9:4b:b6:9b:6f:
+                    de:d8:2c:1f:08:f1:08:4e:9c:b6:3a:dd:8f:b8:0e:
+                    f5:fa:81:65:3c
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                57:51:53:A2:F4:59:DB:F5:E6:4C:25:93:E5:0F:AF:1B:C3:52:DA:4B
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:20:42:65:8b:58:70:dd:8b:ef:2b:bc:1c:7d:ad:cc:
+        16:d8:70:4d:cc:34:e9:9c:e5:4f:ab:df:09:56:0d:d6:1f:c3:
+        02:21:00:b6:d6:79:5a:ac:8d:e4:23:29:53:32:be:1d:20:6a:
+        00:51:ee:66:3b:e8:af:7e:1a:9d:be:14:00:c5:08:ec:b1

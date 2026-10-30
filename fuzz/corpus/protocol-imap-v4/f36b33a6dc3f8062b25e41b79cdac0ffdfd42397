@@ -1,0 +1,11 @@
+a001 LOGIN {5}
+SMITH {6+}
+SESAME
+a002 SELECT inboN
+a005 APPEND saved-messagSMITH {0+}
+SE LOGIN {5}
+SMITH {6+}
+S’’’’’’’’’’’’’’’’’’’’’’’’’’’’’’’’ESAME
+a002 SELEboN
+a005 APPEND saved-messagSMITH {0+}
+SESLOGOUT

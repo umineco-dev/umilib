@@ -1,0 +1,80 @@
+@GET /dd&d HTTP/1.1
+H:GET / HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POS00000%0000000%000000T /x HTTP/1.1
+Hosw:TPHTTP/
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooooooooooo0.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo /x HTTP/1.1
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Hostoooooooooooooooooo /x HTTP/1.1
+Hosw/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooo000;000000dddddd.....oooooooooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+HossÿEGT?????:oooooooooooooooooooooooooooooooo: a
+
+POST /x HTTP/1.1
+Host: a
+
+PO??
+ST /x HTTP/1.1
+Host: a
+

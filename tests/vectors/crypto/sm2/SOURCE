@@ -1,0 +1,7 @@
+draft-shen-sm2-ecdsa-02.txt
+    S. Shen, X. Lee, "SM2 Digital Signature Algorithm", Internet-Draft draft-shen-sm2-ecdsa-02 (February 2014),
+    the text of GB/T 32918 (GM/T 0003-2012) in English with its examples.
+    Downloaded from https://www.ietf.org/archive/id/draft-shen-sm2-ecdsa-02.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the examples over E(Fp) of appendices A.2 (signature), B.2 (key exchange) and C.2 (encryption),
+    on the 256-bit test curve the draft defines.

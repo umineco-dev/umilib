@@ -1,0 +1,4 @@
+EHLO bar.com
+MAILR FMO:<Smith@bar.com> SIZE=5002BME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCESS,FAILURh blah lahBODY=8BTMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCloQTUI

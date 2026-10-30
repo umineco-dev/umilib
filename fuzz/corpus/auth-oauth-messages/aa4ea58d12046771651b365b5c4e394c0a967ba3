@@ -1,0 +1,1 @@
+{"issuer":"https://server.example.com","authorization_endpoint":"https://server.example.com/authorize","token_endpoint":"https://server.example.com/token","scopes_supported":["openid","profile"]}

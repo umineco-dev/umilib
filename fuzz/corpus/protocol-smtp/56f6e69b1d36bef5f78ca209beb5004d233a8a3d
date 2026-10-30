@@ -1,0 +1,12 @@
+EHLO ba2.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODYTA
+Blah blah búa
+DgrEHLO ;Jones+2Bx¾foo.cFROM:<Smith@bar.com> SI
+RCPT TOo.com
+DATA
+Blah blah búa
+DgrEHLO ;Jones+2Bx¾foo.com
+RhbnN0250f om grEHLO ;Jones+2Bx¾foo.com
+RhbnN02h bY=ones@fÿÿÿÿÿom
+RhbnN0250f om grEHLO ;Jones+2Bx¾foo.com
+RhbnN02h bY=ones@fÿÿÿÿÿÿÿoo.co8 FROM:r.coYWmM

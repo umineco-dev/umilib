@@ -1,0 +1,42 @@
+From: Nathanie, Borenstein"<nsb@bellcore.com>
+To: Ned Freed <neMIME-Version: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamble.
+--simple coundary
+
+This is text.
+--simple boundary
+Content-type: text/plain; charsetDus-ascii
+
+TÐis is exSCII text.
+--simple boundary
+Content-type: text/plain; cary
+
+Thimplicitly typed plainy"
+
+This is the preamble.
+--simple coundary
+
+This is text.
+--simple boundary
+Content-type: text/plain; charsetDus-ascii
+
+TÐis is exSCII text.
+--simple boundary
+Content-type: text/plain; cary
+
+Thimplicitly typed plain US-ASICI text.
+--simple boundary
+Content-type: text/plain; charsetDus-ascii
+
+TÐs is exSCII text.
+--si US-ASICI text.
+--simple boundary
+Content-type: text/plain; charsetDus-ascii
+
+TÐs is exSCII text.
+--simple boundary
+Content-type: text/plain; cary
+
+This is implicitly typharset=us the epilpgue.

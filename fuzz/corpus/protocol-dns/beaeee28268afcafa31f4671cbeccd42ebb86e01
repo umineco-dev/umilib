@@ -1,0 +1,4 @@
+example. 3600 IN SOA ns._tcp.example. XT "a b" "c\2ﭧ
+_x._TXT "\\\\\\\\\\\ "a b" "c\034"
+_x._tcp.example. XT "a b" "c\2ﭧ
+_x._tcp.example. 634aAmpln=e

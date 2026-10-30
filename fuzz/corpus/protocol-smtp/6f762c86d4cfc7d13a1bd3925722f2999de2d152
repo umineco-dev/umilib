@@ -1,0 +1,6 @@
+EHLO bar.com
+MAIL FROM:<Smtih@bar.com> SIZE=050D UCC.
+.BIZMIME
+RCPT TO:<Jones@foo.com> NOTIFah blah.
+5 LA
+helloQUIT

@@ -1,0 +1,26 @@
+a:01 LOGIN {5}
+SMITH {6+}
+SESAME
+a002 SELECT inbox
+a003 5}
+SMITH {6+}
+SESAME
+a002 SELECT inbox
+a003 FETCH 12 (BODYSTRUCTURE)
+a0ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ1 LOGIN {5ÿ
+SMITH {6+}
+SESAME
+a002 SELECT inbox
+a003 FETCH 12 (BODYSTRUCTURE)
+a0ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿFETCH 12 (BODYSTRUCTURE)
+a0ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ1 LOGIN {5}
+SMITH {6+}
+SESAME
+a002 SELECT inbox
+a003 FETCH 12 (BODYSTRUCTURE)
+a0ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿzÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ04 UI 1
+a00ÿÿÿÿÿÿÿÿÿÿÿÿÿÿ04 UI 1
+a006 IDLE
+E)
+a
+a007 LOGOUT

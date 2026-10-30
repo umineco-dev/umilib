@@ -1,0 +1,11 @@
+EHLO bar.om
+DATA
+Blm
+DATA
+Bl2Bx@foo.com
+DATA
+Blah blahHLO bar.om
+DATA
+Blah b
+AUTH PLAIN A
+BDQUI`

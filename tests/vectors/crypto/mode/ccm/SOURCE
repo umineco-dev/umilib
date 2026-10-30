@@ -1,0 +1,11 @@
+{VADT,VNT,VPT,VTT,DVPT}{128,192,256}.rsp
+    NIST CAVP, the CCM validation system (CCMVS) response files: variable associated data, nonce, payload
+    and tag lengths, and the decryption-verification process tests.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/ccmtestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every record.
+
+aes_ccm_test.json
+    Project Wycheproof, testvectors_v1/aes_ccm_test.json of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

@@ -1,0 +1,21 @@
+openssl/
+    Certificates, OCSP requests and OCSP responses made by OpenSSL 3.5.7 (openssl-version.txt) in Debian trixie with
+    make.sh and openssl.cnf, on 2026-10-25: an independent implementation the tests check against.
+    License: generated data (OpenSSL is Apache License 2.0; its output is not covered).
+    Format: NAME.der is a certificate in DER and NAME.key its private key (PKCS #8 PEM); request-NAME.der is an
+    OCSPRequest and response-NAME.der an OCSPResponse, in DER; NAME.txt is the text OpenSSL prints for each
+    (`x509 -text`, `ocsp -req_text`, `ocsp -resp_text`), for reading. thisUpdate, producedAt and the revocation time
+    are the time make.sh ran; nextUpdate is 3650 days later.
+    The objects:
+    - root, other-root: two roots;
+    - responder: a responder the root authorized (id-kp-OCSPSigning, id-pkix-ocsp-nocheck); other-responder: a
+      responder of other-root with the same name;
+    - good, revoked, unknown: leaves of the root, with the status their names say (revoked: keyCompromise, with an
+      invalidity date of 2026-02-01);
+    - request-nonce: good, by SHA-1 identifiers, with a nonce; request-multiple: the three leaves by SHA-256
+      identifiers, without a nonce; request-signed: good, signed by good with its certificate;
+    - response-direct: signed by the root, repeating the nonce of request-nonce; response-delegated and
+      response-key-id: signed by responder, named by name and by key; response-no-next-update: signed by the root,
+      without nextUpdate; response-unauthorized: signed by good, which is not a responder; response-other: signed by
+      other-responder.
+    Used: every file.

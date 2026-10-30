@@ -1,0 +1,10 @@
+ÿGET / HTTP/1.1
+Host: a
+Con4ent-Lenqyh: 1
+Trant-: W
+Con4ent-Lenqth: 1
+TransfeHost: aG
+Transfer-Encoding: chunked
+
+0000000000;0000000800*0*d
+

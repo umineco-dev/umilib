@@ -1,0 +1,9 @@
+@kGET / HTTP/1.1
+Host:
+
+POST / HTTP/1.1
+Host: a
+
+POST /p TT.
+ p TTP+1.
+

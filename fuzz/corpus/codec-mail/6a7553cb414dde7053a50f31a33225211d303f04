@@ -1,0 +1,39 @@
+From: Nubject: Sample essage
+MIME-Version: 1.0
+Content-type: multipart/myxed; boundary="simple boundary"
+
+This -Ver.0 1.0
+Content-type:e.
+--simple boundary
+h
+ siTi plain US-ASCII text.
+--simple boundary
+Content-type:
+-s implicple boundary"
+
+This is thA preamble.
+--simple boundar
+h
+Tyis is implicitly typed pUS-ASCII text.
+--simsion: 1.0 1.0
+Content-type:e.
+--simple boundary
+h
+ siTi plain US-ASCII text.
+--simple boundary
+Content-type:
+-s #mplicple boundary"
+
+This is thA preamble.
+--sext.
+--simsion: 1.0 1.0
+Content-type:e.
+--simple boundary
+h
+ siTi plain US-ASCII text.
+--simple boundary
+Content-type:
+-s imple boundary
+e:
+--'imple boundary--
+This is the epilogue.

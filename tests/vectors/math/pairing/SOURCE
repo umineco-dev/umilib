@@ -1,0 +1,7 @@
+draft-irtf-cfrg-pairing-friendly-curves-11.txt
+    Y. Sakemi, T. Kobayashi, T. Saito, R. Wahby, "Pairing-Friendly Curves", Internet-Draft
+    draft-irtf-cfrg-pairing-friendly-curves-11 (November 2022).
+    Downloaded from https://www.ietf.org/archive/id/draft-irtf-cfrg-pairing-friendly-curves-11.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the parameters of BLS12_381 and BN462 (section 4.2) and the test vectors of the optimal ate pairing
+    (appendix B).

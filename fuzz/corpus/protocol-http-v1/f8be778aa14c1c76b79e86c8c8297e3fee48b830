@@ -1,0 +1,13 @@
+@GET / HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+Transfe$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Host: a
+
+POST /x HTTP/1.1
+Host: a
+Transfer-Enco$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ding:!chunked
+
+4
+hÿÿÿunk

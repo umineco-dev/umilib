@@ -1,0 +1,70 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 7 (0x7)
+        Signature Algorithm: rsassaPss        
+        Hash Algorithm: sha384
+        Mask Algorithm: mgf1 with sha384
+         Salt Length: 0x30
+        Trailer Field: 0x01 (default)
+        Issuer: CN=rsa-pss
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: CN=rsa-pss
+        Subject Public Key Info:
+            Public Key Algorithm: rsassaPss
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:bd:2b:c6:2c:7c:9f:69:e9:3f:85:8a:22:02:30:
+                    e7:35:4d:7c:d0:9e:4b:58:83:d8:f3:3f:b2:0d:0b:
+                    46:a8:a8:99:81:ce:ca:98:17:5f:78:dc:94:94:9b:
+                    da:e3:28:7d:1e:27:4c:62:e3:e7:90:1f:65:f8:08:
+                    43:6c:88:20:bc:a8:93:b5:0a:21:fa:11:d6:89:cc:
+                    b6:0d:d2:d2:0e:d0:26:26:ef:cb:6c:dc:37:43:be:
+                    0b:99:f6:26:de:bd:8f:2a:97:e9:ae:2f:06:19:f6:
+                    36:41:8f:3e:88:6b:70:f8:d1:ce:12:fd:69:81:af:
+                    1d:7f:09:cd:fd:8a:a8:d1:fe:27:18:61:ea:b2:77:
+                    92:b2:b4:91:7f:1b:8a:c7:df:e3:03:27:b5:db:19:
+                    78:a9:3b:1c:3c:03:4f:60:42:92:40:5e:07:a4:93:
+                    f3:c2:17:ce:79:b6:29:40:ce:cc:48:a4:fe:86:3b:
+                    b9:07:69:1f:cc:af:fe:40:37:d6:38:b2:56:5e:1d:
+                    ac:45:90:ef:7d:68:d1:50:a4:cb:42:2b:4a:20:d8:
+                    35:cc:42:f5:85:72:bd:67:70:52:c7:b3:00:90:d5:
+                    c1:5f:52:4a:25:fc:97:ce:f2:d1:37:e5:01:ee:88:
+                    46:ad:55:9b:d0:13:b9:00:ed:6d:c7:91:8e:8a:dc:
+                    75:01
+                Exponent: 65537 (0x10001)
+                PSS parameter restrictions:
+                  Hash Algorithm: SHA2-384
+                  Mask Algorithm: MGF1 with SHA2-384
+                  Minimum Salt Length: 48
+                  Trailer Field: 0x1 (default)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Digital Signature, Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                C6:DA:40:3E:18:76:5C:E7:5A:91:AD:37:FD:4D:5B:8E:DE:F2:DA:6D
+    Signature Algorithm: rsassaPss
+    Signature Value:        
+        Hash Algorithm: sha384
+        Mask Algorithm: mgf1 with sha384
+         Salt Length: 0x30
+        Trailer Field: 0x01 (default)
+        36:e0:3f:5b:6d:35:ef:35:88:12:5c:4e:42:29:2f:84:9e:e5:
+        fe:18:63:da:03:54:57:f1:9b:df:9f:69:1c:d8:f5:a1:77:7f:
+        72:a3:a1:79:f7:53:ef:54:7e:d9:a5:7e:b5:de:9c:44:0e:1f:
+        20:9b:6d:f2:23:7e:a2:7f:68:07:19:c9:76:c2:51:2d:e3:34:
+        88:dc:0e:c6:24:dc:c8:90:54:09:ee:25:1f:d4:ed:51:a0:0a:
+        1b:de:d0:3c:64:39:d3:41:33:ca:00:ca:07:4d:51:28:82:9a:
+        6d:ef:f8:a5:ab:e3:51:27:14:f3:fb:cd:5c:35:57:ae:9b:5d:
+        5e:2d:cf:a2:ca:1d:40:83:b2:7a:13:1e:e9:89:d6:43:c8:db:
+        80:67:45:95:b3:42:d6:d8:28:f4:83:39:19:8f:a0:43:07:20:
+        63:9e:d4:03:44:94:30:8f:1d:80:d4:b6:f8:b0:61:5d:18:a2:
+        0f:b9:2b:16:a2:3f:de:0b:2c:36:be:3d:4c:fa:b0:61:eb:a5:
+        ef:11:88:c1:db:ab:c5:62:81:74:29:48:68:03:48:dc:ac:3c:
+        28:2c:62:4e:96:8a:27:de:a5:cd:96:93:68:72:55:89:31:b0:
+        d2:a5:e0:14:91:f8:4c:a4:7b:84:f7:ab:4d:39:25:a9:91:5b:
+        e0:45:83:37

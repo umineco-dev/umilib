@@ -1,0 +1,5 @@
+@GET / HTTP/1.7
+Host: aG
+Transfer-Encoding: chunked
+
+00000		?		

@@ -1,0 +1,24 @@
+HMAC.rsp
+    NIST CAVP, HMAC Validation System (HMACVS) test vectors.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/hmactestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every key, message and (possibly truncated) tag for SHA-1 and SHA-2.
+
+rfc2202.txt
+    RFC 2202, "Test Cases for HMAC-MD5 and HMAC-SHA-1" (P. Cheng, R. Glenn, September 1997).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc2202.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the test cases of sections 2 and 3.
+
+rfc4231.txt
+    RFC 4231, "Identifiers and Test Vectors for HMAC-SHA-224, HMAC-SHA-256, HMAC-SHA-384, and HMAC-SHA-512" (M. Nystrom, December 2005).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc4231.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the test cases of section 4.
+
+wycheproof/hmac_{sha3_224,sha3_256,sha3_384,sha3_512,sha512_224,sha512_256}_test.json
+    Project Wycheproof test vectors, testvectors_v1 of https://github.com/C2SP/wycheproof.
+    Downloaded from https://raw.githubusercontent.com/C2SP/wycheproof/main/testvectors_v1/<name> on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test (valid tags, modified and truncated tags that must fail), for the hash functions
+    that HMAC.rsp does not cover.

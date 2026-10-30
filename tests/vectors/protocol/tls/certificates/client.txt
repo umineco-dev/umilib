@@ -1,0 +1,41 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            ca:e7:ca:00:52:4f:4f:79
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN=TLS Test Root
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2046 GMT
+        Subject: CN=client
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:a9:c3:1e:9a:f8:88:50:d9:95:d0:54:81:4e:59:
+                    04:64:0c:20:a0:49:46:17:dd:07:46:0f:0e:42:4a:
+                    7d:4b:98:3e:58:b7:7c:37:4b:a3:df:17:84:12:41:
+                    44:63:85:ed:1e:23:47:65:d8:65:c6:8d:4a:c6:9b:
+                    99:02:2a:8b:31
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            X509v3 Subject Alternative Name: 
+                email:client@example.com
+            X509v3 Subject Key Identifier: 
+                72:A6:EF:0A:9B:A5:AD:ED:15:D0:54:DF:23:90:63:2F:50:37:10:AF
+            X509v3 Authority Key Identifier: 
+                06:ED:15:F8:4F:05:63:87:61:94:55:5F:E1:A7:6C:52:5B:7F:68:AB
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:21:00:99:f1:50:b1:c8:49:7b:49:89:28:22:51:ba:
+        26:19:07:6c:14:c2:8a:96:44:73:da:3c:53:e9:a3:a6:4a:94:
+        99:02:20:59:fd:15:b8:28:a6:07:81:63:35:fa:4b:5b:23:26:
+        5b:24:bd:8d:0c:9d:03:b1:ed:f2:de:6c:2d:29:eb:71:53

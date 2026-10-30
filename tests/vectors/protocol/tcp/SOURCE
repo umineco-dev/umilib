@@ -1,0 +1,36 @@
+rfc9293.txt, rfc7323.txt, rfc2018.txt, rfc2883.txt, rfc5961.txt, rfc6298.txt, rfc6528.txt, rfc5681.txt,
+rfc6582.txt, rfc6675.txt, rfc9438.txt, rfc6691.txt, rfc3168.txt, rfc8985.txt, rfc7413.txt, rfc5482.txt,
+rfc6093.txt, rfc9406.txt, rfc6191.txt
+    The texts of RFC 9293 (Transmission Control Protocol), RFC 7323 (TCP Extensions for High
+    Performance), RFC 2018 (TCP Selective Acknowledgment Options), RFC 2883 (An Extension to the SACK
+    Option), RFC 5961 (Improving TCP's Robustness to Blind In-Window Attacks), RFC 6298 (Computing TCP's
+    Retransmission Timer), RFC 6528 (Defending against Sequence Number Attacks), RFC 5681 (TCP
+    Congestion Control), RFC 6582 (The NewReno Modification to TCP's Fast Recovery Algorithm), RFC 6675
+    (A Conservative Loss Recovery Algorithm Based on Selective Acknowledgment), RFC 9438 (CUBIC for Fast
+    and Long-Distance Networks), RFC 6691 (TCP Options and Maximum Segment Size), RFC 3168 (The Addition
+    of Explicit Congestion Notification to IP), RFC 8985 (The RACK-TLP Loss Detection Algorithm for
+    TCP), RFC 7413 (TCP Fast Open), RFC 5482 (TCP User Timeout Option), RFC 6093 (On the Implementation
+    of the TCP Urgent Mechanism), RFC 9406 (HyStart++) and RFC 6191 (Reducing the TIME-WAIT State Using
+    TCP Timestamps), downloaded from https://www.rfc-editor.org/rfc/ on 2026-10-27.
+    License: the IETF Trust's Legal Provisions Relating to IETF Documents.
+    Used: the segment and option formats, the state machine and its MUST and SHLD requirements, the
+    retransmission timer, the initial sequence numbers, congestion control and loss recovery, the
+    checks against blind attacks, ECN, and the reuse of TIME-WAIT that the tests check. RFC 8985,
+    RFC 7413, RFC 5482 and RFC 9406 are kept for what is not implemented, so that the reasons can be
+    checked against them.
+
+linux.txt
+    Frames that the Linux kernel (7.0.14-linuxkit, of Docker Desktop on arm64, with the tools of Debian
+    trixie) sent between two network namespaces on 2026-10-27, as seen by the client (192.0.2.1,
+    2001:db8::1): connections over IPv4 and IPv6 with the options of RFC 7323 and RFC 2018, data both
+    ways and a graceful close (Python echo servers); a connection to a closed port refused with a reset;
+    32 KiB sent to a server that reads nothing for four seconds through a receive buffer of 2,048 bytes
+    (a zero window and its probes); urgent data; keep-alives after one second of idleness; a bulk
+    transfer whose every twelfth data segment the server drops after the capture point (iptables,
+    "statistic --mode nth"), so that SACK, fast retransmit and recovery show; a connection with
+    timestamps, SACK and window scaling turned off; and a connection that requests ECN (RFC 3168).
+    Checksum offloading, TSO, GSO and GRO were turned off, so every segment is one the kernel built.
+    Each frame is a line of hexadecimal after "# " lines with tcpdump's summary of it (`tcpdump -n -e -v`).
+    Made by linux.sh, run as `docker run --rm --privileged -v "$PWD":/out debian:trixie sh /out/linux.sh`,
+    and `python3 ../ethernet/linux.py tcp.pcap tcp.txt linux.txt`.
+    License: produced for this project (no third-party content).

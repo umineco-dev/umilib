@@ -1,0 +1,4 @@
+MHLO bar.coiMIME
+RCPT TO:<Jones@foo.comRhb> NOTIFYRE ORCPT=r
+RCPT TO:<Jones@foo.comRh> E ORCPT=rfBDAT 5 L
+helloQUITet

@@ -1,0 +1,19 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.coz> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.coRCPT TO:<Jones@fˇˇˇÿom> NOTIFY=SUCCESS,FAILURE ORCPT=rfc82+2Bx@foo.comm> NOTIFY=SUCCESS,FAILURE ORCPT=rfc82+2Bx@foo.com
+DATA
+Bl2Bx@foo.AI‡URE ORCPT=rfc822;Jones+2Bx@foo.com
+DATA
+Bl2Bx@foo.com
+DATA
+hh blrfc82+2Bx@foo.com
+DATA
+Bl2Bx@foo.AI‡URE ORCPT=rfc822;Jones+2Bx@foo.com
+DATA
+Bl2Bx@foo.com
+DATA
+hh blahm
+DATA
+Bahm
+DATA
+Bl2Bx

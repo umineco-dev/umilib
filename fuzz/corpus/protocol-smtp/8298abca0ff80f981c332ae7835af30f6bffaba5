@@ -1,0 +1,4 @@
+EHLO bar=8BITMIME
+RCPT TO:<Jones@com> SIZE=EHLO bar.com
+MA∂≈√µêëöå@foo@barZE=500 BODY=8BITMIME
+RCPT TO:<o@esPLAINJnfoo.com> NOTIFEO

@@ -1,0 +1,4 @@
+chacha20_poly1305_test.json, xchacha20_poly1305_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

@@ -1,0 +1,2 @@
+EHLO bcom
+MAIL FROM:<S@bar.com> SIZ=E005 ›

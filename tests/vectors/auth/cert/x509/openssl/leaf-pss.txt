@@ -1,0 +1,90 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 3 (0x3)
+        Signature Algorithm: rsassaPss        
+        Hash Algorithm: sha256
+        Mask Algorithm: mgf1 with sha256
+         Salt Length: 0x20
+        Trailer Field: 0x01 (default)
+        Issuer: C=JP, O=umilib, OU=Testing + CN=umilib Intermediate CA
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2051 GMT
+        Subject: C=JP, ST=東京都, L=Chiyoda, O=umilib, CN=www.example.com, emailAddress=user@example.com
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:a5:37:f0:f7:b0:42:2e:a2:e4:3d:b0:11:e0:18:
+                    a7:06:c6:2d:ab:8b:98:3a:c6:de:c0:dc:09:cb:ad:
+                    24:d7:f5:6c:12:af:57:60:dd:8c:e9:d5:51:c0:ee:
+                    df:97:6a:8b:53:90:c2:09:e1:12:93:13:2a:5f:dc:
+                    80:39:91:d7:ca:0d:3a:80:e0:5c:30:4f:5e:6f:29:
+                    16:9c:05:e7:e4:b3:b6:5e:1d:2c:67:56:c7:df:1b:
+                    48:12:b0:7b:48:61:b4:84:b5:a6:ae:43:e6:7f:4e:
+                    34:1c:fd:ec:67:e1:f6:5e:7a:be:05:b5:2f:32:6e:
+                    18:5c:db:7e:7c:3c:88:ee:a2:13:be:e4:38:b8:be:
+                    6e:d9:f2:2b:ef:18:97:ac:a7:a6:6e:d2:26:6d:9d:
+                    a3:c1:09:b1:02:ee:6b:bb:31:82:cc:b4:7a:b8:f2:
+                    e2:6b:62:d7:46:e4:9a:35:ae:58:a8:f5:ca:84:40:
+                    f3:29:14:54:f9:5c:58:2b:40:e6:10:9e:87:a5:a2:
+                    9c:ab:4c:d3:61:70:71:7b:16:30:c6:12:96:18:8f:
+                    7a:5b:6d:e8:41:f2:42:b8:40:72:69:61:03:35:d6:
+                    48:fa:cb:18:e9:7f:f5:c2:8b:28:69:b9:0f:cc:48:
+                    0d:a5:6b:f2:5d:c7:32:39:3b:46:42:c5:be:da:d7:
+                    a9:87
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication, TLS Web Client Authentication
+            X509v3 Subject Alternative Name: 
+                DNS:www.example.com, DNS:example.com, IP Address:192.0.2.1, IP Address:2001:DB8:0:0:0:0:0:1, email:user@example.com, URI:https://www.example.com/, DirName:/C=JP/O=umilib/CN=Directory Name, Registered ID:1.2.3.4, othername: UPN:user@example.com
+            X509v3 Issuer Alternative Name: 
+                URI:https://ca.example.com/
+            X509v3 Subject Key Identifier: 
+                29:33:89:77:1C:9A:BE:8B:39:2E:44:D4:7C:58:43:FD:CF:45:89:42
+            X509v3 Authority Key Identifier: 
+                52:0A:54:33:76:E2:DF:42:24:64:DA:F9:DA:89:48:8C:A2:83:17:01
+            X509v3 CRL Distribution Points: 
+                Full Name:
+                  URI:http://crl.example.com/intermediate.crl
+                Reasons:
+                  Key Compromise, CA Compromise
+                CRL Issuer:
+                  DirName:C = JP, O = umilib, CN = CRL Issuer
+            X509v3 Freshest CRL: 
+                Full Name:
+                  URI:http://crl.example.com/delta.crl
+
+            Authority Information Access: 
+                OCSP - URI:http://ocsp.example.com/
+            Subject Information Access: 
+                CA Repository - URI:http://repository.example.com/
+            X509v3 Certificate Policies: 
+                Policy: 1.3.6.1.4.1.55555.2
+    Signature Algorithm: rsassaPss
+    Signature Value:        
+        Hash Algorithm: sha256
+        Mask Algorithm: mgf1 with sha256
+         Salt Length: 0x20
+        Trailer Field: 0x01 (default)
+        07:94:65:98:d4:fb:d3:db:26:09:57:2d:f2:4c:cd:44:ad:22:
+        7c:db:9f:7f:cb:72:07:e4:30:ef:99:f3:f3:77:a9:f3:d1:f4:
+        da:92:3f:cf:86:39:bd:1e:ed:2b:b4:8e:1e:8f:3f:ba:6d:4f:
+        bd:f7:d8:7a:1f:c8:bd:b5:1f:a0:38:2e:0a:43:46:66:8b:98:
+        ce:97:d9:8c:47:74:8f:63:5b:c5:f9:b1:cf:b5:b8:e3:f7:ec:
+        de:a1:3e:cd:ef:83:7a:ad:63:48:c1:41:0b:51:12:2e:65:ec:
+        94:6c:d3:be:40:21:aa:c9:90:55:47:12:82:8d:bf:fb:f7:1b:
+        af:63:91:fb:32:5f:3e:5c:21:be:31:29:d6:4f:44:a4:58:af:
+        d3:ea:9d:ec:de:f5:5c:55:23:9f:80:3a:1f:36:67:c0:cb:b0:
+        89:76:4d:c0:27:60:76:cb:5a:36:de:5e:dc:4b:25:4e:77:bc:
+        55:62:b6:b1:a9:42:77:11:3e:71:e1:07:13:82:c9:ed:17:63:
+        e3:90:50:d5:3a:66:5e:bf:cc:9f:64:c6:32:48:c4:c2:77:52:
+        e3:9f:f9:b6:7f:19:42:ca:88:64:17:bb:9d:48:89:fa:e9:68:
+        22:64:81:b0:bb:8a:5d:4c:44:7b:b9:93:8b:dc:62:cf:be:76:
+        66:08:37:23

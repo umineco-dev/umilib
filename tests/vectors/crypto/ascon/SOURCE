@@ -1,0 +1,22 @@
+LWC_AEAD_KAT_128_128.txt
+    The known-answer tests of the reference implementation of the Ascon designers, updated for SP 800-232:
+    crypto_aead/asconaead128 of https://github.com/ascon/ascon-c (commit fdfca4089abb4a2a9afa45699e49b6a770e2c3c6),
+    downloaded on 2026-10-24.
+    License: CC0 1.0 Universal.
+    Format: Count, Key, Nonce, PT, AD and CT (the ciphertext followed by the 16-byte tag).
+    Used: every record.
+
+acvp.txt
+    Extracted by a script from the sample vectors of the NIST ACVP server (gen-val/json-files/Ascon-AEAD128-SP800-232
+    of https://github.com/usnistgov/ACVP-Server, internalProjection.json), downloaded on 2026-10-24: the tests whose
+    lengths are whole bytes (umilib takes bytes; the ACVP file also tests bit lengths).
+    License: NIST software and data, a work of the United States government (public domain in the United States).
+    Format: Key = Value records with the direction, key, nonce, ad, pt, ct, tag (possibly truncated), secondKey
+    (the key K2 of nonce masking) and the expected result.
+    Used: every record.
+
+ascon_sp800_232_aead128_test.json
+    Project Wycheproof, testvectors_v1/ascon_sp800_232_aead128_test.json of https://github.com/C2SP/wycheproof,
+    downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

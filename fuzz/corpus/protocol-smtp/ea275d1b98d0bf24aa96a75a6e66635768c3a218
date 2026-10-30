@@ -1,0 +1,12 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> BODY=Jone Z=5Bs+1Bx@foo.com
+DAbac.orm
+MAIL FR
+MAIL FROM:<Smith@bar.com> BODY=Jone Z=2Bs+1Bx@foo.com
+DT
+B
+BDHLO bar.com
+MAIL FROM:<Smith@bar.com> BODY=Jone Z=5Bs+1Bx@foo.com
+
+MAIL FROM:<Es@OM:<Es@rS
+250

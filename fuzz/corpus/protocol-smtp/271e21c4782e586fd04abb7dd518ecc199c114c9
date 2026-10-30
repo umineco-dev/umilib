@@ -1,0 +1,11 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCESS,FAILURE ORCPT=rfc822;Jones+2Bx@foo.com
+DATA
+Bl2Bx@foo.com
+DATA
+Blah blah blah.
+.
+AUTH PLAIN AHRpbQB0YW5zdGFhZnRhbnN0YWFm
+BDAT 5 LAST
+helloQUIT

@@ -1,0 +1,11 @@
+.DS_Store
+/target/
+__pycache__/
+*.pyc
+/port/python/dist/
+/port/python/.venv/
+/port/python/umilib/ffi/*.so
+/port/python/umilib/ffi/*.dylib
+/port/python/umilib/ffi/*.dll
+/fuzz/crashes/
+/fuzz/artifacts/

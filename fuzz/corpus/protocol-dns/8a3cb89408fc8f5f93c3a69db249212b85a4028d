@@ -1,0 +1,3 @@
+example. 3600 IN SOA ns.example. admin.example. 1 3600 600 86400 300
+www.example. 399 IN TXT "a """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""34"
+_x._tcp.exampYXc1 ech=AEn. alpn=A

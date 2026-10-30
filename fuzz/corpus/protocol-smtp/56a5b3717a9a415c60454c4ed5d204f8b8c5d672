@@ -1,0 +1,36 @@
+EHLO bar.com
+MAIL FROM:<Smit1h@bar.com> SIZE.com
+MAIL FROM:<Smit1h@bar.com> SIZE=500 BODY bnN0YWFm
+ bar.com
+MAIL FROM:<Smit1h@far.com> SIZE=500 BODY bnN0YWm
+ar.com
+MAIL FROM:<Smit1h@bar.com> SIZE=500 BODY bnN0YWFm
+
+MAIL FRbar.com
+MAIL FROM:<SmitSmit1h@bar.com> SIZE=500 BODY bnN0YWFm
+ bar.com
+MAIL FROM:<Smit1h@far.com> SIZE=500 BODY bnN0YWm
+ar.com
+MAIL FROM:<Smit1h@bar.com> SIZE=500 BODY bnN0YWFm
+
+MAIL FRbar.com
+MAIL FROM:<Smit1h@bar.com>)SIZE=500 BODY bnN0YW=500 BODY bnN0YWFm
+ bar.com
+MAIL FROM:<Smit1h@far.com> SIZE=500 BODY bnN0YWm
+ar.com
+MAIL FROM:<Smit1h@bar.com> SIZE=500 BODY bnN0YWFm
+
+MAIL FRbar.com
+MAIL FROM:<SmitSmit1h@bar.com> SIZE=500 BODY bnN0YWFm
+ bar.com
+MAIL FROM:<Smit1h@far.com> SIZE=500 BODY bnN0YWm
+ar.com
+MAIL FROM:<Smit1h@bar.com> SIZE=500 BODY bnN0YWFm
+
+MAIL FRbar.com
+MAIL FROM:<Smit1h@bar.com>)SIZE=500 BODY bnN0YWFm
+BY1h@bar.com>)SIZE=500 BODY bnN0YWFm
+BYWFm
+BDAT 5 L
+BDAT 5 L
+helloQUI

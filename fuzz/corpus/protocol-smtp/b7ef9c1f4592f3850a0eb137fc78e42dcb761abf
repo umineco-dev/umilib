@@ -1,0 +1,10 @@
+DHLO.
+.
+AUTH PLSmitnN
+AUTH PLAIN AHRpbAB5
+;h Pn%
+AUTH PLAIN AHRpbAB5
+;h blah.... etc
+AUTH PL AHRpbAB5
+;ðAItzdGFhZ
+helloQUIT

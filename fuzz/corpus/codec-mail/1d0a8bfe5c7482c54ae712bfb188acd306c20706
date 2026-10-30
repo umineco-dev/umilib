@@ -1,0 +1,14 @@
+From: Nathaniel Borenstein <nsb@bellcore.com>
+To: Ned Freed <ned@innos.E-Version: 1.0
+Content-type: multipart/mixed; boundary="s
+
+This is ex1licitly typed plain US-ASCII text.
+
+--simple boundary--
+This is the epilogue.US-ASCII text.
+--si_ple boundarype: text/plain; charset=us-ascii
+
+This is explicitly typed plain US-ASCII {ext.
+
+--simple boundary--
+This is the epilogue.

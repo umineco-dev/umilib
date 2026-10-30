@@ -1,0 +1,30 @@
+ÿ
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:T
+Host: aG
+Transfer-Encoding:chunked
+
+00000000;01.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooootooooooooooooooooooooooooooooooP/1.1
+Host: a
+
+POST /x HTTP0000000000.1
+Host: a
+
+POST /{ HTTP/1.1
+Host: a
+
+POST Hosw:TP//1.1
+Host: a
+
+POST /.1
+Host: aG
+Transf1.1
+Hosoooooooooooooooooooooooooo

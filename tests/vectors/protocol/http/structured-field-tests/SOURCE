@@ -1,0 +1,4 @@
+*.json, serialisation-tests/*.json, LICENSE.md
+    From https://github.com/httpwg/structured-field-tests, commit 2f9d4579ff621a10a947cda73c9f8dc8b6f22edc (2026-10-27).
+    License: BSD 3-clause of the IETF Trust (LICENSE.md).
+    Used: the parsing and serialization of structured field values (RFC 9651), with the format of the suite's README.

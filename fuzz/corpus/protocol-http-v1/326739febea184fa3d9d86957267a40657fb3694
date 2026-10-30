@@ -1,0 +1,7 @@
+@GET / HTTP/1.2
+Host:1.1
+Transfer-Encoding: chunked
+
+91093213;000'03230;################NNNNNNNNd
+
+

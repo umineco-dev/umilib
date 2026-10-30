@@ -1,0 +1,6 @@
+
+RCPT TO:<Jones@foo.com> NOT
+RCPT TO:<
+.
+AU`H ME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCloQUIT

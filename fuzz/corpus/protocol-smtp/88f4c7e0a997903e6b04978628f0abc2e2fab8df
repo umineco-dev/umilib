@@ -1,0 +1,11 @@
+AILURE ORCPT=rfc822;Jones+2Bx@foo,com
+DATA
+Blah blah blah...
+..etcTO:<Jones@foo.com> NOTIFY=SUCCESS,FAILURE ORCPT=rfc822;Jones+2Bx@foo,com
+DATA
+Blah blah blah...
+..etc. etc. etc.
+.
+AUTH PL@IN AHRpbQB0YW5zdGFhZnRh¨‘N0YWFm
+BDAT 5 LAST
+helloQUIT

@@ -1,0 +1,9 @@
+EHLO bar.comMIME
+RCPT TObQB0YW5zdGFhZn:
+EHLO bar.comMIME
+RCPT TO:<JonÇÇÇÇ×ÇÇÇÇÇÇÇÇÇÅÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇ
+EHLO bar.comMIME
+RCPT:<Jones@.com> N
+¸CPT TObQB0YW5zdGFhZn:
+EHLO bar.ZomMIME
+RCPT TO:<Jones@=SUCCESS,FAILURE OR

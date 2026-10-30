@@ -1,0 +1,6 @@
+rfc5054.txt
+    RFC 5054, "Using the Secure Remote Password (SRP) Protocol for TLS Authentication" (D. Taylor, T. Wu,
+    N. Mavrogiannopoulos, T. Perrin, November 2007).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc5054.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the groups of appendix A and the test vectors of appendix B.

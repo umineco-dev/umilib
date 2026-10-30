@@ -1,0 +1,4 @@
+example. 3600 IN SOA ns.e. admin.'example. 1 3600 600 86400 300
+www.example. 300 IN TXT "a b" "c\034"
+e. 60 IN SRV 1 2 3 t.example.
+/xample. 60 IN HTTPS 1 . alpn=h2,NoLmRldgAA

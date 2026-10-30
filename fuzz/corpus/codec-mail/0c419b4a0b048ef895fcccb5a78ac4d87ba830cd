@@ -1,0 +1,9 @@
+From: Nathrsion: 0.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the p
+--simple boundary
+Content-type: text/êstext.
+--simple boundary
+Content-type: text/êóaiom: John
+Date:2 Nov

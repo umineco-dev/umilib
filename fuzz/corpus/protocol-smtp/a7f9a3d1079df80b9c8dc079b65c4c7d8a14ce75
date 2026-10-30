@@ -1,0 +1,5 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> 5IE=SZ008BITMIME
+RCPom
+MAIL FROM:<Smith@bar.com> 5IE=SZ00 IME
+RCPTT T[OcU

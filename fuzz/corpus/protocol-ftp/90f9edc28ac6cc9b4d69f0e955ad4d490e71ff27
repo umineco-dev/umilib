@@ -1,0 +1,4 @@
+
+RETR a.txtRTE 
+RETR 0
+RETR a./t

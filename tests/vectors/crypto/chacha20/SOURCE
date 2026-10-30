@@ -1,0 +1,23 @@
+rfc8439.txt
+    Extracted by a script from appendix A of RFC 8439, "ChaCha20 and Poly1305 for IETF Protocols",
+    https://www.rfc-editor.org/rfc/rfc8439.txt, downloaded on 2026-10-24.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records with the section (A.1 block function, A.2 encryption, A.3 Poly1305, A.4 key
+    generation, A.5 AEAD decryption) and the number of the vector; hexadecimal fields (Key, Nonce, Counter in
+    decimal, Keystream, Plaintext, Ciphertext, OneTimeKey or R and S, Text, Tag, AAD, PolyInput, CalculatedTag).
+    Used: every record. The examples of section 2 are in tests/crypto/chacha20.rs.
+
+draft-irtf-cfrg-xchacha.txt
+    Extracted by a script from appendices A.1 and A.2 of draft-irtf-cfrg-xchacha-03, "XChaCha: eXtended-nonce
+    ChaCha and AEAD_XChaCha20_Poly1305", https://www.ietf.org/archive/id/draft-irtf-cfrg-xchacha-03.txt,
+    downloaded on 2026-10-24 (appendix A.3 repeats them in another layout).
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: as rfc8439.txt; Nonce is the 24-byte IV, Fixed the 32-bit fixed-common part.
+    Used: every record. The HChaCha20 example of section 2.2.1 is in tests/crypto/chacha20.rs.
+
+chacha20_counter_test.json
+    Project Wycheproof, testvectors_v1/chacha20_counter_test.json of https://github.com/C2SP/wycheproof,
+    downloaded on 2026-10-24: the counter boundaries of ChaCha20 (32-bit counter, RFC 8439) and of XChaCha20
+    with the 64-bit counter of libsodium.
+    License: Apache License 2.0.
+    Used: every test.

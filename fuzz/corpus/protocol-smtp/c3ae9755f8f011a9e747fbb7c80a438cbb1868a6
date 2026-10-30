@@ -1,0 +1,8 @@
+EHLO bar
+RCPT TO:e<s@noJfoo.comar
+RCPT TO:e<sS
+MAIS MIME
+RCPT TO:e<s@noJfoNOTIFY=S
+MAIL FROM
+Y=8BKTMI
+RCPT TO:e<s@noJfoNOT

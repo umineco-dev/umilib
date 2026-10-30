@@ -1,0 +1,44 @@
+EHLO bar.ME
+R~CPmMIEMT TO:<Jones@foo.co> N TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<SmiNOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.co> NOTIFY=SUCCESS,FAILURE ORCPT=NOTI
+
+RCPT TO:<Jones@fm> NOTI
+RCPT TO:<Jone FROM:<SmiNOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.co> N TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone Fs@foo.com> NOTI
+RCPT TO:<Jone FROM:<SmiNOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.co> NOTIFY=SUCCESS,FAILURE ORCPT=NOTI
+
+RCPT TO:<Jones@foo.com> NOTI
+RCPT 
+RCPT TO:<Jones@foo.comRho.comRhbEHITMIME&ME&
+RCPT TO:<Jones@foo.com> NOTI
+
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPTBOKY
+RCPT TO:<Jones@foo.comROM:<SmiNOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.co> NOTIFY=SUCCESS,FAILURE ORCPT=NOTI
+
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jones@fos@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<SmiNOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.OTIFY=SUCCE50 BOKY
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPTBOKY
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<SmiNOTI
+RCPT TO:<Jones@foo.com> NEHLBDAT
+RCPT TO:<Jones@foo.!co> N TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<SmiNOTI
+RCPT TO:<Jones@foo.com> NEHLO ba@
+RCPT TO:<Jones@foo.co> NOTIFY=SUCCESS,FAILURE ORCPT=NOTI
+
+RCP@foo.comRhb> N

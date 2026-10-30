@@ -1,0 +1,15 @@
+gmt-0044.5-2016-annex-a.txt
+    GM/T 0044.5-2016, "SM9 Identity-based Cryptographic Algorithms - Part 5: Parameter Definition",
+    English translation of 2024-10-30, Cryptography Standardization Technical Committee of China.
+    Downloaded from http://www.gmbz.org.cn/upload/2025-01-23/1737625720708039809.pdf on 2026-10-24
+    (announced at http://www.gmbz.org.cn/main/postDetail.html?id=20250123174859),
+    SHA-256 285cf7afa2c3b03ef419c4b9f1df278faad7a0b549be665606a04117b159d803.
+    License (the Copyright Notice of the document): "This standard is made available for public use.
+    Permission is granted to use, reproduce, and distribute this standard in whole or in part, without
+    modification, for any purpose, provided that the source is acknowledged. This permission does not
+    extend to any derivative works. All other rights are reserved by the copyright holder."
+    Content: Annex A (pages 4 to 8 of the document), the example of the digital signature algorithm, as
+    the text layer of the PDF gives it (extracted with pypdf 5.4.0); characters the text layer does not
+    map are shown as "?", and nothing else is changed.
+    Used: the system parameters, the keys, g = e(P1, Ppub-s), the signature of "Chinese IBS standard"
+    and the values of its verification (tests/crypto/ibs.rs).

@@ -1,0 +1,6 @@
+EHLO bar6com
+M/AITMIME
+RCPT TO:<Joneó@foo.com> NMIME
+RCPT TO:<Joneó@foo.com> NOTI etc.
+.
+AUar

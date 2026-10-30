@@ -1,0 +1,36 @@
+EHLO bar.com
+MAILcom> NOTIFY= ORCPT=rfc823;mMIME
+:<Jo›E
+124-SIZ
+AUTH IME
+25ar.m
+500-tc. et'.
+.
+AUTH I
+hello IME
+25ar.m
+500-tc. et'.
+.
+AUTH IME
+2I5 LAST
+hellQUI
+AUTH IME
+3ILUúRT
+ar.comMIME
+:<Jo›E
+124-SIZ
+AUTH IME
+25ar.m
+500-tc. et'.
+.
+AUTH IME
+2I5 LAST
+hello IME
+25ar.m
+500-tc. et'.
+.
+AUTH IME
+2I5 LAST
+hellQUI
+AUTH IME
+3ILJones+2Bx@h@bar.cIL FROMo-> SIZE=500 ah

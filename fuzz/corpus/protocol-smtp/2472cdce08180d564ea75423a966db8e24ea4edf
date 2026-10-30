@@ -1,0 +1,4 @@
+EH FOM:<SmiTMIME
+RCPT TO:<Jones@com> SIZE==:<JoneMIME?
+RCPT TO:Jones@com> SIZE==:<JoneMIME?
+RCPT TO:<o@esJnfoo.com> NOTIFEO

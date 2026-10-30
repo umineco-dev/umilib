@@ -1,0 +1,4 @@
+EHLO bar.ÿÿÿÿÿÿÿÿcom
+MAIL F=500ö BOEHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZDY=8BIPMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCÿÿÿÿÿÿCESS,FAE=500 BOILURE ORCPT=rfc822D; 5 LASTY=0BI

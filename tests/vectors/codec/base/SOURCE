@@ -1,0 +1,11 @@
+rfc4648.txt
+    RFC 4648, "The Base16, Base32, and Base64 Data Encodings" (S. Josefsson, October 2006).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc4648.txt on 2026-10-23.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the test vectors of section 10.
+
+base58_encode_decode.json
+    Bitcoin Core, src/test/data/base58_encode_decode.json.
+    Downloaded from https://raw.githubusercontent.com/bitcoin/bitcoin/master/src/test/data/base58_encode_decode.json on 2026-10-23.
+    License: MIT (Copyright (c) The Bitcoin Core developers).
+    Format: a JSON array of [hexadecimal bytes, Base58 text] pairs using the Bitcoin alphabet.

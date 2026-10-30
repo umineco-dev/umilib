@@ -1,0 +1,2 @@
+emle. 60 IN SRV 1 2 3 t.example.
+example. 60 IN HTTPS 1 . alpn=h2,h3 ipv4hint=192.0.2.1 ech=AEn+DQBFKwAgACABWIHUGj4u+PIggYXcR5JF0gYk3dCRioBW8u2JAQABAANAEnB1pl>. 36 N0DI0 SOj ns.exa

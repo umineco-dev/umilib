@@ -1,0 +1,19 @@
+EHLO bar.com
+MAÿÿÿÿÿÿÿÿÿIL FROM:<Smith@bar.com> SIZE=500 BODY=0IBTMIME
+RCPT TO:<Jones@foo.com> ºOTIFnSIZE=5×0 BODY=0EMAÿEHLO bar.com
+MAÿÿÿÿÿÿÿÿÿIL FROM:<Smith@bar.com> SIZE=DY=0IBTMIME
+RCPT TO:<Jones@foo.com> ºOTIFnSIZE=5×0 BODY=0EMAÿÿÿÿÿÿÿÿÿIL FROM:<Smith@bar.com> SIZE=500 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFnSIZE=5×0 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFY5SUCCESS,FA=500 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIF0BITMIME
+RCPT TO:<Jones@foo.com> ºO
+RCPT TO:<Jones@foo.com> ºOTIFY5SUCCESS,FA=500 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIF0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFT=loQUITÿÿÿÿÿÿÿÿIL FROM:<Smith@bar.com> SIZE=500 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFnSIZE=5×0 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFY5SUCCESS,FA=500 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIF0BITMIME
+RCPT TO:<Jones@foo.com> ºO
+RCPT TO:<Jones@foo.com> ºOTIFY5SUCCESS,FA=500 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIF0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFT=loQUIT}

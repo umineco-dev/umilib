@@ -1,0 +1,16 @@
+rfc9106.txt
+    Extracted by a script from section 5 of RFC 9106, "Argon2 Memory-Hard Function for Password Hashing and
+    Proof-of-Work Applications", https://www.rfc-editor.org/rfc/rfc9106.txt, downloaded on 2026-10-24.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records: the type, m, t, p, T, the inputs, H0, PassN (the printed words of the memory after
+    each pass as block:word:value) and the tag (hexadecimal).
+    Used: every record and every value.
+
+reference.txt
+    Extracted by a script from the hash tests of version 0x13 in src/test.c of the reference implementation
+    https://github.com/P-H-C/phc-winner-argon2 (commit 92cd2e19b50b9a58d177e61e1d8ce925315d3d91), downloaded on
+    2026-10-24: Argon2i and Argon2id with 32-byte tags for several m, t, p, passwords and salts.
+    License: CC0 1.0 Universal or Apache License 2.0, at the choice of the user.
+    Format: Key = Value records: the type, m (KiB), t, p, the password and salt (hexadecimal ASCII), the tag, and
+    Large = yes for the test that needs 1 GiB (TEST_LARGE_RAM in test.c).
+    Used: every record; the large one only when the tests are run with --ignored.

@@ -1,0 +1,7 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.bom> SIZE=m
+IASmithY=£oODYÿÿÿÿÿÿÿÿÿÿÿÿÿm
+MAIL FROM:<Smith@bar.bom> SIZE=m
+IASmi`th@OM:ASmithY=SoODYÿÿÿÿÿÿÿÿÿÿÿÿÿm
+MAIL FROM:<Smith@bar.bom> SIZE=m
+helloQUITÿ=´

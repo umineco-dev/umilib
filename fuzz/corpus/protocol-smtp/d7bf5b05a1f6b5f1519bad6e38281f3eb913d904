@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BOKY=8BITMIME
+RCPT TO:<Jones@foo.com> NOTEHLO bar.comMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCESS,FAILURE ORCIFY=SUCCESS,FAILPT=rfc822;Jones+2Bx@fooURE.co ORC

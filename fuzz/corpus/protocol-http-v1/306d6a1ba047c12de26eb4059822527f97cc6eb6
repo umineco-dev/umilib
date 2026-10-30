@@ -1,0 +1,16 @@
+:GET / HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POa
+
+P

@@ -1,0 +1,177 @@
+# Runs every automated check. Triggered by every push, and called by
+# pull_request.yml (after approval) and release.yml (after the version bump).
+name: Test
+
+on:
+  push:
+    branches: ["**"]
+  workflow_call:
+    inputs:
+      ref:
+        description: The commit to test; defaults to the commit that triggered the workflow.
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "1"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - run: rustup toolchain install stable --profile minimal --component rustfmt,clippy && rustup default stable
+      - run: cargo fmt --check
+      - run: cargo clippy --all-features --all-targets --locked -- -D warnings
+      - name: Clippy with the libFuzzer driver
+        run: cargo clippy --all-features --all-targets --locked --target-dir target/libfuzzer -- -D warnings
+        env:
+          RUSTFLAGS: --cfg umilib_libfuzzer
+      - run: cargo doc --all-features --no-deps --locked
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        toolchain: [stable, "1.88"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal && rustup default ${{ matrix.toolchain }}
+      - run: cargo check --all-features --all-targets --locked
+      - run: cargo test --all-features --locked
+      - run: cargo bench --all-features --locked --no-run
+
+  cross:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - i686-unknown-linux-gnu
+          - armv7-unknown-linux-gnueabihf
+          - aarch64-unknown-linux-gnu
+          - riscv64gc-unknown-linux-gnu
+          - s390x-unknown-linux-gnu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }} && rustup default stable
+      - run: sudo apt-get update && sudo apt-get install -y $(python tools/target.py packages ${{ matrix.target }})
+      - run: python tools/target.py environment ${{ matrix.target }} >> "$GITHUB_ENV"
+      - run: cargo test --all-features --locked --target ${{ matrix.target }}
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-linux-android }
+          - { os: ubuntu-latest, target: i686-linux-android }
+          - { os: ubuntu-latest, target: armv7-linux-androideabi }
+          - { os: ubuntu-latest, target: aarch64-linux-android }
+          - { os: ubuntu-latest, target: riscv32gc-unknown-linux-gnu, tier3: true }
+          - { os: ubuntu-latest, target: riscv64-linux-android, tier3: true }
+          - { os: macos-latest, target: x86_64-apple-darwin }
+          - { os: macos-latest, target: aarch64-apple-ios }
+          - { os: macos-latest, target: aarch64-apple-ios-sim }
+          - { os: macos-latest, target: x86_64-apple-ios }
+          - { os: windows-latest, target: i686-pc-windows-msvc }
+          - { os: windows-latest, target: aarch64-pc-windows-msvc }
+          - { os: windows-latest, target: thumbv7a-pc-windows-msvc, tier3: true }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: ${{ !matrix.tier3 }}
+        run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }} && rustup default stable
+      - if: ${{ matrix.tier3 }}
+        run: rustup toolchain install nightly --profile minimal --component rust-src
+      - run: python tools/target.py environment ${{ matrix.target }} >> "$GITHUB_ENV"
+        shell: bash
+      - if: ${{ !matrix.tier3 }}
+        run: cargo rustc --lib --all-features --locked --target ${{ matrix.target }} --crate-type staticlib,cdylib
+      - if: ${{ matrix.tier3 }}
+        run: cargo +nightly rustc -Zbuild-std --lib --all-features --locked --target ${{ matrix.target }} --crate-type staticlib
+
+  no-std:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [thumbv7em-none-eabihf, riscv32imac-unknown-none-elf]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }} && rustup default stable
+      - name: Build every feature outside platform
+        run: |
+          features=$(python -c 'import tomllib; print(",".join(name for name in tomllib.load(open("Cargo.toml", "rb"))["features"] if name != "default" and not name.startswith("platform")))')
+          cargo build --no-default-features --features "$features" --locked --target ${{ matrix.target }}
+
+  features:
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1/4, 2/4, 3/4, 4/4]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - run: python tools/check_features.py --part ${{ matrix.part }}
+
+  miri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - run: rustup toolchain install nightly --profile minimal --component miri,rust-src
+      - run: cargo +nightly miri test --all-features --locked --test bytes --test secret --test ffi --test platform
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+
+  ffi:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - uses: astral-sh/setup-uv@v6
+      - run: python tools/check_ffi.py

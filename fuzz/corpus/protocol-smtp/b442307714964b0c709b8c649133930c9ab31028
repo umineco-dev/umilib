@@ -1,0 +1,11 @@
+EHLO bar.comcom> SIZE=500 BITMIME
+RCPT TO:<Hones@foo.com> NOTIFY=SUCCESS, etc.-
+.
+AUTH PL@IRhbnN0YWFm
+BD:T 2 LAST
+hellBlah ž—Ñ..
+..eŒš. etc. etc.-
+.
+AUTH PXL@IN AHRpbQB0WzY5GdFhZ/RhbnN0YWFm
+BD:T 5 LAST
+hel. etcT

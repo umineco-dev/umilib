@@ -1,0 +1,44 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 6569864297927415847 (0x5b2cd8c5347c1827)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN=TLS Test Root
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2046 GMT
+        Subject: CN=server.example
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (521 bit)
+                pub:
+                    04:00:18:c2:09:75:f9:8c:08:f1:5a:d6:b3:0c:29:
+                    21:77:78:d9:b3:46:af:ff:97:60:1b:2f:95:7a:4e:
+                    d3:d7:ce:d4:74:87:ba:93:95:48:59:a2:dd:fd:3e:
+                    b7:2c:98:70:e7:c2:9e:d0:41:26:51:9a:32:86:5f:
+                    08:a1:45:2b:08:61:40:00:7f:19:b8:5a:91:58:79:
+                    98:87:8a:7b:ba:17:d6:e8:7b:64:ad:b6:51:6e:74:
+                    cd:ef:ae:ba:ec:43:f2:77:ac:6b:2e:32:fd:c7:9c:
+                    2c:30:0c:4b:81:29:ac:79:52:2b:7e:18:81:d8:7a:
+                    1c:02:c8:7c:98:b7:45:3f:4d:b6:43:41:96
+                ASN1 OID: secp521r1
+                NIST CURVE: P-521
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Subject Alternative Name: 
+                DNS:server.example, DNS:*.wild.example, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
+            X509v3 Subject Key Identifier: 
+                E4:0B:AA:E1:FE:B6:75:F1:35:87:AA:85:C8:66:01:4E:08:15:A6:60
+            X509v3 Authority Key Identifier: 
+                06:ED:15:F8:4F:05:63:87:61:94:55:5F:E1:A7:6C:52:5B:7F:68:AB
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:46:02:21:00:87:0a:49:80:11:8b:33:e6:aa:46:a6:10:72:
+        f3:72:e1:e3:c3:66:5b:c6:6b:66:a6:37:ba:fb:11:4f:99:77:
+        07:02:21:00:8f:fe:13:a0:d4:28:55:be:e7:84:c0:e9:29:2b:
+        12:25:5b:75:74:1f:d4:fa:b2:ae:46:de:e6:dc:d1:70:3c:e5

@@ -1,0 +1,53 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            cb:ae:d0:da:6b:86:f9:6a
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN=TLS Test Root
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2046 GMT
+        Subject: CN=server.example
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:ae:a7:84:0b:d4:0c:d0:fd:8a:cc:39:4f:9d:28:
+                    42:9f:d2:4a:ce:ba:70:20:dc:be:fc:9d:ef:ee:0e:
+                    d3:ed:20:c1:56:3b:4c:ac:13:1d:20:b6:e0:a0:19:
+                    c2:f4:1c:59:44:72:8f:aa:92:d6:8d:cd:31:dc:6f:
+                    c4:52:7b:61:a9:08:05:90:4a:d4:fa:42:6b:8e:7c:
+                    55:20:98:02:49:65:d3:bd:b1:7e:f4:62:85:1f:f1:
+                    9b:e4:e7:ec:23:5f:b9:61:0b:a0:34:c1:28:d6:43:
+                    c6:fe:61:2e:a7:a0:57:77:cd:1c:7b:b8:63:c1:75:
+                    6d:b2:5d:1e:fd:f4:58:c1:79:80:47:88:59:e4:c7:
+                    39:b0:21:5a:b7:19:83:19:17:07:b6:82:d0:e7:9f:
+                    15:23:85:0c:8e:c6:93:d1:a7:15:b9:49:24:9e:15:
+                    3f:1d:c8:30:ce:c8:03:84:ca:b1:d3:c8:31:38:26:
+                    4e:f3:04:45:50:63:00:07:cf:57:b0:61:8e:af:49:
+                    db:fa:0b:c8:db:5d:da:58:51:49:dc:e8:31:f5:c8:
+                    85:0d:ab:64:ed:cb:38:89:fc:c1:e3:10:9a:69:b4:
+                    8b:7a:42:76:63:15:f5:2d:5f:06:ba:7b:af:7b:1a:
+                    d4:7d:33:f7:d1:1c:a8:10:59:b8:35:05:59:20:53:
+                    9c:1f
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Subject Alternative Name: 
+                DNS:server.example, DNS:*.wild.example, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
+            X509v3 Subject Key Identifier: 
+                C7:E1:46:78:63:E2:B5:BF:3E:1C:52:C6:84:68:FD:46:56:CD:D9:19
+            X509v3 Authority Key Identifier: 
+                06:ED:15:F8:4F:05:63:87:61:94:55:5F:E1:A7:6C:52:5B:7F:68:AB
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:20:31:fd:b0:17:f8:18:b5:55:10:87:77:e0:01:1c:
+        98:4f:1e:08:2a:7c:cd:66:41:b4:fc:5a:18:1d:86:65:ae:fd:
+        02:21:00:a0:12:9c:b1:3f:d9:59:25:9e:00:c6:04:45:17:19:
+        19:89:b4:3d:06:e5:ae:31:09:41:0b:ca:e7:f2:c4:67:dc

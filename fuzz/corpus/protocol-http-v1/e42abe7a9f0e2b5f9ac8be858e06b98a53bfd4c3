@@ -1,0 +1,19 @@
+@GET / HTTP/1.1
+Host: a
+
+POST / HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+Transfer-Encoding: chunked
+
+6
+hello
+1
+ÿ
+Trÿÿÿÿÿÿÿÿÿÿÿÿÿÿþÿÿÿÿúÿ
+2
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿe-TP/1.1
+ÿÿÿtúÿÿÿÿÿÿÿÿÿ
+ÿÿ

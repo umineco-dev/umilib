@@ -1,0 +1,2 @@
+EHLO bar.com
+MAIL FROM:<> SIZE=es@foo.cURE ORCPT=rfc822;QUIT

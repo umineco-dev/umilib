@@ -1,0 +1,11 @@
+SERmp
+FEAT
+AUTH TLS anonymous
+PASS guest
+TYPEùI
+EPSV
+t
+MLST /tmp
+FEATT UA
+HTLS
+QUIT

@@ -1,0 +1,9 @@
+EHLO bar
+RCPT TO:e<s@noJfoo.comar
+RCPT TO:e<s@noJfoo&com> FY=S
+MAIS MIME
+RCPT TO:e<s@noJfoo.IFY> NOTIFY=S
+MAIL FROM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY=S
+MAIL FROM

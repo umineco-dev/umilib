@@ -1,0 +1,14 @@
++GET / HTTP/1.1
+Host: aG
+fTrdg: ch
+Transfer-Encoding: chunked
+
+6
+hello
+2 
+
+
+6	
+0 
+
+

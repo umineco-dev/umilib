@@ -1,0 +1,6 @@
+EHLO bar.com
+MAIL )Rah 
+..et. etc. etc.
+.
+AUTH PLAINgm
+MAIL FROM:<Smyth@ba> SIZE=000 BODY=8elloQUI:T

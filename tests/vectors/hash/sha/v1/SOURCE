@@ -1,0 +1,11 @@
+SHA1ShortMsg.rsp, SHA1LongMsg.rsp, SHA1Monte.rsp
+    NIST CAVP, Secure Hash Algorithm Validation System (SHAVS), byte-oriented test vectors.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/shs/shabytetestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every message and digest, and the Monte Carlo test of SHAVS section 6.4.
+
+rfc3174.txt
+    RFC 3174, "US Secure Hash Algorithm 1 (SHA1)" (D. Eastlake 3rd, P. Jones, September 2001).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc3174.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the test strings of section 7.3.

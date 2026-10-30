@@ -1,0 +1,54 @@
+HTTP/1.1 200 OK@GET Ð : ia Ð : ian
+TrSfg:
+ c` : OK@GET Ð : ian
+TrSfg:
+ c` : ian
+TrSfg:
+ c:
+ cn
+ Ð : ian
+TrSfg:
+ c` : ian
+TrSfg:
+ c:
+ cn
+TrSfg:
+ c` : OK@GET Ð@GET / HTTP/1.1
+Host: aG
+Transfer-Encoding: chunked
+
+19103230;00=00000000000000000
+Transfer-Encoding: chunked
+
+19103230;000'000000000+00000 : ian
+Sr:Tgf
+ c` : ian
+TrSfg:
+ c`un2200 Sfg Ð : i : ian
+TrSfg:
+g:
+ cw`n2200 Sfg:
+ cn
+TrSfg:
+ c` : OK@GETfg:
+ c:
+ cn
+TrSfg:
+ c` : OK@GET Ð : ian
+Sr:Tgf
+ c` : ian
+TrSan
+TrSfg:
+ cw`n2200 Sfg:
+ cn
+TrSfg:
+ c` : OK@GET Ð : ian
+TrSfg:
+ c` : ian
+TrSfg:
+ c=000000`un2200Hosã a
+
+Á00000					Host: aGÁ1Con000000000
+he+O+eed
+
+

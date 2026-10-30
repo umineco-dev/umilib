@@ -1,0 +1,13 @@
+rfc4269.txt
+    Extracted by a script from RFC 4269, "The SEED Encryption Algorithm", https://www.rfc-editor.org/rfc/rfc4269.txt,
+    downloaded on 2026-10-24: the extended S-boxes SS0 to SS3 of appendix A.2 and the test vectors of appendix B.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records; hexadecimal values. The record "Extended S-boxes" lists the 256 entries of SS0 to SS3;
+    each test vector has the key, plaintext and ciphertext, RoundKeys (Ki0 || Ki1 of the rounds 1 to 16) and
+    RoundInputs (L0 || L1 || R0 || R1 before each of the rounds 1 to 16).
+    Used: every record.
+
+seed_gcm_test.json, seed_ccm_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

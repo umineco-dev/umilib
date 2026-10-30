@@ -1,0 +1,5 @@
+SHA{224,256,384,512,512_224,512_256}{ShortMsg,LongMsg,Monte}.rsp
+    NIST CAVP, Secure Hash Algorithm Validation System (SHAVS), byte-oriented test vectors.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/shs/shabytetestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every message and digest, and the Monte Carlo test of SHAVS section 6.4.

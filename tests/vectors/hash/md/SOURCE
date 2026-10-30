@@ -1,0 +1,11 @@
+rfc1320.txt
+    RFC 1320, "The MD4 Message-Digest Algorithm" (R. Rivest, April 1992).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc1320.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the test suite of appendix A.5.
+
+rfc1321.txt
+    RFC 1321, "The MD5 Message-Digest Algorithm" (R. Rivest, April 1992).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc1321.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the test suite of appendix A.5.

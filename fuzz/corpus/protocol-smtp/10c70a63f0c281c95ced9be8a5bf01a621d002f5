@@ -1,0 +1,16 @@
+EHLO bar.com
+MAIL FROM:<Smi<Hones@foo.com> NOTIF
+BDAT MIME
+RCPT TO:<HoSmith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> ZE=500 8BYBKO=ITMIME
+RCPT TO:<Hones@foo.com> NOTIF
+BDAT MIME
+RCPT TO:<Hones@fom> NOTIF
+BDATAT MIME
+RCPT TO:<HoSmith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> ZE=500 8BYBKO=ITMIME
+RCPT TO:<Hones@foo.com> NOTIF
+BDAT MIME
+RCPT TO:<Hones@foo.com> NOTIF
+BDAT 5 LST 5 LST
+helloQUIT

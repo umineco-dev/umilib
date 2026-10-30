@@ -1,0 +1,5 @@
+EHLO baIL FROM:<Smith@bar.com> SIZ50=0E BOK
+RCPT TO:<JY=ones@foo.co8 FROM:<Smith@bar.com> S SIZ50=0E BOK
+RCPT TO:<JY=ones@foo.co8 FROM:<Smith@bar.com> SIZE=500 BODEHLO bar.com
+MAILY=8BITMIME
+RCPT TO:<Jones@foOEHLM:<Smith@bar.comom> SIZEU

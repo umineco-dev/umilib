@@ -1,0 +1,6 @@
+rfc2268.txt
+    Extracted by a script from section 5 of RFC 2268, "A Description of the RC2(r) Encryption Algorithm",
+    https://www.rfc-editor.org/rfc/rfc2268.txt, downloaded on 2026-10-24.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records: the effective key length in bits, the key, the plaintext and the ciphertext (hexadecimal).
+    Used: every record.

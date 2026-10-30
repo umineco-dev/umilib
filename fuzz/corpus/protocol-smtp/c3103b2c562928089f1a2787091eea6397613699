@@ -1,0 +1,31 @@
+EHLO bar.ME
+R~CPmMIEM
+RCPT TO:<Jones@foo.comRho.comRhbEHITMIME&ME&
+RCPT TO:<Jones@foo.com> NOTI
+
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<Smith@bar.c‘‰> SIZE=250 BOKY
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<SmiNOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.co> NOTIFY=SUCCESS,FAILURE ORCPT=NOTI
+
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<Smith@bar.c‘‰> SIZE=250 BOKY
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<J<Smith@bar.c‘‰> SIZET 0 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRhb> NOTIFY=SUCCESS,]URE ORCfBDAT 5 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRh BOKY=7B=7BITMbQB0YW5zdGFhZnAINI ARhbM0 L
+heElloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRhb> N

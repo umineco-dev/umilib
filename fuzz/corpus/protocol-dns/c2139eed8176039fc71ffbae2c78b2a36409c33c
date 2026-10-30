@@ -1,0 +1,2 @@
+exampl. 60 IN SRV 1 2 3 t.
+example. 60 IN HTTPS 1 . alpn=h2,h3 ipv4hint=192.0.2.1 ech=AEn+DQBFKwAgACABWIHUGj4gIuPg+YXcR5JF0gYk3dCRioBW8uJq9H4mKAAIAAEAAQABAANAEnB1YmxpYy50bHMt

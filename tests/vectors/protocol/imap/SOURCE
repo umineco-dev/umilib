@@ -1,0 +1,3 @@
+The texts of RFC 9051 (IMAP4rev2), RFC 3501 (IMAP4rev1), RFC 7888 (LITERAL+ and LITERAL-),
+RFC 6855 (UTF-8) and RFC 2177 (IDLE), downloaded from https://www.rfc-editor.org/rfc/rfcNNNN.txt
+on 2026-10-29. The tests take their examples from them.

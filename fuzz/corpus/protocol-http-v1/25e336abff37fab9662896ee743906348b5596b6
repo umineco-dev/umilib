@@ -1,0 +1,227 @@
+:GET / HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TPHTTP/
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooo#oooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooooooooooo1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:ooooooooooooooooooo1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TPHTTP/
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooo#oooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooooooooooo1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooTPHTTP/0.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooo /ÿÿ/oooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooooooooooo1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo /x HTTP/1.1
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooTPHTTP/0.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooo /ÿÿ/oooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooooooooooo1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo /x HTTP/1.1
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooo HTTP/2.oooooooTPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POooooooooooooooooooooooo /x HTTP/1.1
+Hosw:TPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooooooooooooooooooooooooooo HTTP/2.oooooooTPHTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+P

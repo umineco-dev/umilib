@@ -1,0 +1,2 @@
+exale. 299 IN TXT "a b" "c\034"
+_x._tcp.example. 60 IN SRV 1 2 + tgAy

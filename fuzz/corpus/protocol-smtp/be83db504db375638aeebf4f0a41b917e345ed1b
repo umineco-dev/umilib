@@ -1,0 +1,2 @@
+IZE
+RCPT TO:<Jones@foo.com> NOTI@foo.com> NTIFY=SUCCESS,FAILURE ORCPT=rfc822;Jones+2Bx@h@bar.cIL FROMom> SIZE=500 ah

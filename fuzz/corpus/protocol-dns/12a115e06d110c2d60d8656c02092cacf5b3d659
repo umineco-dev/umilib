@@ -1,0 +1,4 @@
+example. 3600 IN SOA example. admin.example. 1 3600 600 86400 300
+www.example. 299 IN TXT "a b" "c\034"
+_x._tcp.example. 60 IN SRV 1 2 + t.example.
+exampl. 3ldgAy

@@ -1,0 +1,6 @@
+rfc6507.txt
+    RFC 6507, "Elliptic Curve-Based Certificateless Signatures for Identity-Based Encryption (ECCSI)"
+    (M. Groves, February 2012).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc6507.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the test data of appendix A (NIST P-256 with SHA-256).

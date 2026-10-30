@@ -1,0 +1,34 @@
+SHA3_{224,256,384,512}{ShortMsg,LongMsg,Monte}.rsp
+    NIST CAVP, SHA-3 Validation System (SHA3VS), byte-oriented test vectors.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/sha-3bytetestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every message and digest, and the Monte Carlo test of SHA3VS section 6.2.3.
+
+SHAKE{128,256}{ShortMsg,LongMsg,Monte,VariableOut}.rsp
+    NIST CAVP, SHA-3 Validation System, byte-oriented SHAKE test vectors.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/shakebytetestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every message and output, the variable output lengths and the Monte Carlo test of SHA3VS section 6.3.3.
+
+sp800185.txt
+    Extracted by a script from the NIST sample values of SP 800-185 ("Examples with Intermediate Values"):
+    cSHAKE_samples.pdf, KMAC_samples.pdf, KMACXOF_samples.pdf, TupleHash_samples.pdf, TupleHashXOF_samples.pdf,
+    ParallelHash_samples.pdf and ParallelHashXOF_samples.pdf of
+    https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/, downloaded on 2026-10-24.
+    License: NIST publications, a work of the United States government (public domain in the United States).
+    Format: one sample per line: function, security strength, function name N (KMAC: the key) and customization S
+    (hexadecimal, "-" if empty), block size B (ParallelHash), output length in bits, data (TupleHash: the strings
+    separated by ","), and the output. KMAC is checked as the cSHAKE with N = "KMAC" that SP 800-185 section 4.3
+    defines it as, which covers cSHAKE with a function name.
+
+KeccakShortMsgKAT_{224,256,384,512}.txt
+    The known-answer tests of the Keccak submission to the SHA-3 competition (round 3), ShortMsgKAT_{224,256,384,512}.txt of
+    KeccakKAT-3.zip, downloaded from https://keccak.team/obsolete/KeccakKAT-3.zip on 2026-10-24.
+    License: the Keccak team dedicates its reference material to the public domain (CC0).
+    Used: the byte-aligned messages, for Keccak-224 to Keccak-512 (the padding before FIPS 202 added domain separation).
+
+KeccakF-1600-IntermediateValues.txt
+    The intermediate values of Keccak-f[1600], tests/TestVectors/KeccakF-1600-IntermediateValues.txt of https://github.com/XKCP/XKCP.
+    Downloaded from https://raw.githubusercontent.com/XKCP/XKCP/master/tests/TestVectors/KeccakF-1600-IntermediateValues.txt on 2026-10-24.
+    License: CC0 1.0 Universal (the XKCP test vectors are in the public domain).
+    Used: the round constants and the state after the permutation of the all-zero state and of that result.

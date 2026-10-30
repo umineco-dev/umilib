@@ -1,0 +1,12 @@
+EHLO bar.om
+MAIL FROM:<Smith@bar.com> SIZE-499 BODATA
+Blÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ2Bx@foo.comO bar.om
+MAIL FROM:<Smith@bar.com> SIZE-500 BODY=8BITMIME
+CPU`H com
+MAIL Ã­°²:<Smih@tar.com> SIZE=9ÿÿÿÿ4ÿ9ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ2Bx@foo.comO bar.om
+MAIL FROM:<Smith@bar.com> SIZE-500 BODY=8BITMIME
+CPU`H com
+MAIL Ã­°²:<Smih@tar.com> SIZE=9@foo.comO bar.om
+MAIL FROM:<Smith@bar.com> SIZE-500 BODY=8BITMIME
+C4 BODY=8BITMIME
+RCT

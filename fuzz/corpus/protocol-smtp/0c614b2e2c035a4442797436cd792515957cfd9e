@@ -1,0 +1,6 @@
+EHLO bar.com
+MAÿÿÿÿÿÿÿÿÿIL FROM:<`Smith@bODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFn×0 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFY5SUCCESS,FA=500 BODY=0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIF0BITMIME
+RCPT TO:<Jones@foo.com> ºOTIFU=loQUIT}

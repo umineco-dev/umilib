@@ -1,0 +1,10 @@
+EHLO bar.comMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCESS,FAILURcom
+DATA
+Blah bla. etc> etc.
+.
+AUTH PLAItc.
+.
+AUTH PLAIN AHRpbQB0YW5zdGFhZnRhN AHRpbQB0YW5zdGFhZnRhbnN0YWFmDB
+cAT @5 LAST
+helloQUIT

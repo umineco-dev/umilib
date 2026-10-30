@@ -1,0 +1,61 @@
+# Fuzzes every target under libFuzzer with AddressSanitizer, weekly or on demand.
+# New corpus inputs and crashes are uploaded as artifacts; see docs/fuzz.md.
+name: Fuzz
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: Seconds to fuzz each target.
+        default: "300"
+
+permissions:
+  contents: read
+
+jobs:
+  targets:
+    runs-on: ubuntu-latest
+    outputs:
+      names: ${{ steps.list.outputs.names }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - id: list
+        name: List the fuzz targets
+        run: |
+          set -o pipefail
+          names=$(cargo test --all-features --locked --test fuzz | sed -n 's/^fuzz \([^ ]*\) \.\.\. .*/\1/p' | python3 -c 'import json, sys; print(json.dumps(sys.stdin.read().split()))')
+          echo "names=$names" >> "$GITHUB_OUTPUT"
+
+  fuzz:
+    needs: targets
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.targets.outputs.names) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: rustup toolchain install nightly --profile minimal --component rust-src
+      - name: Install clang and its libFuzzer runtime
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang
+          version=$(clang --version | sed -n 's/.*clang version \([0-9]*\).*/\1/p' | head -n 1)
+          sudo apt-get install -y "libclang-rt-$version-dev"
+      - env:
+          TARGET: ${{ matrix.target }}
+          SECONDS_PER_TARGET: ${{ inputs.seconds || '300' }}
+        run: python tools/fuzz.py "$TARGET" --time "$SECONDS_PER_TARGET" --sanitizer address --features "$(python -c 'import tomllib; print(",".join(name for name in tomllib.load(open("Cargo.toml", "rb"))["features"] if name != "default"))')"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-${{ matrix.target }}
+          path: |
+            fuzz/corpus/${{ matrix.target }}/
+            fuzz/artifacts/${{ matrix.target }}/
+          if-no-files-found: ignore

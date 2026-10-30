@@ -1,0 +1,18 @@
+EHLO bar.om
+DA.com
+DATA
+Bl2Bx@foo.com
+SSLO bar.nm
+DA.com
+DATA
+Bl2ATA
+Blah blah blah.
+.
+Anes+ÿÿÿ
+m
+520-8BITUIME
+250- bar.com
+500-SIZE
+250-DSN
+2AT 5 LAST
+helloQUIT

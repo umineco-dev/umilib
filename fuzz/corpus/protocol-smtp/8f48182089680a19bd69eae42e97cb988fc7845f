@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<S1mith@bar.c---5qqqqqqq---------------------------------------------------------------------------------------------------------------------------------om> SIZE=501 BODY=8BITMIME
+RCPTEHLO bar.com
+MAIL TO

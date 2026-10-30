@@ -1,0 +1,9 @@
+rfc4422.txt, rfc4505.txt, rfc4616.txt, rfc5801.txt, rfc5802.txt, rfc5929.txt, rfc7628.txt, rfc7677.txt, rfc9266.txt
+    The texts of the RFCs, https://www.rfc-editor.org/rfc/rfc<number>.txt, downloaded on 2026-10-26.
+    License: IETF Trust Legal Provisions; the examples are data.
+    Used: the examples of RFC 4422 appendix A.2 (EXTERNAL), RFC 4505 §4 (ANONYMOUS), RFC 4616 §4 (PLAIN),
+    RFC 5802 §5 and RFC 7677 §3 (the SCRAM exchanges, all four messages), RFC 7628 §4.1, §4.3 and §4.4
+    (OAUTHBEARER), and the grammar of the server errors of RFC 5802 §7, extracted from the texts by the tests
+    (tests/auth/sasl). RFC 5801, RFC 5929 and RFC 9266 define the GS2 header and the channel binding types.
+    Known errors: RFC 7628 §4.4 writes "user=" for "a=" in the GS2 header (erratum 8564, reported 2025-09-04);
+    the test expects the original to be refused and the corrected text to read.

@@ -1,0 +1,2 @@
+examplleww.example. 371 IN TXT"a b"0"c\34"example& 32 IN SRV 1 2 3 t.example.
+exampne. 60 IN HTTPS 2 . alpn=h2,h3 ipv4hint=\192.0.2.1 ech=AEn+DQBpl

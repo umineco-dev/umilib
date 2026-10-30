@@ -1,0 +1,70 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 2 (0x2)
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=JP, O=umilib, OU=Testing + CN=umilib Intermediate CA
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: C=JP, ST=東京都, L=Chiyoda, O=umilib, CN=www.example.com, emailAddress=user@example.com
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:dc:69:f0:b2:f7:4f:d4:23:c5:19:b6:84:73:32:
+                    fb:8f:53:51:69:76:ae:89:95:86:d7:1b:29:af:c2:
+                    fc:42:64:02:8b:ee:cb:b0:42:f0:9c:e1:d9:94:ec:
+                    d8:88:2b:2e:05:7a:11:c2:c0:b5:a1:83:b1:d6:ae:
+                    d0:f3:e5:1a:0c
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication, TLS Web Client Authentication
+            X509v3 Subject Alternative Name: 
+                DNS:www.example.com, DNS:example.com, IP Address:192.0.2.1, IP Address:2001:DB8:0:0:0:0:0:1, email:user@example.com, URI:https://www.example.com/, DirName:/C=JP/O=umilib/CN=Directory Name, Registered ID:1.2.3.4, othername: UPN:user@example.com
+            X509v3 Issuer Alternative Name: 
+                URI:https://ca.example.com/
+            X509v3 Subject Key Identifier: 
+                CC:F3:AB:C6:A0:9E:E7:3A:92:EA:65:BA:E4:F3:06:DC:A4:8D:D2:3F
+            X509v3 Authority Key Identifier: 
+                52:0A:54:33:76:E2:DF:42:24:64:DA:F9:DA:89:48:8C:A2:83:17:01
+            X509v3 CRL Distribution Points: 
+                Full Name:
+                  URI:http://crl.example.com/intermediate.crl
+                Reasons:
+                  Key Compromise, CA Compromise
+                CRL Issuer:
+                  DirName:C = JP, O = umilib, CN = CRL Issuer
+            X509v3 Freshest CRL: 
+                Full Name:
+                  URI:http://crl.example.com/delta.crl
+
+            Authority Information Access: 
+                OCSP - URI:http://ocsp.example.com/
+            Subject Information Access: 
+                CA Repository - URI:http://repository.example.com/
+            X509v3 Certificate Policies: 
+                Policy: 1.3.6.1.4.1.55555.2
+    Signature Algorithm: sha256WithRSAEncryption
+    Signature Value:
+        55:fa:b7:d5:18:d6:4a:57:d5:8a:85:2f:95:c9:05:42:cc:94:
+        40:e7:11:2c:18:d3:db:45:93:3b:9d:ee:d8:d7:e7:b7:b2:79:
+        32:2c:65:9a:90:7d:84:4e:da:95:b4:53:75:a1:41:ba:7c:7d:
+        df:00:ab:0e:b4:3b:87:b9:27:87:d1:a2:07:52:f4:06:cc:34:
+        cd:65:e3:d6:1d:f9:c5:6e:cb:8e:2b:70:b9:81:71:6f:3b:60:
+        c2:86:a8:6a:db:1c:9b:a8:5e:ac:b7:51:d1:0b:7e:20:85:27:
+        44:e5:98:d2:84:60:08:91:2c:6f:e3:07:30:6c:aa:11:a2:6d:
+        f9:5e:df:e5:4b:53:38:29:09:52:92:20:80:32:4e:ae:fd:46:
+        f5:c8:59:8a:4a:b0:03:77:bb:c9:66:03:f0:58:7d:c1:f1:e4:
+        71:5a:5a:1c:0c:f1:30:5f:53:fc:9d:16:ef:0f:a4:e7:01:b1:
+        0f:b3:1e:08:02:76:fb:9a:27:7b:5e:59:d2:90:b2:55:af:8e:
+        49:89:75:fa:34:0f:60:5d:af:c3:e8:99:70:92:4b:08:dd:38:
+        76:53:45:97:c3:e5:c6:f2:4e:bc:c6:29:14:1f:de:5e:ac:30:
+        e4:41:14:96:fa:6d:97:bc:5c:54:6d:d4:9b:a2:aa:49:e1:40:
+        0c:46:18:69

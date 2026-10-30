@@ -1,0 +1,7 @@
+example. 3600 IN SOA ns._tcp.example. XT "a b ""c\1ﭧ
+_x._mple.X T "a b" "c\1ﭧ
+_x._mple.X T "a b" "c\2ﭧ
+_x||||||||||||||||||||||||||||||||||||||||_tcp.example. XT "a b" "c\2ﭧ
+_x._tc3"
+_x._tcp.example. XT "a b" "c\2ﭧ
+_x._tcp.example. 60 IN SRV 1\\\\\\\\\\\\\\\\\034ampln=e

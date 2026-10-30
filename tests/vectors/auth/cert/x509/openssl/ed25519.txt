@@ -1,0 +1,30 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 7 (0x7)
+        Signature Algorithm: ED25519
+        Issuer: CN=ed25519
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: CN=ed25519
+        Subject Public Key Info:
+            Public Key Algorithm: ED25519
+                ED25519 Public-Key:
+                pub:
+                    15:94:8d:aa:b3:37:06:f4:04:08:35:77:ef:29:40:
+                    34:95:12:c3:0d:52:4c:c7:e1:f4:92:68:8f:45:d4:
+                    5e:69
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Digital Signature, Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                76:C6:A0:BD:67:29:EA:81:6E:20:7C:FB:73:F6:52:4F:48:1F:63:49
+    Signature Algorithm: ED25519
+    Signature Value:
+        99:f6:c6:28:ed:1a:06:cf:0d:2f:e0:67:27:78:75:13:1c:b5:
+        52:f9:64:e2:80:ab:c9:41:c3:5e:d4:4e:3d:52:9b:39:62:25:
+        e1:50:8d:e9:96:29:47:12:0c:07:3d:bf:4f:ea:f0:23:47:34:
+        76:4d:22:7d:aa:36:13:04:bd:0e

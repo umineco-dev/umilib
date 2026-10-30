@@ -1,0 +1,2 @@
+example. 3599 IN SOA ns.exampl. an.example. 1 3600 600 86400 300
+ TXT "a b\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\034"lee

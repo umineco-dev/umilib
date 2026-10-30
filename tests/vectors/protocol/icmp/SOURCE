@@ -1,0 +1,26 @@
+v4/: rfc792.txt, rfc1191.txt, rfc4884.txt, rfc5927.txt, rfc6918.txt
+v6/: rfc4443.txt, rfc4861.txt, rfc6980.txt, rfc7048.txt, rfc8201.txt
+    The texts of RFC 792 (Internet Control Message Protocol), RFC 1191 (Path MTU Discovery), RFC 4884
+    (Extended ICMP to Support Multi-Part Messages), RFC 5927 (ICMP Attacks against TCP), RFC 6918
+    (Formally Deprecating Some ICMPv4 Message Types), RFC 4443 (ICMPv6), RFC 4861 (Neighbor Discovery for
+    IP version 6), RFC 6980 (Security Implications of IPv6 Fragmentation with IPv6 Neighbor Discovery),
+    RFC 7048 (Neighbor Unreachability Detection Is Too Impatient) and RFC 8201 (Path MTU Discovery for IP
+    version 6), downloaded from https://www.rfc-editor.org/rfc/ on 2026-10-26.
+    License: the IETF Trust's Legal Provisions Relating to IETF Documents.
+    Used: the message formats and the rules the tests check. RFC 1122, whose §3.2.2 the tests also check,
+    is in ../arp/rfc1122.txt.
+
+linux.txt
+    Frames that the Linux kernel (7.0.14-linuxkit, of Docker Desktop on arm64, with the tools of Debian
+    trixie) sent between four network namespaces on 2026-10-26: a host, a router (with radvd sending
+    Router Advertisements) and a second router on the host's link, and a host behind the router on a link
+    of an MTU of 1,280 (576 for IPv4 by a route). Echoes, Time Exceeded (TTL, hop limit, reassembly),
+    Fragmentation Needed and Packet Too Big, Port and Protocol Unreachable, Redirect, Parameter Problem
+    (an unknown next header, an unknown option), Router Solicitation and Advertisement, Neighbor
+    Solicitation and Advertisement (with duplicate address detection), MLDv2, and the multi-part
+    extensions of RFC 4884 that Linux adds to errors (net.ipv4.icmp_errors_extension_mask). The frames of
+    the host's link come first, then those of the far link. Checksum offloading was turned off.
+    Each frame is a line of hexadecimal after "# " lines with tcpdump's summary of it (`tcpdump -n -e -v`).
+    Made by linux.sh, run as `docker run --rm --privileged -v "$PWD":/out debian:trixie sh /out/linux.sh`,
+    and `python3 ../ethernet/linux.py` on lan.pcap and far.pcap with their summaries, the outputs joined.
+    License: produced for this project (no third-party content).

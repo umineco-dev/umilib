@@ -1,0 +1,18 @@
+EHLO ba
+RCPT T<Jo.es@fco1mL FROM!<Smith@bcomд> SIZE=500 BODY=8BITMIME
+RCPT TO:<EHLO barom
+MAIL FROM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@€€h€€€€€€€€€€€€€€€€€€€€€¶€€€€€TЫЫIME
+RCPT TO:<Jones@foo.com>
+MSI7B
+DATA
+Kl2Bx@foo.com
+DATA
+Blacom> ;com
+DATAT€€ееееееееееееееееееееееееееееееееееееее
+ееееееее
+AUT LA
+.
+AUT LAST
+s@foo.com> ZE=00E=50
+0helY=8l

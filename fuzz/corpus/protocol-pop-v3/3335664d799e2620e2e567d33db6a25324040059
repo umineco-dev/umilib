@@ -1,0 +1,12 @@
+APOP mrose c4c9333bac560ecc979e58001b3e22fb
+STAT
+LIST
+REb
+STAT
+LIST
+RETR 1
+T3e22fb
+STAT
+LIST
+ÿÿÿÿÿAÿÿÿÿÿÿLAIN
+dT

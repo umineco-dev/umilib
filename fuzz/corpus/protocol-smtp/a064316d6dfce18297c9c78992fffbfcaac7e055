@@ -1,0 +1,16 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jottttttttttttutttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt@fsnoeo.com> NOTIFY=b> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> NOTI=8BITMIME
+RCPTom
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jottttttttttttutttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt@fsnoeo.com> NOTIFY=b> SIZE=500 BODY=8BITMIME
+RCPTAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jottttttttttttutttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt@fsnoeo.com> NOTIFY=b> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> NOTI=8BITMIME
+RCPTom
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jottttttttttttutttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt@fsnoeo.com> NOTIFY=b> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@com> NO%TIFY=b§ç.co TO:<Jones@com> NO%TIFY=b§ç.com
+M>
+ th@barUIT

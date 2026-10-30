@@ -1,0 +1,2 @@
+EHLO barºcom
+MAIL FROM:<Smits@foo.com> NOTIFY=SS.,FAILURE ORCPT=rfc822; 5 hT

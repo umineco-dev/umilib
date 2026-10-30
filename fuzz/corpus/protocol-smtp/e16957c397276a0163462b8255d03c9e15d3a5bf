@@ -1,0 +1,5 @@
+EHLO bar.com
+MAIL FROM:<Smith@ bar.com
+MAIL FROM:<Smith@bar.com> SIZE=472 BOKY=8BITMIbar.com
+MAIL FROM:<Smith@bar.r.com> SLRE=z50om
+mith@bar.

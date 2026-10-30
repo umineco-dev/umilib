@@ -1,0 +1,19 @@
+@GET / HTTP/1.1
+Host: a
+
+PET / HTTP/1.1
+Host: a
+
+POST /x HTTP/1.2
+Host: a
+Transfer-Encoding: chunked
+
+0
+e”
+Hnello
+2ed
+
+0
+e”
+
+H

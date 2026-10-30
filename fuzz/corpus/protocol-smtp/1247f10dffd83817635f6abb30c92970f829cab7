@@ -1,0 +1,12 @@
+EHLO b
+.
+AUTH PL@IN AHLO bar.com
+MAIL FROM:<Smh@bar.com> SI=061 MIME
+RCPT c..
+.
+AUTH PL@IN AHLO bar.com
+MAIL FROM:<Smith@bar.com> SI=663 BOKY=8BITc/
+.
+MIME
+RCPT T
+O:

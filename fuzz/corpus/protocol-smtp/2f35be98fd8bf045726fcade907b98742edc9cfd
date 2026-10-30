@@ -1,0 +1,4 @@
+EHLO bar.com
+5001BME
+RCPT TO:<Jones@foo.com> NOTIFY=Sah lehBODY=8BTMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCloQTUI

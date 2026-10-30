@@ -1,0 +1,9 @@
+EHLO bar.om
+MAIL FROM:<Smith@bar.com> SIZE-499 ATA
+Blÿÿÿÿÿÿÿÿÿÿ2Bx@foo.comO bar.om
+MAIL FROM:<Smith@bar.com> SIZE-500 BODY=8BITMIME
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ@ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ3Bx@foo.comO bar.om
+MAIL FROM:<Smith@bar.com> SIZe-500 BODY=6BITMIME
+CP`coUmH50-SIZEm gAUTH reets bar.com
+500-8P BITMIME
+

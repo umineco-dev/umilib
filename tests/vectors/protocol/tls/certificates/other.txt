@@ -1,0 +1,34 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1 (0x1)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN=Other Test Root
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2046 GMT
+        Subject: CN=Other Test Root
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:be:ca:f4:58:f5:4c:46:5d:02:94:12:a6:19:ee:
+                    31:b2:42:a6:bc:5f:41:a7:17:56:17:a6:9f:16:19:
+                    c6:fb:6e:f2:a2:db:b0:ba:31:ff:da:c1:78:c5:89:
+                    72:40:05:f1:89:75:77:20:f0:1d:70:30:99:82:c8:
+                    e6:05:68:f1:a8
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                66:2B:CF:4E:2A:8B:DE:19:EA:88:C3:B9:D7:FA:69:89:00:12:3E:3C
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:20:1c:22:5f:cf:18:d4:96:28:08:35:28:d4:da:5b:
+        9a:e5:d1:11:e0:49:3a:a2:35:93:d4:39:e9:1a:74:03:65:81:
+        02:21:00:d6:75:e1:aa:3f:a5:43:d9:5b:ec:7e:d5:a3:82:d2:
+        71:62:7a:1f:bb:b2:5f:f1:04:4d:06:66:05:cc:b2:7b:75

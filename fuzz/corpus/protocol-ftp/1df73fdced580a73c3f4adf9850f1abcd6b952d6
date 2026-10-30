@@ -1,0 +1,6 @@
+USER anonymous
+PASS guest
+TYPE 
+IPESV
+PORT 127,0/tmp
+

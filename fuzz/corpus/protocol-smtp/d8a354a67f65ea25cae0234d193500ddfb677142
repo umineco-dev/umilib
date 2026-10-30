@@ -1,0 +1,14 @@
+EHLO ba
+R@bc500 BODY=8BITªªªªª²ªRC TO:<EHLO barom
+MAIL FROM:<Smith@bcom> SIZE=499 BODY=8BITMIME
+RCPT TO:<Jones@foo.Jones@foo.com> NOTÿÿÿÿÿÿ#ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿT››IME
+RCPT TO:<Jones@foo.com>
+MSI-TM2KME
+250--SIZ gr500-8BITMIME
+MIME
+250-SI0-TM2IME
+TA
+Bl2Bx@foo.com
+DATA
+Blacom> ;ssssssssssL FROuu,uuuuuuuuuuuuM:<Smi> NOTIFY=sssssssTMIEP
+TMR@bcom> SI

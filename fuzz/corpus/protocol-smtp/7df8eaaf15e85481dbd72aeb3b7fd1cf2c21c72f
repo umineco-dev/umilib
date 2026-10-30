@@ -1,0 +1,7 @@
+250-foo.c8BITMIME
+250-SIZEm greets bar.com
+500-8BITMIME
+250-SIZE
+s bar.com
+500-8BITMIME
+250 `ELP

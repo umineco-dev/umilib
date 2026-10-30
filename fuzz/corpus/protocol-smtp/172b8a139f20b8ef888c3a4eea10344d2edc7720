@@ -1,0 +1,8 @@
+EHLO lah blah.ÿÿÿÿÿ
+.
+AUTH PLAIN AHRpbQB0YW5zdWFm
+BDÿÿÿÿAT 5 LASDATA
+Blah blah blah.
+.
+AUTH PLAIN AHRpbQB0YW5zdGFhZnRhbnN0YWFm
+BDAhelloQ

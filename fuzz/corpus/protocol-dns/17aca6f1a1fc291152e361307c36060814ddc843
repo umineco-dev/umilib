@@ -1,0 +1,3 @@
+example. 3600 IN SOA ns.example. aDmin.exam. 1 3600 600 86400 300
+www.xample. 60 IN HTTPS 1 . alpn=h2,h3 ipv4hint=192.0.21 ech=00 300
+8uJq9.2.NoLmRldgAA

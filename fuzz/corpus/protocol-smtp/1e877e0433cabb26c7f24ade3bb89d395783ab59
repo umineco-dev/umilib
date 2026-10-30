@@ -1,0 +1,11 @@
+EHLO bar.comMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCE0SS,FAILURE ORCPT=rff822;Jones+2BxocomM
+DATA
+BlaME
+R.coCOPT T
+.
+AUTH PLAIN AHR
+BDAT 5 L
+hell
+BlaME
+R.o

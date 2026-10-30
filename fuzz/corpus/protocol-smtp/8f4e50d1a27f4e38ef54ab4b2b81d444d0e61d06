@@ -1,0 +1,43 @@
+EHLO bar.comMIME
+RCPT TObQB0YW5zdGFhZn:
+EHLO bar.comMIME
+RCPT TO:.com
+ACPhZn:
+EHLO bar.comMIME
+ T@T T
+EHLO b.ar.cocoSN
+25>FhZn:
+EHLO 0b.aar.com
+AOKbQB0YW5zdGFhZn:
+EHLO bar.comMIME
+R0b.aar.com
+AObQB0YW5FhZn:
+EHLO bar.comMIME
+ T@CPT T':.com
+ACPT T
+EHLO b.ar.cocoSN
+25>FhZn:
+EHCPT:
+EHLO 0b.aar.com
+AObQB0YW5FhZn:
+EHLO b
+AObQB0YW5zdGFhZn:
+EHLO bar.comMIME
+R0b.aar.com
+AObQB0YW5FhZn:
+EHLO bar.comMIME
+ T@CPT T':.com
+ACPT T
+EHLO b.ar.cocoSN
+2FhZn:
+EHCPT:
+EHLO 0b.aar.com
+AObQB0YW5FhZn:
+EHLO bar.comMIME
+ T@.com> N
+RCPT TObQB0YW5zdGFhZn:
+EHLOar.comMIME
+ T@.com> N
+RCPT TObQB0YW5zdGFhZn:
+EHLO bar.ZomMIME
+RCPT TO:<Jones@foo.com> OTINFY=SUCCESS,FAILURE OR

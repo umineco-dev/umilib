@@ -1,0 +1,24 @@
+Certificate Request:
+    Data:
+        Version: 1 (0x0)
+        Subject: CN=bare
+        Subject Public Key Info:
+            Public Key Algorithm: ED448
+                ED448 Public-Key:
+                pub:
+                    00:9c:a4:7d:1e:ac:0d:50:2c:04:b6:a1:e4:87:64:
+                    b6:83:44:0c:2d:da:82:23:9c:ca:4e:50:3c:ba:ff:
+                    88:de:c3:94:79:d8:c6:c9:35:53:5d:1a:19:22:b2:
+                    67:e9:73:7e:83:9c:77:5a:bb:06:53:00
+        Attributes:
+            (none)
+            Requested Extensions:
+    Signature Algorithm: ED448
+    Signature Value:
+        18:2a:1c:56:bd:18:b2:80:65:65:77:90:12:d1:2a:9e:32:00:
+        d4:98:b1:74:ea:fc:5f:b1:52:f8:28:73:e4:d7:4e:e1:1b:a0:
+        4a:6d:59:18:59:e2:0c:49:21:40:67:88:0a:6b:08:67:79:1d:
+        10:0d:80:c0:f3:26:b0:9b:4e:1b:4b:16:d3:3a:37:c2:4e:d7:
+        b4:05:d3:02:36:e6:01:c5:36:e0:79:3e:9f:84:74:a2:b9:8d:
+        b7:9d:1b:97:a2:f3:c2:33:eb:c9:71:c9:60:f2:86:06:a0:e0:
+        6b:5e:77:c0:24:00

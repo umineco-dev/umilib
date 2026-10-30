@@ -1,0 +1,7 @@
+EHLO bar.com
+MA4IL FROM:<Smith@<aaaaaEHLO bar.com
+MAIL FROM:<Smith@bar.com> 5IE=SZ00 BOKY=8BI
+MAIL FROM:<Smith@bar.cor.com> 5IE=SZ.0 BOKY=8BMIME
+RCPom
+MAIL FROM:<Smith@bar.com> 5IE=SZ00 BOKY=8BIT:MIME
+RC TO:<JjIIIIIIIITIFY=Sm> 5IE=SZ00? BOKY=8aa

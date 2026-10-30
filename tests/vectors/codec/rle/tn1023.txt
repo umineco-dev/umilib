@@ -1,0 +1,2 @@
+Unpacked data: AA AA AA 80 00 2A AA AA AA AA 80 00 2A 22 AA AA AA AA AA AA AA AA AA AA
+After being packed by PackBits: FE AA 02 80 00 2A FD AA 03 80 00 2A 22 F7 AA

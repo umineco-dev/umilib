@@ -1,0 +1,9 @@
+:GET / HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw: acaTnr
+nodin*: cP/1.1
+Host: a
+
+P

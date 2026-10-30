@@ -1,0 +1,5 @@
+rfc9180.txt
+    RFC 9180, "Hybrid Public Key Encryption" (R. Barnes, K. Bhargavan, B. Lipp, C. Wood, February 2022).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc9180.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: every test vector of appendix A (seven suites, four modes each).

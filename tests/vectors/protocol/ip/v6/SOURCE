@@ -1,0 +1,14 @@
+rfc8200.txt, rfc5095.txt, rfc5722.txt, rfc6437.txt, rfc6946.txt, rfc7045.txt, rfc7112.txt, rfc8883.txt, rfc9098.txt
+    The texts of RFC 8200 (Internet Protocol, Version 6), RFC 5095 (Deprecation of Type 0 Routing Headers),
+    RFC 5722 (Handling of Overlapping IPv6 Fragments), RFC 6437 (IPv6 Flow Label Specification), RFC 6946
+    (Processing of IPv6 "Atomic" Fragments), RFC 7045 (Transmission and Processing of IPv6 Extension Headers),
+    RFC 7112 (Implications of Oversized IPv6 Header Chains), RFC 8883 (ICMPv6 Errors for Discarding Packets
+    Due to Processing Limits) and RFC 9098 (Operational Implications of IPv6 Packets with Extension Headers),
+    downloaded from https://www.rfc-editor.org/rfc/ on 2026-10-26.
+    License: the IETF Trust's Legal Provisions Relating to IETF Documents.
+    Used: the rules the tests check (header of RFC 8200 §3, extension headers and options of §4, fragments
+    of §4.5, the pseudo-header of §8.1, and the updates of RFC 5095, RFC 5722, RFC 6946, RFC 7045 and
+    RFC 7112).
+
+The IPv6 packets of the Linux kernel (fragmented echoes, MLDv2 reports with Hop-by-Hop options, NDP) are in
+../../ethernet/linux.txt (see ../../ethernet/SOURCE).

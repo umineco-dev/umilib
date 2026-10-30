@@ -1,0 +1,6 @@
+EHLO bar
+RCPT TO:e<s@noJfoo.com> NOTIFY=S
+MAIL FROM
+Y=ÇBITMIM
+RCPT TO:e<s@noJfoo.IFY=S
+MAIL FROM

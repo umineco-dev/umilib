@@ -1,0 +1,35 @@
+ÿ
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:oooooooo:oooooooκκκκκκκκκκκκκκκκκκκκκκκκooooooooooooooooooooooooo HTTP/2.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:ooofffffffffffffffffffffffffffffffffffffffffffffffffooooooooooooooooooooooooooooooooooooo1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: a
+
+POST /x HTTP/1.1
+Host: W
+
+POST /x HTTP/1.1
+Hosw:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hosw:ooooooooooooooooooooooooooooooooz HTTP/2.1Hs
+ow:TP//1.1
+Host: a
+
+POST /x HTTP/1.1
+Hoswt: a

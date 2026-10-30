@@ -1,0 +1,11 @@
+FNaMIME-Version: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamble.
+--simplemple boundary
+Content-type: text/plain: charsetDus-ascii
+
+This is exSCII text.
+--simple boundary
+Content-type: texplain; charset=us the epilogue.
+<

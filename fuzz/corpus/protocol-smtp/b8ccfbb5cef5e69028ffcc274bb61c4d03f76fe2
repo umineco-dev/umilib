@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL ìmithBom
+MAIL FROM:<Siiiiih@barҞom> SIZE=5
+hello

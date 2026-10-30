@@ -1,0 +1,13 @@
+ anonymou,
+PAFEAT
+AUTH TLS
+YTT
+ATLSt
+MLST /tmpF
+ TLS
+YUIT
+ATLSt
+MLST /tmp
+FEAT
+AUTH TLS
+QUIT

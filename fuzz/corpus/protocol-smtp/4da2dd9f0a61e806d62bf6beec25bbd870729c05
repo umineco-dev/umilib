@@ -1,0 +1,36 @@
+EHLO bar
+RCPT TO:e<s@noJfoo.comar
+RCPT TO:e<s@noJfoo&com> FY=S
+MAIS FROM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY> NOTIFY=S
+MAIL FRLO bar
+RCPT TO:e<s@nfoo.comar
+RCPT TO:e<s@noJfoo&com> FY=S
+MAIS FROM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY> NOTIFY=S
+MAIL  bar
+RCPT TO:e<s@noJfoo.comar
+RCPT TO:e<s@noJfoo&com> FY=S
+MAIS FROM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY> NOTIFY=SRLO bar
+RCPT TO:e<s@noJfoo.comar
+RCPT TO:e<s@noJfoo&com> FY=S
+MAIS FROM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY> NOTIFY=S
+MAIL FROM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY=S
+MAIL FROMOM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY=S
+MFROM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY=S
+MAIL FROMOM
+Y=8BITMIME
+RCPT TO:e<s@noJfoo.IFY=S
+MAIL FROM

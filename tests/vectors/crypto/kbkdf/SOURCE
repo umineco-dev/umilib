@@ -1,0 +1,9 @@
+KDFCTR_gen.rsp, KDFFeedback_gen_NOzeroiv.rsp, KDFFeedback_gen_wzeroiv.rsp, KDFFeedback_gen_nocounter.rsp,
+KDFDblPipeline_gen_withCounter.rsp, KDFDblPipeline_gen_WOCounter.rsp
+    NIST CAVP, the key-based key derivation validation system (KBKDFVS) response files of SP 800-108:
+    CounterMode.zip, FeedbackModeNOzeroiv.zip, FeedbackModewzeroiv.zip, FeedbackModenocounter.zip,
+    PipelineModewithCounter.zip and PipelineModeWOCounter.zip of
+    https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/KBKDF800-108/,
+    downloaded on 2026-10-24 (the files of the archives renamed after them).
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every record, with CMAC over AES-128/192/256 and two- and three-key TDES and HMAC over SHA-1 and SHA-2.

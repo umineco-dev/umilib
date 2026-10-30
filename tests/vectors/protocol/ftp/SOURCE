@@ -1,0 +1,4 @@
+The texts of RFC 959 (FTP), RFC 2389 (FEAT and OPTS), RFC 2428 (EPRT and EPSV), RFC 2577 (security
+considerations), RFC 2640 (internationalization), RFC 3659 (MDTM, SIZE, REST STREAM, MLST, MLSD),
+RFC 4217 (FTPS) and RFC 7151 (HOST), downloaded from https://www.rfc-editor.org/rfc/rfcNNNN.txt on
+2026-10-29. The tests take their dialogues and examples from them.

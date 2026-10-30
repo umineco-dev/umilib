@@ -1,0 +1,7 @@
+EHLO bar.comMIME
+RCPT TO:<Jones@foo.com> PT=rff822;Jones+2Bx@h...
+..etc. etc. e)tc.
+.
+AUTH PLAItc.
+.
+AUTH PelloQUIT

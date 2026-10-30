@@ -1,0 +1,31 @@
+rfc3454.txt
+    RFC 3454, "Preparation of Internationalized Strings ("stringprep")", https://www.rfc-editor.org/rfc/rfc3454.txt,
+    downloaded on 2026-10-25.
+    License: IETF Trust Legal Provisions; the tables are data.
+    Format: the text of the RFC; tools/stringprep_tables.py reads the tables of appendices A to D.
+    Used: every table (generated into src/codec/stringprep/tables.rs), and the tests compare entries with it.
+
+rfc4013.txt
+    RFC 4013, "SASLprep: Stringprep Profile for User Names and Passwords",
+    https://www.rfc-editor.org/rfc/rfc4013.txt, downloaded on 2026-10-25.
+    License: IETF Trust Legal Provisions; the examples are data.
+    Format: the text of the RFC.
+    Used: the profile of section 2 and the examples of section 3.
+
+rfc4518.txt
+    RFC 4518, "Lightweight Directory Access Protocol (LDAP): Internationalized String Preparation",
+    https://www.rfc-editor.org/rfc/rfc4518.txt, downloaded on 2026-10-25, with its verified errata 860, 1757 and 1758
+    (https://www.rfc-editor.org/errata/rfc4518).
+    License: IETF Trust Legal Provisions.
+    Format: the text of the RFC.
+    Used: the six steps of section 2, which the tests check rule by rule.
+
+UnicodeData-3.2.0.txt, CompositionExclusions-3.2.0.txt, NormalizationTest-3.2.0.txt
+    The Unicode Character Database of Unicode 3.2.0, https://www.unicode.org/Public/3.2-Update/ (the files of the same
+    names), downloaded on 2026-10-25.
+    License: Unicode License v3 (LICENSE-UNICODE.txt).
+    Format: the formats of the Unicode Character Database (UAX #44 and the headers of the files).
+    Used: tools/stringprep_tables.py generates the combining classes, decompositions, compositions and combining
+    marks from UnicodeData-3.2.0.txt and CompositionExclusions-3.2.0.txt; the tests run every line of
+    NormalizationTest-3.2.0.txt (parts 0 to 3) and check that every code point not listed in part 1 is unchanged by
+    every form.

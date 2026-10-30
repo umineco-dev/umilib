@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<Smith@barõcom> SIZm
+MAIO.coODY=8BITMIME
+RCPT TO:<Jonesmith@barõcom> SIZ NOTIFY=SoODY=U

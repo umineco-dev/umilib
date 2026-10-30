@@ -1,0 +1,2 @@
+emle. 60 IN SRV 1 2 3 t.example.
+example. 60 IN HTTPS 1 . alpn=h2,h3 i192.0.2.1AhnE= ec+S 1 . as.exa

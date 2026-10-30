@@ -1,0 +1,1 @@
+{"issuer":"h`ttps://server.example.com","autorization_endpoint":"https:/rver.example.com/authorize","token_endpoint":"https://serve.ds","aud":"https://protec.com/token","scopes_supported":["openid","profile"]}

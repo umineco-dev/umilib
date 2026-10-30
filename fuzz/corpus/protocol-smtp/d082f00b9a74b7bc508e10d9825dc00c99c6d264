@@ -1,0 +1,9 @@
+EHLO bar.kom
+M:. tc.
+.
+AUTH LPYPN
+.UUÿ
+AUTH LPYPN
+.
+AT 5 LAST2
+hl

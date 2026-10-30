@@ -1,0 +1,25 @@
+T{ECB,CBC,CFB64,CFB8,CFB1,OFB}{invperm,permop,subtab,varkey,vartext}.rsp
+    NIST CAVP, the known answer tests of the TDES validation system (SP 800-20): the variable plaintext,
+    variable key, inverse permutation, permutation operation and substitution table tests, with
+    Key1 = Key2 = Key3 (the field KEYs), which is single DES.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/des/KAT_TDES.zip
+    on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every record. The pipelined (CFBP) and interleaved (CBCI, OFBI) modes of ANSI X9.52 are not
+    implemented, so their files are not included.
+
+T{ECB,CBC,CFB64,CFB8,CFB1,OFB}MMT{2,3}.rsp
+    NIST CAVP, the multi-block message tests of TDES with two-key (2) and three-key (3) bundles.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/des/tdesmmt.zip
+    on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every record.
+
+T{ECB,CBC}Monte{2,3}.rsp
+    NIST CAVP, the Monte Carlo tests of TDES (SP 800-20 tables 6, 12, 18 and 24).
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/des/tdesmct.zip
+    on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: the first records of each direction (each record starts from the keys and the text it lists), and
+    the key update of each of them against the keys of the next record; the files set odd parity on the
+    updated keys, which DES ignores, so keys are compared without their parity bits.

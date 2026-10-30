@@ -1,0 +1,5 @@
+test_parsing/
+    JSONTestSuite by Nicolas Seriot, https://github.com/nst/JSONTestSuite, directory test_parsing.
+    Downloaded from https://codeload.github.com/nst/JSONTestSuite/tar.gz/refs/heads/master on 2026-10-23.
+    License: MIT, see LICENSE in this directory.
+    Naming: y_* must be accepted, n_* must be rejected, i_* may be either (RFC 8259 leaves them to the implementation).

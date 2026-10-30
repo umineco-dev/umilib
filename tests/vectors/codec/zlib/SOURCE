@@ -1,0 +1,6 @@
+*.zz
+    zlib streams (RFC 1950) made by zlib 1.2.12 (the zlib of Python 3.14) on 2026-10-25 from the inputs
+    of ../deflate: text.level<n> with zlib.compress at level n; empty with zlib.compress(b"", 6);
+    repetitive.window9 with a window of 2^9 bytes (wbits = 9) at level 9; text.dictionary at level 9
+    with ../deflate/dictionary.bin as the preset dictionary.
+    License: data produced by zlib (zlib License); the streams are outputs, not code.

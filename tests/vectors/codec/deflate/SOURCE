@@ -1,0 +1,13 @@
+*.deflate
+    Raw Deflate streams (RFC 1951) made by zlib 1.2.12 (the zlib of Python 3.14, through
+    zlib.compressobj with wbits = -15 and memLevel = 9) on 2026-10-25; each was checked to decompress
+    back with zlib. <name>.level<n>: level n with the default strategy; .huffman, .rle and .fixed: level
+    6 with Z_HUFFMAN_ONLY, Z_RLE and Z_FIXED; .sync and .full: level 6 with Z_SYNC_FLUSH after every
+    3001 bytes and Z_FULL_FLUSH after every 7777 bytes; .window9: level 9 with a window of 2^9 bytes
+    (wbits = -9); text.dictionary: level 9 with dictionary.bin as the preset dictionary (zdict).
+    License: data produced by zlib (zlib License); the streams are outputs, not code.
+*.bin
+    The inputs and the dictionary, made with a seeded pseudorandom generator for these tests: words of
+    a small vocabulary (text), runs and repeats at distances up to 32768 (repetitive), random bytes,
+    100000 zeros, one byte and nothing.
+    License: made for umilib (MIT).

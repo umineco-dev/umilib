@@ -1,0 +1,6 @@
+@GET / HTTP/1.2
+Host: aG
+Transfer-Encoding: chunked
+
+38206470;00=00000000000000000
+T™™™™™™™a

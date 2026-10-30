@@ -1,0 +1,2 @@
+EHLO bar.com
+MAIL FROM:<Smith@barc> SIZE=500 BODY=8UIT

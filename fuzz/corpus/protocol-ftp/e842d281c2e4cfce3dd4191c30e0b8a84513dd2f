@@ -1,0 +1,129 @@
+USER an8
+EPR82|
+S
+/tmp
+FEAT
+@UTH TLS an8
+EPRT |2|::17A|5282|
+S²/tmpRT |2|::1
+EPR82|
+S
+/tmp
+FEAT
+@UTH TLS an8
+EPRT |2|::17A|5282|
+S²/tmpRT |2|::17A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/ TLSA/A/
+@UT9
+EPRT |2|::17A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/tmp
+FEAT
+@UTH
+EPRT |2|::17A|5282|
+S
+/tmp
+UTH TLS an8
+EPRT |2|::17A|5282|
+S²/tmp8
+EPRT |2|::17A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/ TLSA/A/
+@U82|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/tmp
+FEAT
+@UTH
+EPRT |2|::17A|5282|
+S
+/tmp
+FEAT
+@UTH TLS a7A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/ TLSA/A/
+@UT9
+EPRT |2|::17A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/tmp
+FEAT
+@UTH
+EPRT |2|::17A|5282|
+S
+/tmp
+UTH TLS an8
+EPRT |2|::17A|5282|
+S²/tmp8
+EPRT |2|::17A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/ TLSA/A/
+@U82|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/tmp
+FEAT
+@UTH
+EPRT |2|::17A|5282|
+S
+/tmp
+FEAT
+@UTH TLS an8
+EPRT |2|::17A|5282|
+S²/tmp8
+T
+E

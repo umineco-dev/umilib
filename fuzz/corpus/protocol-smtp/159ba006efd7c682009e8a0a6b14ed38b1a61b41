@@ -1,0 +1,7 @@
+EHLO bar.m
+MAIL FROM:<Smith@bar.com> SIZE=501 BODY=8BITMIME
+RCPT TO:<o@esJnfoo.cF
+BDAT 25
+2r0 HELPlloQUITUTH T bnN0YW
+BDAT 5 LAST
+helloQUIT

@@ -1,0 +1,12 @@
+rfc791.txt, rfc815.txt, rfc1858.txt, rfc2474.txt, rfc3128.txt, rfc3168.txt, rfc6864.txt, rfc7126.txt
+    The texts of RFC 791 (Internet Protocol), RFC 815 (IP Datagram Reassembly Algorithms), RFC 1858
+    (Security Considerations for IP Fragment Filtering), RFC 2474 (Differentiated Services Field), RFC 3128
+    (Protection Against a Variant of the Tiny Fragment Attack), RFC 3168 (Explicit Congestion Notification),
+    RFC 6864 (Updated Specification of the IPv4 ID Field) and RFC 7126 (Recommendations on Filtering of IPv4
+    Packets Containing IPv4 Options), downloaded from https://www.rfc-editor.org/rfc/ on 2026-10-26.
+    License: the IETF Trust's Legal Provisions Relating to IETF Documents.
+    Used: the rules the tests check (header layout and options of RFC 791 §3.1, fragmentation of §3.2);
+    RFC 1122, whose §3.2.1 and §3.3.2 the tests also check, is in ../../arp/rfc1122.txt.
+
+The IPv4 packets of the Linux kernel (fragmented echoes, Record Route options) are in
+../../ethernet/linux.txt (see ../../ethernet/SOURCE).

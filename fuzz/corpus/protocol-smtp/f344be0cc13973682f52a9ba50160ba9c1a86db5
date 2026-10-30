@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL ÿÿÿÿ=ME
+RCPT ETH
+MAIL FROMO:<J7ones

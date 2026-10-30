@@ -1,0 +1,7 @@
+EHLO bar.com
+MAIL FROM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> NOTIFY=bar.LTMIME
+RCPT TO:<Jones@foo.com> ZE=000 8BYBKONS
+250 NDS
+250 aWDNSNDS
+2.

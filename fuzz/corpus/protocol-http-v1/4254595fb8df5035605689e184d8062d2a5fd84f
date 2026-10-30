@@ -1,0 +1,21 @@
+@GEc / HTTP/1.1
+Host: a
+
+POST /x HTTP/1.2
+Host: a
+Transfre-Encoding:2chuost: a
+
+POST /x HTTP/1.2
+Host: a
+Transfre-Encoding: chunked
+
+ææææTP/1.2
+Host: acoding: chunked
+
+0 HosT
+nked
+
+6
+enedlo
+0 HosT
+

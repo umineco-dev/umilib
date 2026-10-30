@@ -1,0 +1,5 @@
+USER anony,euest
+EPRT |2|1080+:>0:200C:41A|5|
+REST 
+EPRT |2|1080+:?0:2 /C:417A|5|
+RES

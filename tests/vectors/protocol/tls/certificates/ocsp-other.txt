@@ -1,0 +1,66 @@
+OCSP Response Data:
+    OCSP Response Status: successful (0x0)
+    Response Type: Basic OCSP Response
+    Version: 1 (0x0)
+    Responder Id: CN = Other Test Root
+    Produced At: Oct 27 05:03:14 2026 GMT
+    Responses:
+    Certificate ID:
+      Hash Algorithm: sha1
+      Issuer Name Hash: 64F5BFCABC69B02CAF61A8B1374FED4A17551EA1
+      Issuer Key Hash: 06ED15F84F0563876194555FE1A76C525B7F68AB
+      Serial Number: 88E720D9B7DECA07
+    Cert Status: good
+    This Update: Oct 27 05:03:14 2026 GMT
+    Next Update: Oct 22 05:03:14 2046 GMT
+
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:21:00:c0:3a:d2:10:57:59:99:49:9c:47:36:b9:a3:
+        5f:66:48:15:c1:63:b7:46:ca:62:9e:fb:2d:ca:07:50:11:83:
+        64:02:20:43:34:52:f0:54:b1:08:e7:85:3c:19:4a:8f:5b:6e:
+        b5:78:c9:a1:1c:ba:be:ef:45:07:53:9e:49:9c:d8:e9:be
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1 (0x1)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN=Other Test Root
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2046 GMT
+        Subject: CN=Other Test Root
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:be:ca:f4:58:f5:4c:46:5d:02:94:12:a6:19:ee:
+                    31:b2:42:a6:bc:5f:41:a7:17:56:17:a6:9f:16:19:
+                    c6:fb:6e:f2:a2:db:b0:ba:31:ff:da:c1:78:c5:89:
+                    72:40:05:f1:89:75:77:20:f0:1d:70:30:99:82:c8:
+                    e6:05:68:f1:a8
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                66:2B:CF:4E:2A:8B:DE:19:EA:88:C3:B9:D7:FA:69:89:00:12:3E:3C
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:20:1c:22:5f:cf:18:d4:96:28:08:35:28:d4:da:5b:
+        9a:e5:d1:11:e0:49:3a:a2:35:93:d4:39:e9:1a:74:03:65:81:
+        02:21:00:d6:75:e1:aa:3f:a5:43:d9:5b:ec:7e:d5:a3:82:d2:
+        71:62:7a:1f:bb:b2:5f:f1:04:4d:06:66:05:cc:b2:7b:75
+-----BEGIN CERTIFICATE-----
+MIIBZTCCAQugAwIBAgIBATAKBggqhkjOPQQDAjAaMRgwFgYDVQQDDA9PdGhlciBU
+ZXN0IFJvb3QwHhcNMjYwMTAxMDAwMDAwWhcNNDYwMTAxMDAwMDAwWjAaMRgwFgYD
+VQQDDA9PdGhlciBUZXN0IFJvb3QwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAS+
+yvRY9UxGXQKUEqYZ7jGyQqa8X0GnF1YXpp8WGcb7bvKi27C6Mf/awXjFiXJABfGJ
+dXcg8B1wMJmCyOYFaPGoo0IwQDAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQE
+AwIBBjAdBgNVHQ4EFgQUZivPTiqL3hnqiMO51/ppiQASPjwwCgYIKoZIzj0EAwID
+SAAwRQIgHCJfzxjUligINSjU2lua5dER4Ek6ojWT1DnpGnQDZYECIQDWdeGqP6VD
+2VvsftWjgtJxYnofu7Jf8QRNBmYFzLJ7dQ==
+-----END CERTIFICATE-----

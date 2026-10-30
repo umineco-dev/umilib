@@ -1,0 +1,2 @@
+EHLO bar.com
+MAILcom> NOTIFY= ORCPT=rfc823;Jones+2Bx@h@bar.cIL FROMom> SIZE=500 ah

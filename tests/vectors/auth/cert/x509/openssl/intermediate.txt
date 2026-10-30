@@ -1,0 +1,81 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            01:23:45:67:89:ab:cd:ef:01:23:45:67:89:ab:cd:ef:01:23:45:67
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: C=JP, O=umilib, CN=umilib Root CA
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: C=JP, O=umilib, OU=Testing + CN=umilib Intermediate CA
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:ad:50:57:71:70:c0:76:8e:53:b1:15:32:7a:74:
+                    f9:b9:b0:23:08:03:b9:f6:06:08:5e:65:d2:ba:ec:
+                    23:52:73:ce:27:12:a8:1d:e2:bd:ca:f7:99:d7:5e:
+                    f3:4c:9c:13:fd:f9:8a:f6:d6:9a:11:b0:5e:ed:e8:
+                    18:2c:54:34:8f:f0:9f:26:be:e5:51:63:96:59:5a:
+                    ba:95:73:64:bf:2c:2b:9f:25:3f:38:b9:64:53:77:
+                    12:fe:b3:26:0c:cc:97:fc:b1:cd:c0:21:cf:9c:59:
+                    7e:45:2c:b8:05:8e:1a:d5:35:ca:6f:36:34:63:0b:
+                    4b:27:cf:1b:7e:9f:b4:11:23:01:b6:e6:1e:a6:53:
+                    39:46:1e:60:74:3c:f7:07:77:e4:83:0f:7c:78:16:
+                    1a:2d:10:93:c5:ea:5e:ff:5f:8a:c8:fc:71:ee:58:
+                    99:b3:78:e5:71:c8:39:9b:ec:56:bc:f4:3e:1e:a1:
+                    9c:f9:c8:ea:1c:65:00:85:80:05:c5:fc:c6:32:0d:
+                    ce:ba:20:f0:8e:6c:44:47:7d:84:a4:13:81:8f:a5:
+                    01:d6:85:44:eb:b0:98:4b:0d:0b:48:8f:1c:63:87:
+                    64:94:6f:30:2e:39:30:41:3f:29:7b:35:20:ca:18:
+                    c1:96:87:f1:9b:61:15:69:0c:18:ad:31:fb:17:16:
+                    a2:2d
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE, pathlen:0
+            X509v3 Key Usage: critical
+                Digital Signature, Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                52:0A:54:33:76:E2:DF:42:24:64:DA:F9:DA:89:48:8C:A2:83:17:01
+            X509v3 Authority Key Identifier: 
+                keyid:0F:31:AB:64:03:2D:02:69:26:2C:B6:88:E8:A2:1C:49:A6:80:70:EF
+                DirName:/C=JP/O=umilib/CN=umilib Root CA
+                serial:01
+            X509v3 Name Constraints: critical
+                Permitted:
+                  DNS:example.com
+                  IP:192.0.2.0/255.255.255.0
+                  IP:2001:DB8:0:0:0:0:0:0/FFFF:FFFF:0:0:0:0:0:0
+                  email:example.com
+                  DirName:C = JP, O = umilib
+                Excluded:
+                  DNS:bad.example.com
+            X509v3 Certificate Policies: 
+                Policy: 1.3.6.1.4.1.55555.1
+                  CPS: https://example.com/cps
+                  User Notice:
+                    Organization: umilib
+                    Numbers: 1, 2, 3
+                    Explicit Text: Explicit text
+                Policy: X509v3 Any Policy
+            X509v3 Policy Constraints: 
+                Require Explicit Policy:0, Inhibit Policy Mapping:1
+            X509v3 Inhibit Any Policy: 
+                2
+            X509v3 Policy Mappings: 
+                1.3.6.1.4.1.55555.1:1.3.6.1.4.1.55555.2
+            X509v3 CRL Distribution Points: 
+                Full Name:
+                  URI:http://crl.example.com/root.crl
+
+            Authority Information Access: 
+                OCSP - URI:http://ocsp.example.com/
+                CA Issuers - URI:http://ca.example.com/root.der
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:21:00:b0:9b:14:b6:9c:46:fb:e2:7d:ad:9f:16:6f:
+        52:b6:32:64:e0:34:8a:5c:43:a3:e5:79:1c:26:c0:7b:c9:88:
+        81:02:20:47:da:c1:51:ad:b2:be:8b:22:00:58:c4:a1:2f:18:
+        e7:7b:66:79:fc:6f:63:b9:0a:dc:30:72:c7:eb:16:df:dc

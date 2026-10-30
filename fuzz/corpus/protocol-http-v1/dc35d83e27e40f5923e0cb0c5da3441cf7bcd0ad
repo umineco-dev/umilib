@@ -1,0 +1,9 @@
+7GET / HTTP/1.1
+Host: aG
+Transfer-Encoding: chunked
+
+00000000;000
+Host: aG
+T)ransfer-Encoding: chunked
+
+615Þ0000;8ddddddd.............&NNNNNNNNNNNNNNNNN.=    00

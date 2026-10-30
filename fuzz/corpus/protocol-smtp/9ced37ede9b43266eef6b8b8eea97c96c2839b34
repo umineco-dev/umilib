@@ -1,0 +1,4 @@
+EHLO ba.com
+MAIL FROM:<Smith@ar.com> SIZE=499 BODY=8BITMIME
+RCPT TOcom
+DATA

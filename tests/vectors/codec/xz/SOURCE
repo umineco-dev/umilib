@@ -1,0 +1,24 @@
+xz-utils/*.xz, xz-utils/README
+    The test files of XZ Utils 5.8.4 (tests/files of xz-5.8.4.tar.gz from
+    https://github.com/tukaani-project/xz/releases/download/v5.8.4/, SHA-256
+    0014c7886930454fe8bd4228665b51af55eeae560ea135c9c4cd33f55b2591d9, the checksum Homebrew records),
+    downloaded on 2026-10-25. README describes each file.
+    License: BSD Zero Clause License (0BSD), as their README states.
+xz-utils/good-*.out
+    The output of `xz -dc` (XZ Utils 5.8.4) for each good-*.xz file; for good-1-delta-lzma2.tiff.xz
+    (929,138 bytes of output), its SHA-256 in good-1-delta-lzma2.tiff.sha256 instead.
+bcj.bin, make_bcj.py
+    bcj.bin is 16 KiB of pseudo-random small bytes with branch instructions of the eight BCJ
+    architectures, written by make_bcj.py (Python 3, by this project) so that each filter converts
+    something.
+bcj.*.xz, text.*.xz, random.xz, empty.xz
+    Made on 2026-10-25 with xz (XZ Utils) 5.8.4 and checked with `xz -t`:
+    - bcj.<architecture>.xz: `xz -T1 --<architecture> --lzma2=preset=6 bcj.bin`;
+      bcj.x86-start (`--x86=start=4097`), bcj.arm64-start (`--arm64=start=4096`), bcj.riscv-start
+      (`--riscv=start=2`), bcj.chain (`--delta=dist=4 --x86 --lzma2`), bcj.plain (`--lzma2`);
+    - text.<check>.xz: `xz -T1 -C <check>` of ../deflate/text.bin (none, crc32, crc64, sha256);
+      text.level0 and text.level9 (`-0`, `-9e`); text.blocks (`-T1 --block-size=4096`, Block Headers
+      without sizes); text.threads (`-T2 --block-size=4096`, Block Headers with both sizes);
+    - random.xz (of ../deflate/random.bin) and empty.xz (of ../deflate/empty.bin);
+    - text.concatenated.xz: text.crc64.xz, 4 null bytes, empty.xz, 8 null bytes (Stream Padding).
+    License: data produced by xz (the files are outputs, not code).

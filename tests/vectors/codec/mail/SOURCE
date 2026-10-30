@@ -1,0 +1,4 @@
+The texts of RFC 5322 (Internet Message Format), RFC 6532 (Internationalized Email Headers),
+RFC 2045, 2046, 2047 and 2049 (MIME), RFC 2231 (MIME Parameter Value and Encoded Word Extensions),
+RFC 2183 (Content-Disposition) and RFC 6854 (group syntax in From and Sender), downloaded from
+https://www.rfc-editor.org/rfc/rfcNNNN.txt on 2026-10-29. The tests take their examples from them.

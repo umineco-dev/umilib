@@ -1,0 +1,38 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 7 (0x7)
+        Signature Algorithm: ecdsa-with-SHA384
+        Issuer: CN=p384
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: CN=p384
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (384 bit)
+                pub:
+                    04:28:58:65:38:52:25:a8:9d:61:1d:dc:3d:b6:88:
+                    6a:06:d0:b5:a4:52:66:2c:47:80:65:c8:03:a5:89:
+                    87:89:44:f6:f3:dd:f0:b4:f8:81:97:c1:d5:95:bd:
+                    c2:96:5e:a5:42:3c:eb:34:06:b0:f8:e0:47:99:47:
+                    33:b7:a5:d8:b4:de:78:d3:12:fe:30:82:1f:e0:c7:
+                    3c:d1:f9:e6:9d:d3:c9:6b:49:76:66:fe:3d:e3:5c:
+                    35:1a:b3:c4:a1:c3:8a
+                ASN1 OID: secp384r1
+                NIST CURVE: P-384
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Digital Signature, Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                4B:73:94:5D:D2:96:AA:4A:4E:6B:05:33:71:F2:8D:8A:91:D9:37:FA
+    Signature Algorithm: ecdsa-with-SHA384
+    Signature Value:
+        30:66:02:31:00:ef:34:e6:b7:2e:ad:6b:f4:09:e0:e7:fa:5a:
+        57:e2:13:ae:b5:79:32:a2:5e:02:4a:73:b2:a1:2b:8e:48:8b:
+        ed:24:0a:20:b6:61:8d:4c:5c:af:62:83:d4:e8:fa:fd:b1:02:
+        31:00:d9:8e:06:2d:29:26:b0:fd:76:71:3e:e6:41:ec:fe:a1:
+        a4:c4:65:27:6f:0f:4d:c9:24:cc:50:9b:a0:dc:1a:d1:30:72:
+        71:b5:43:4a:34:18:0f:0d:b6:de:07:d1:39:08

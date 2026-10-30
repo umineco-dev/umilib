@@ -1,0 +1,19 @@
+USER an8
+EPRT |2|::17A|5282|
+S
+/tmp8
+EPRT |2|::17A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/
+EPRT |2|::17A|5282|
+\
+FE
+UT
+E

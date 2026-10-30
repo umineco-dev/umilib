@@ -1,0 +1,3 @@
+example. 3600 IN SOA m. ple. 1 3600 600 86400 300
+www.example. 300 IN TXT "a b" "c\034"
+_x._tcp.examle. 60 IN HTTPS 1 . alpn=h2,h3 ipv4hint=0le TXToLmRldgAA

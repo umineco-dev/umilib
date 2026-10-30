@@ -1,0 +1,29 @@
+cookbook/
+    The JOSE Cookbook (the examples of RFC 7520 as JSON files), https://github.com/ietf-jose/cookbook, files of the
+    master branch downloaded from https://raw.githubusercontent.com/ietf-jose/cookbook/master/ on 2026-10-26:
+    jwk/, jws/, jwe/, curve25519/ and 6.nesting_signatures_and_encryption.json.
+    License: the Unlicense (cookbook/LICENSE).
+    Not included: rfc7797/, whose examples do not follow RFC 7797 (no "crit" listing "b64", and a protected header
+    whose base64url is not that of the header); RFC 7797 is tested with the examples of its text instead.
+    Known errors kept as they are: the input of jwe/5_13 names its content encryption "A128CBC-H256" (its headers
+    say "A128CBC-HS256"), and the ephemeral key of curve25519/ecdh-es.json in "encrypting_key" is not the one of
+    its header (the file says it is not reproducible).
+    Used: every key, every output of every example (verified or decrypted with the keys whose algorithms are
+    implemented: RSA1_5 is not), and the deterministic steps (HMAC, RSASSA-PKCS1-v1_5 and EdDSA signatures,
+    content encryption, AES key wrapping, PBES2, AES-GCM key wrapping, ECDH-ES with the ephemeral key given).
+
+json_web_signature_test.json, json_web_encryption_test.json
+    Project Wycheproof, testvectors_v1/json_web_signature_test.json and json_web_encryption_test.json of
+    https://github.com/C2SP/wycheproof, downloaded on 2026-10-26.
+    License: Apache License 2.0.
+    Used: every test, with the divergences that tests/protocol/jwt/jws.rs and jwe.rs list with their reasons
+    (keys whose "alg" or "key_ops" the specifications do not let them use, files whose values are corrupted, a
+    JSON serialization that this library reads, and RSA1_5).
+
+rfc7515.txt, rfc7516.txt, rfc7517.txt, rfc7518.txt, rfc7519.txt, rfc7638.txt, rfc7797.txt, rfc8037.txt,
+rfc8725.txt, rfc8812.txt, rfc9278.txt, rfc9864.txt, rfc9964.txt
+    The texts of the RFCs, https://www.rfc-editor.org/rfc/rfc<number>.txt, downloaded on 2026-10-26.
+    License: IETF Trust Legal Provisions; the examples are data.
+    Used: the examples of RFC 7515 appendix A.1 (the HMAC key), RFC 7516 appendix A, RFC 7518 appendix C,
+    RFC 7519 §3.1, §6.1 and appendix A, RFC 7638 §3.1, RFC 7797 §4, RFC 8037 appendix A, RFC 9278 §3 and
+    RFC 9964 appendix A, extracted from the texts by the tests (tests/common/vectors.rs, tests/protocol/jwt).

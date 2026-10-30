@@ -1,0 +1,5 @@
+* 12 FETCH (FLAGS (\Seen) IN
+a006 APPEND saved-messages (\SERNALDATE "1од3456789a
+006 IDLE
+DONELOG
+28 92))

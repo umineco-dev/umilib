@@ -1,0 +1,15 @@
+SER anonymous
+PASSest
+PAbS ˇˇˇEt
+TYPE I
+EPSV
+PORT 127,0,0,1,7,138
+EPSV
+PRT |2|1080::8:800:
+TYPEùI
+EPSV
+t
+MLST /tmp
+FEATT UA
+HTLS
+QUIT

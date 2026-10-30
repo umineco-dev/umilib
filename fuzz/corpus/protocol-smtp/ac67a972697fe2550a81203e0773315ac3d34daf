@@ -1,0 +1,23 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.mco> SIZE=500 BODY=8BITMIMEEHLO bar.com
+MAIL FROM:<Smith@bcom> SIZE=520 BODY=8BITMIM
+RCPT bar.com
+MAIL FROM:<Smith@bcom> SIZE=520 BODY=8BITMIME
+RCPT TO/:<JonesIIIIIJones@fmbar.LTMIÔMEöÿÿÿ
+RCPT TO:<IIkkIIIIIIIIIIIIkkkkkkkk&kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk&kkkkkkkkkjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkIIJones@foo.co> ZE=000 8BYBKONS
+0/6 Nbar.com
+MAIL F7OM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO/:<Jones@foTO:<Jones@foo.com> E
+RCPT @fooIIIIIIIIIkkkkkkkkkkkkkkkkkIIIIIIIIIIIIIIJones@foo.comIIIIIIIIIIIIIJones@fmbar.LTMIÔMEöÿÿÿ
+RCPT TO:<IIkkIIIIIIIIIIIIkkkkkkkk&kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk&kkkkkkkkkjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkIIJones@foo.co> ZE=000 8BYBKONS
+0/6 Nbar.com
+MAIL F7OM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO/:<Jones@foTO:<Jones@foo.com> E
+RCPT TO/:<JEHLO bar.com
+MAIL FROM:<Smith@bcom> SIZE=520 BODY=8BITMIME
+RCPT TO/:<Jones@fooIIIIIIIIIkkkkkkkkkkkkkkkkkIIIIIIIIIIIIIIJones@foo.comIIIIIIIIIIIIIJones@fmbar.LTMIÔMEöÿÿÿ
+RCPT TO:<IIkkIIIIIIIIIIIIkkkkkkkk&kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk&kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk&kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkIIJones@foo.co> ZE=000 8BYBKONS
+0/6 Nbar.com
+MAIL F7OM:<Smith@bcom>ones@fooIIIIIINOTIFY=bar.com
+MAIit%@bar. SIZE=500 BODY=8BITMIcomME
+RC> SIZE=PT

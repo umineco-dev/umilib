@@ -1,0 +1,4 @@
+EHLO bar.col
+MAIL FROM:<Smith@òbarõcom> SI8PTË ÿšSmith
+MAIL FROM:<Smith@barõcom> SIZ NOTIFYSmith
+MAIL FROM:<Smith@barõcom>ZN IS OTIFY=SoODY=U

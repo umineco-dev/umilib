@@ -1,0 +1,12 @@
+FroVersion: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamblee boundary
+
+This is impli itly typed plain US-ASCII text.
+--simple boundary
+-ontent-type: text/pl explicitly typSCII texYgeW91IGNhbiByZWFkIHaryFroVersion: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+T
+This i text/pl explicitly tytSCII --

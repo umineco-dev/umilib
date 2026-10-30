@@ -1,0 +1,10 @@
+EHLO ba
+RCPT T<aaaaaaaaaaaaaaaaaaaaarom
+MAIL FROM:<Smiph@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jon:<IIIIIIIIIIIIÿÿÿÿÿÿÿT››IME
+RCPT TO:<Jones@foo.cos>
+MSI4B–r.ÿÿ.r.
+DATA
+Bl2B@foo.com
+DATA
+Blacom> ;ssssssssss3ssssssssssttttttttttttHtttcttttttts

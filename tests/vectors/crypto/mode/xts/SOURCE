@@ -1,0 +1,12 @@
+XTSGenAES{128,256}.rsp, XTSGenAES{128,256}Sequence.rsp
+    NIST CAVP, the XTS-AES validation system (XTSVS) response files, with the tweak given as a 128-bit
+    value and, in the *Sequence files, as a data unit sequence number.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/XTSTestVectors.zip
+    on 2026-10-24 (the two folders of the archive renamed into the file names).
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every record, including data units that are not a whole number of bytes where they are bytes long.
+
+aes_xts_test.json
+    Project Wycheproof, testvectors_v1/aes_xts_test.json of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test; the IV of 8 to 16 bytes is the tweak followed by zeros.

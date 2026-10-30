@@ -1,0 +1,5 @@
+rfc3526.txt
+    RFC 3526, "More Modular Exponential (MODP) Diffie-Hellman groups for Internet Key Exchange (IKE)" (T. Kivinen, M. Kojo, May 2003).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc3526.txt on 2026-10-23.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the hexadecimal values of the safe primes p (with q = (p - 1) / 2 prime) and the generator 2.

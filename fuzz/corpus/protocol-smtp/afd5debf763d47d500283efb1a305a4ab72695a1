@@ -1,0 +1,5 @@
+EHLO bar.comMIME
+RCPT
+EHLO bar.comMIME
+
+i

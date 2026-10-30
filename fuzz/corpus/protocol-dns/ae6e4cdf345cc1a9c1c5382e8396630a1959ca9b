@@ -1,0 +1,8 @@
+e.example. 300 IN TXT "a b" "c\03__"
+.4xtFmple. 1 3600 600 86400 300
+www.example. 300 IN TXT "a b" "c\034"
+_x._tcp600 86400 300
+www.eple. 300 IN TXT "a b" "c\034"
+_x.ple. admin.exFmple. 1 3600 600 86400 300
+www.example. 300 IN TXT "a b" "c\03__"
+.4xtcp:example. 60 IN dgAA

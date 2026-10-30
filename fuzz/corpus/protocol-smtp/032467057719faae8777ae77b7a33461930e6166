@@ -1,0 +1,8 @@
+EHLO c.broam
+MAIL FROM:<Smith@bar.com>2SIZE=508BITMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUILURE ORCPT=rfc822;Jones+2Bx blah...
+.etc. etc. etc.
+.
+AUTH PL@INB0YW5zdGFhZnRhbnIN AHRpbQB0YW5zdGFhZnRhbnN0YWFm
+BDAT 5 LAST
+helloQUIT

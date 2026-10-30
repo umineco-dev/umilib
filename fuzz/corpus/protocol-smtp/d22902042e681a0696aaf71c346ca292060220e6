@@ -1,0 +1,9 @@
+EHLO ba.com
+MAIL FROM:<Smith@bom
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<JJones+2on%s@foo.olm> GOTIFY=hloQUIT
+ar.com> ITMIME
+RCPT TO:<JJones+2on%s@foo.olm> GOTIFY=@bar.com> SIZE=226 BODY=8BITMIME
+RCPT TO:<JJones+2on%s@foo.olm> IT
+ar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<JJones+2on%s@foo.olm> GOTIFY=hhloQU

@@ -1,0 +1,9 @@
+*.gz
+    gzip files (RFC 1952) made on 2026-10-25 from the inputs of ../deflate:
+    - text.python, empty.python: Python 3.14 gzip.compress (zlib 1.2.12) at levels 9 and 6, MTIME 0;
+    - text.named: Python gzip.GzipFile with the name "text.bin" and MTIME 1761350400, level 6;
+    - members: two members (1000 bytes of text at level 6, then repetitive at level 1);
+    - members.padded: one member followed by 16 zero bytes;
+    - repetitive.command: GNU gzip 1.15, `gzip -c -n -9 repetitive.bin` (no name, MTIME 0).
+    Each was checked to decompress with Python's gzip module.
+    License: data produced by zlib (zlib License) and GNU gzip (GPL; the files are outputs, not code).

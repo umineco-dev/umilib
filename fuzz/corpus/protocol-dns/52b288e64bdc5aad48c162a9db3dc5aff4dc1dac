@@ -1,0 +1,2 @@
+example. 3600 IN SOA ns.example. admin.example. 1 3600 600 86400 300
+www.example. HTTPS 1 . alpn=h2,h3 ipv4hint=192.0.2.1 ech=AEn+DQBFKwAgACABWIHUGj4u+PIggY.1 ech=AEABWIHUGj4u+PIggYXcR5JF03dmKAAdgAA

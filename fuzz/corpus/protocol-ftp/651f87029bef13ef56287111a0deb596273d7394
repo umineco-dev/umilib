@@ -1,0 +1,6 @@
+USER anonymous
+P0:202|+REST 140
+RETR a.txt
+MLST /ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿtmp
+FEAT
+AUTH TLSŠQUIT

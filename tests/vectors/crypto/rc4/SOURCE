@@ -1,0 +1,6 @@
+rfc6229.txt
+    Extracted by a script from section 2 of RFC 6229, "Test Vectors for the Stream Cipher RC4",
+    https://www.rfc-editor.org/rfc/rfc6229.txt, downloaded on 2026-10-24.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records: the key, and OffsetN, the 16 bytes of the key stream from byte N.
+    Used: every record and offset.

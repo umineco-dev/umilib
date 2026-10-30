@@ -1,0 +1,4 @@
+EHLO  bar.coSmith
+MAIL FROM:<Smith@> m
+@foo.IOM¸:<šSmith
+MAIL FROM:<SmiRRRRRRth@> P

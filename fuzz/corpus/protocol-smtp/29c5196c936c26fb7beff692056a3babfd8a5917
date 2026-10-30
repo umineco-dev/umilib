@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> BODY=Jon1sexB+@foo.com
+DAT
+BIT

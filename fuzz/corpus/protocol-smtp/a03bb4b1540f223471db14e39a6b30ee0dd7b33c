@@ -1,0 +1,7 @@
+EHLO bar.com
+
+RCPT TO:<J/onST=FROM:<SE
+RCPT TO:<Jofeó@foo.com> NMIME
+RCPT TO:<Joneó@foüÿÿÿm> NOTI eATô:<SE
+RCPT TO:<Joneó@foo.com>MIME
+RCPT TO:<Joneó@foüÿÿÿm> NOTIT

@@ -1,0 +1,35 @@
+APOrose c4c9333bac560ecc979e58001b3e22fbc.
+TOP 1 1
+RPOP mrose c4c9333bac560ecc979e58001b3e
+REb
+STATb
+APOP mrose c3c9333bac560ecc979e58001b3e22fb
+SATT
+REb
+ISSATT
+LIST
+REb+OK ллл
+Eb
+STATb
+APOP mrose c4c9333bac560ecc979e58001b3e22fb
+SAT1b3e22fb
+SATT
+LIST
+VEb
+STAT*b
+APOP mrose c3c9333bac560ecc979e58001b3e22fb
+SAT
+ISSATT
+LIST
+REb+OK ллл
+Eb
+STATb
+APOP mrose c4c9333bac560ecc979e58001b3e22fb
+SATT
+REb
+ISSATT
+LIST
+REb*OK лл
+ISSATT
+LIST
+REb+OK ллл

@@ -1,0 +1,4 @@
+EHLO bar.comMIME
+RCPT
+EHLO bar.comE
+RPT TON

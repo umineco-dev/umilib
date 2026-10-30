@@ -1,0 +1,4 @@
+EHLO bar
+MAIL F
+MAIL FROM:<Smith@bar.gcom>
+loQUIT

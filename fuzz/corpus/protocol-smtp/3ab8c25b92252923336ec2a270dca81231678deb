@@ -1,0 +1,5 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Joÿÿ
+EHLO bar.comMTMIZE
+228-/DSN

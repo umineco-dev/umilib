@@ -1,0 +1,5 @@
+?GET / HTTP/1.1
+Host: aK
+Transfer-Encoding: chunked
+
+0;000000000000*000=		¦	ÿÿÿÿÿÿÿe

@@ -1,0 +1,40 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 17 (0x11)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: C=JP, O=umilib, CN=umilib OCSP Root CA
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: CN=revoked.example.com
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:5d:e6:7e:54:65:4e:32:f8:d7:bb:19:89:80:70:
+                    d2:c7:08:9f:a3:3c:85:66:7d:84:98:69:fd:f9:80:
+                    de:dd:50:86:00:50:3d:ac:cc:39:b6:fc:5a:a1:03:
+                    fe:12:e4:b0:1a:fd:04:69:53:88:71:be:15:1c:32:
+                    86:33:06:fe:9c
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Subject Key Identifier: 
+                89:06:B5:0E:06:A0:79:67:9E:12:8B:FF:71:B6:93:D8:D2:C8:21:54
+            X509v3 Authority Key Identifier: 
+                57:51:53:A2:F4:59:DB:F5:E6:4C:25:93:E5:0F:AF:1B:C3:52:DA:4B
+            Authority Information Access: 
+                OCSP - URI:http://ocsp.example.com/
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:20:37:51:91:15:eb:ed:09:5f:78:44:bc:27:6e:f2:
+        88:9f:ae:d9:6b:73:73:49:4c:da:f7:2d:90:04:46:8d:db:cf:
+        02:21:00:8d:f4:c1:18:6e:84:1e:4a:1b:47:ba:8b:07:29:08:
+        d4:fb:99:6d:f0:3b:66:f3:6f:46:72:7d:a4:0e:3d:03:72

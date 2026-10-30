@@ -1,0 +1,19 @@
+rfc894.txt, rfc1112.txt, rfc2464.txt, rfc7042.txt
+    The texts of RFC 894 (IP Datagrams over Ethernet Networks), RFC 1112 (Host Extensions for IP
+    Multicasting), RFC 2464 (Transmission of IPv6 Packets over Ethernet Networks) and RFC 7042 (IANA
+    Considerations and IETF Protocol and Documentation Usage for IEEE 802 Parameters), downloaded from
+    https://www.rfc-editor.org/rfc/ on 2026-10-26.
+    License: the IETF Trust's Legal Provisions Relating to IETF Documents.
+    Used: the multicast mappings of RFC 1112 §6.4 and RFC 2464 §7, the interface identifier example of
+    RFC 2464 §4, and the EtherTypes of RFC 7042.
+
+linux.txt
+    Frames that the Linux kernel (7.0.14-linuxkit, of Docker Desktop on arm64, with the tools of Debian
+    trixie) sent between two network namespaces joined by a veth pair, captured with tcpdump on 2026-10-26:
+    ARP, NDP and MLDv2, ICMP and ICMPv6 echoes of 3,000 bytes (fragmented at an MTU of 1,500), an echo with
+    the Record Route option, frames with an 802.1Q tag and with 802.1ad and 802.1Q tags, and UDP and TCP
+    exchanges over IPv4 and IPv6. Checksum offloading was turned off, so that every checksum is the kernel's.
+    Each frame is a line of hexadecimal after "# " lines with tcpdump's summary of it (`tcpdump -n -e -v`).
+    Made by linux.sh, run as `docker run --rm --privileged -v "$PWD":/out debian:trixie sh /out/linux.sh`,
+    and `python3 linux.py capture.pcap capture.txt linux.txt` on its output.
+    License: produced for this project (no third-party content).

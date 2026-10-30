@@ -1,0 +1,12 @@
+EHLO bar.com
+MAIL FROM:<Smith@bc±±±±±±±±om> SIZE=500 BODY=8BITMIME
+RCPT TO/:<Jones@foo.combar.LTMIÔMEöÿÿÿ
+RCPT TO:<IIIIIIIIIIIIIkkkkkkkkkkkkkkkkkIIIIIIIIIIIIIIJones@foo.com> ZE=000 8BYBKONS
+0/6 Nbar.com
+MAIL F7OM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO/:<Jones@foo.combar.LTMIÔMEöÿÿÿ
+RCPT TO:<IIIIIIIIIIIIIkkkkkkkkkkkkkkkkkIIIIIIIIII%IkkkkkkkkkkkkkkkÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkIIJones@foo.com> ZE=0 008BYBKONS
+0/6 NDS
+25 0DS
+25 0aWDNSS
+2.

@@ -1,0 +1,3 @@
+xz-utils/*.lzma
+    The .lzma test files of XZ Utils 5.8.4 (tests/files of xz-5.8.4.tar.gz, see ../xz/SOURCE),
+    described in ../xz/xz-utils/README section 3. License: 0BSD.

@@ -1,0 +1,11 @@
+rfc1071.txt, rfc1624.txt, rfc4291.txt, rfc5952.txt, rfc6890.txt, rfc9637.txt
+    The texts of RFC 1071 (Computing the Internet Checksum), RFC 1624 (Computation of the Internet Checksum
+    via Incremental Update), RFC 4291 (IP Version 6 Addressing Architecture), RFC 5952 (A Recommendation for
+    IPv6 Address Text Representation), RFC 6890 (Special-Purpose IP Address Registries) and RFC 9637
+    (Expanding the IPv6 Documentation Space), downloaded from https://www.rfc-editor.org/rfc/ on 2026-10-26.
+    License: the IETF Trust's Legal Provisions Relating to IETF Documents.
+    Used: the numerical example of RFC 1071 §3, the example of RFC 1624 §4, the text forms of RFC 4291 §2.2
+    and RFC 5952 §2, §4 and §5, the solicited-node example of RFC 4291 §2.7.1, and the address blocks of
+    RFC 6890 and RFC 9637.
+
+The packets of the Linux kernel are in ../ethernet/linux.txt (see ../ethernet/SOURCE).

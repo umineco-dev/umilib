@@ -1,0 +1,38 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.coz> SIZE=500 BODY=8BITMIfoo.com
+DATA
+Bl2Bx@foo.com
+DATA
+hh blrfc82+2Bx@foo.com
+DATA
+Bl2Bx@foo.AI‡URE ORCPT=rfc832;Jones+2Bx@foo.com
+DATA
+Bl2Bx> SIZE=5foo.AI‡URE ORCPT=rfc822;Jones+2Bx@foo.com
+DATA
+Bl2Bx@foo.com
+DATA
+hh blrfc82+2Bx@foo.com
+DETA
+Bl2Bx@foo.AI‡URE O
+DATA
+Bl2Bx@foo.com
+DATA
+hh blrfc82+2Bx@foo.com
+DATA
+Bl2Bx@foo.AI‡URE ORCPT=rfc822;Jones+2Bx@foo.com
+DATA
+m
+DATA
+
+Bl2Bx@foo.com
+DATA
+hh blrfc82+2Bx@foo.com
+DATA
+Bl3Bx@foo.AI‡URE ORCPT=rfc822;Jones+2Bx@foo.com
+DATA
+m
+Dhh blahm
+DATA
+Bahm
+DATA
+Bl2Bx

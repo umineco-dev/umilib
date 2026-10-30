@@ -1,0 +1,15 @@
+*.lz4
+    LZ4 frames made by the lz4 command line utility v1.10.0 (by Yann Collet) on 2026-10-25 from the
+    inputs of ../deflate, and each checked to decompress back with `lz4 -d`:
+    - text.level1, text.level9, repetitive.level12, random.level1: `lz4 -1`, `-9`, `-12` (independent
+      blocks of 64 KiB, content checksum, the defaults of the tool for files of this size);
+    - text.nocrc: `lz4 -1 --no-frame-crc`; empty: `lz4 -1` of nothing;
+    - text.legacy: `lz4 -l` (a legacy frame);
+    - text.dictionary: `lz4 -9 -D dictionary.bin` (the dictionary passed off-band, no Dict-ID);
+    - frames: text.level1 then random.level1; skippable: a skippable frame (magic 0x184D2A53, 5 bytes
+      "hello") followed by text.level1, made by hand;
+    - large.linked (`-9 -B4 -BD`, linked blocks), large.checksums (`-9 -B4 -BX --content-size`, block
+      checksums and the content size), large.block256 (`-1 -B5`): from an input of 284409 bytes of words
+      of a small vocabulary that is not stored here: these frames carry its xxHash-32 (content checksum),
+      which the decoder checks, and all three decode to the same data.
+    License: data produced by lz4 (BSD-2-Clause library, GPL-2.0 tool; the files are outputs, not code).

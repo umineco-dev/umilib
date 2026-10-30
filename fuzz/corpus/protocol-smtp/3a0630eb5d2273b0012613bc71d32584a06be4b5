@@ -1,0 +1,7 @@
+EHLO bar.comMIME
+RCPT TObQ10YW:
+EHLO bar.comMIME
+RCPT TO:<Jones@foo.com> N
+RCPT QB0YW5zdGFhZn:
+EHLO bar.comMIME
+RCPT TO:<s@foo.com> NOTIFY=SUCCESS,FAILURE OR

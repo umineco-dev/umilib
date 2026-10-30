@@ -1,0 +1,6 @@
+EHLO bar.com
+M
+RC6 BOm> SBITMIME
+RCPT TO:<Jones@foo.com> N.comMIME
+RCPT TO:<Jones@foo.com> NÿÿÿÿOTIFY NOHLO bzr.comMIME
+RCPT TO:<Jones@foo.com> NÿÿÿÿOoIF@TfoURE.co ORC

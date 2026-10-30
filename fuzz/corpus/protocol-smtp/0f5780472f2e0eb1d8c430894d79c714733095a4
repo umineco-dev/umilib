@@ -1,0 +1,4 @@
+EHLO bth@ BOK
+RCPT TO:<JY=oneo@of.sco0 FROM:<Smith@bar.com> SIZE=571B ODEHLO bar.com
+MAILY=8BITMIME
+RCPT TO:<Jones@foOEHLO bar.coIIIIIIIII:<h@bar.col> > SIZEU

@@ -1,0 +1,7 @@
+USE40
+RETR 0
+RETR a.t-x
+
+RETR 0
+RETR a.ttm/
+FE

@@ -1,0 +1,19 @@
+rfc7091.txt
+    RFC 7091, "GOST R 34.10-2012: Digital Signature Algorithm" (V. Dolmatov, A. Degtyarev, December 2013).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc7091.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the example of section 7 (its curve, keys, e, r and s).
+
+rfc7836.txt
+    RFC 7836, "Guidelines on the Cryptographic Algorithms to Accompany the Usage of Standards GOST R 34.10-2012
+    and GOST R 34.11-2012" (S. Smyshlyaev et al., March 2016).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc7836.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the parameter sets of appendix A, compared with the constants of crypto::curve::gost.
+
+rfc4357.txt
+    RFC 4357, "Additional Cryptographic Algorithms for Use with GOST 28147-89, GOST R 34.10-94, GOST R 34.10-2001,
+    and GOST R 34.11-94 Algorithms" (V. Popov, I. Kurepkin, S. Leontiev, January 2006).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc4357.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the CryptoPro parameter sets of section 11.4, compared with the constants of crypto::curve::gost.

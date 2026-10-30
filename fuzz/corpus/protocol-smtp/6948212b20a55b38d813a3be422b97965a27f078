@@ -1,0 +1,3 @@
+EHLO bar.co.comRhb> NOTIFY=SUCCESS,FAILURE ORCPT=rff821;Jones+2Bp@foo.comM
+DATA
+JU

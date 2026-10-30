@@ -1,0 +1,5 @@
+rfc7468.txt
+    RFC 7468, "Textual Encodings of PKIX, PKCS, and CMS Structures" (S. Josefsson, S. Leonard, April 2015).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc7468.txt on 2026-10-23.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the textual encodings given as examples in sections 5 to 13 and Appendix A.

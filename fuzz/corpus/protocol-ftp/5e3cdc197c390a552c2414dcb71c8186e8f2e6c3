@@ -1,0 +1,9 @@
+USEaon RH 
+2|+REST 140
+RETR a.txt
+MLST /tmp
+FEP5:200C:
+RETR a.txt
+MLST /tmp
+FEAT
+AUTH TLSŠQUIT

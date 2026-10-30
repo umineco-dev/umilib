@@ -1,0 +1,10 @@
+a:01 LOGIN {5}
+SMITH {6+}
+SESAME
+a002 SELEC inbox
+a:01 LOGIN {5}
+SMITH {6+}
+SESAME
+a  {6+}
+SESAME
+a]IN {5}S 

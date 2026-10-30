@@ -1,0 +1,4 @@
+exampleple. 300 IN TXT "a b" "c\03]"
+ple. 60 IN SRV 0 2 3 t.example.
+ex!m._tcp.example. 60 IN SRV 1 2 3 t.examplmple. 300
+ IN  IN T

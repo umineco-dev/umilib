@@ -1,0 +1,20 @@
+gmt-0044.5-2016-annex-b.txt, gmt-0044.5-2016-annex-c.txt, gmt-0044.5-2016-annex-d.txt
+    GM/T 0044.5-2016, "SM9 Identity-based Cryptographic Algorithms - Part 5: Parameter Definition",
+    English translation of 2024-10-30, Cryptography Standardization Technical Committee of China.
+    Downloaded from http://www.gmbz.org.cn/upload/2025-01-23/1737625720708039809.pdf on 2026-10-24
+    (announced at http://www.gmbz.org.cn/main/postDetail.html?id=20250123174859),
+    SHA-256 285cf7afa2c3b03ef419c4b9f1df278faad7a0b549be665606a04117b159d803.
+    License (the Copyright Notice of the document): "This standard is made available for public use.
+    Permission is granted to use, reproduce, and distribute this standard in whole or in part, without
+    modification, for any purpose, provided that the source is acknowledged. This permission does not
+    extend to any derivative works. All other rights are reserved by the copyright holder."
+    Content: Annex B (pages 9 to 19 of the document), the example of the key exchange protocol; Annex C
+    (pages 20 to 23), the example of the key encapsulation mechanism; Annex D (pages 24 to 30), the example
+    of public key encryption; each as the text layer of the PDF gives it (extracted with pypdf 5.4.0);
+    characters the text layer does not map are shown as "?", and nothing else is changed.
+    Note: in the steps A1 and B1 of annex B the document prints IDB || hid and IDA || hid with hid = 02
+    ("426F6202", "416C6963 6502"), but the values of H1 printed after them, and the keys, are those of
+    hid = 03, the identifier of the encryption keys given at the start of the annex; the tests use 03.
+    Used: the keys, the intermediate values and the results of the key exchange of Alice and Bob
+    (annex B), of the encapsulation for Bob (annex C) and of the encryption of "Chinese IBE standard" for
+    Bob with the stream cipher and with SM4 in CBC mode (annex D) (tests/crypto/sm9.rs).

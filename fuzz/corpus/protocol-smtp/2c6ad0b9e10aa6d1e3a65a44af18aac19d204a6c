@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=50 0BOKY=8BITMIME
+RCPT TEHLO b r.com
+MAIL FROMO:<Jones

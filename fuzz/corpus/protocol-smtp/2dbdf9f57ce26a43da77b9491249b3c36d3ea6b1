@@ -1,0 +1,3 @@
+EHLO
+RCPT TEHLO r.com
+MAIL FROMOb res

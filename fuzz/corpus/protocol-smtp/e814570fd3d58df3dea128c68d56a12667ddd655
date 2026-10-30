@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL Fÿÿÿÿÿ=ME
+RCPT ETHLO .om
+MAIL FROMO:<Jones

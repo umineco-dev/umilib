@@ -1,0 +1,25 @@
+EHLO bar.ME
+R~CPmMIEM
+RCPT TO:<Jones@foo.comRho.comRhb> NOTIFY=SUCCESS,FAILURE ORCPT=rfBDAT 0 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRhb> Nar.ME
+R~CPmMIEM
+RCPT TO:<Jones@foo.comRho.comRhb> NOTIFY=SUCCESS,FAILURE ORCPT=rfBDAT 0 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRhb> NOTIFY=SUCCESS,]FAILURE ORCfBDAT 5 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRho.comRhb> NOTIFY=SUCCESS,FAILURE ORCPT=rfBDAT 0 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPOTIFY=SUCCESS,]FAILURE ORCfBDAT 5 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRho.comRhb> NOTIFY=SUCCESS,FAILURE ORCPT=rfBDAT 0 L
+helloQUIT
+ PLO zba’.comMIEM
+RCPT TO:<Jones@foo.comRhb> NOTIFY=SUCCESS,]FAILURE ORCPT=rfBDAT 5 L
+helloQUIT
+ helloQUIT

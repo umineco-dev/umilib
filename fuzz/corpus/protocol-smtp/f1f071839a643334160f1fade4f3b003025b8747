@@ -1,0 +1,3 @@
+EHLO bar.com
+MAIL FROM:<Smith@r.com> SIZE=2500 BNDY=8BITMIME
+EHLO T TZEO:

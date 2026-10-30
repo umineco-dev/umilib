@@ -1,0 +1,3 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com>  SIZE=
+RCPT TO:<Jonÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿes@foo.com>z N

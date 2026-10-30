@@ -1,0 +1,15 @@
+aes_gcm_siv_test.json
+    Project Wycheproof, testvectors_v1/aes_gcm_siv_test.json of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    It includes the test vectors of RFC 8452 appendix C.
+    License: Apache License 2.0.
+    Used: every test.
+
+rfc8452.txt
+    Extracted by a script from the test vectors of RFC 8452 appendix C (C.1 AEAD_AES_128_GCM_SIV,
+    C.2 AEAD_AES_256_GCM_SIV, C.3 counter wrap tests) of https://www.rfc-editor.org/rfc/rfc8452.txt,
+    downloaded on 2026-10-24; the script checks every byte count the RFC prints.
+    License: IETF Trust Legal Provisions (code components under the Revised BSD License); the vectors are data.
+    Format: Key = Value records under the heading of their section; hexadecimal values, named after the RFC labels
+    (Plaintext, AAD, Key, Nonce, AuthenticationKey, EncryptionKey, POLYVALInput, POLYVALResult, XORNonce, Masked,
+    Tag, InitialCounter, Result).
+    Used: every record, including the intermediate values.

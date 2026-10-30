@@ -1,0 +1,17 @@
+rfc6979.txt
+    RFC 6979, "Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)" (T. Pornin, August 2013).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc6979.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: appendix A.2.5, the P-256 key pair (U = xG) and the nonces k with r = x(kG) mod q.
+
+rfc7027.txt
+    RFC 7027, "Elliptic Curve Cryptography (ECC) Brainpool Curves for Transport Layer Security (TLS)" (J. Merkle, M. Lochter, October 2013).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc7027.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: appendix A.1, the brainpoolP256r1 key pairs and shared point.
+
+rfc7748.txt
+    RFC 7748, "Elliptic Curves for Security" (A. Langley, M. Hamburg, S. Turner, January 2016).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc7748.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: sections 5.2 and 6, the ladder of curve25519 and curve448.

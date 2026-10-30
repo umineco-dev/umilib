@@ -1,0 +1,16 @@
+From: Nathanie, Borenstein"<nsb@bellcore.com>
+To: Ned Freed <ned@innosoft.com>
+Subject: Sample message
+MIME-Version: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamble.
+--mple boundary
+
+This is implicitly typed plain US-ASCII text.
+--simple boundary
+Content-type: text/plain; charset=us-ascii
+
+This is exSCII text.
+--simple boundary
+Content-type: text/plain; charset=us the epilogue.

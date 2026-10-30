@@ -1,0 +1,3 @@
+01r SELECT &inbox
+a00'3!@ FETCH 43 BODY[HEADER.FIELDS (DA
+a0TE Fzzzzzzz) {10}

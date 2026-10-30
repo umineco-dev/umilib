@@ -1,0 +1,4 @@
+EHLO b
+RCPT TO:<Jones@com> SIZE=EHLO bar.com
+MAIL FRO
+RCPT TO:<o@esJnfoo.com> NOTIFEO

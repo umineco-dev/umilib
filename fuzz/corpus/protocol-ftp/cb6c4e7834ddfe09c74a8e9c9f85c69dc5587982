@@ -1,0 +1,14 @@
+211-F211-Fehturez
+ MDTM
+ Q
+PAAÿÿÿÿÿ:ÿýFEIZE
+ Mp, eLyTt:200C:417A|5282|
+R
+RETR a.txt
+MLST /tmp
+FEAT
+AUTH TLS
+QUTH TLS
+*;
+211 End
+213

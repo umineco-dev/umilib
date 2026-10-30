@@ -1,0 +1,10 @@
+EHLO baME&ME&
+RCPT TO:<Jones@foo.com> NOTI
+
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<Smith@bar.c‘‰> SIZE=250 BOKY
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jone FROM:<Smith@bar.c‘‰> SbME

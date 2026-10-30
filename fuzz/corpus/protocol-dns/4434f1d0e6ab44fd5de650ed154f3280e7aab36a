@@ -1,0 +1,1 @@
+exampl.example. 300 IN TXT "a b" "c\034"example. 3600 IN SOA ns.exampTPS 1 . alpn=h2,h3 ipv/hinTXT "a b" "c\034"example. 3600 IN SOA ns.exampTPS 1 . alpn=h2,h6 ipv/hint=192.#.2.1 ech=AE HTTPS 1 . alpn=h*,h3  . alpn=h2,h3 i.#.2.1 ech=AEn. alpn=A

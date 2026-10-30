@@ -1,0 +1,15 @@
+*.11-4.lzss, *.10-5.lzss
+    Streams made by Haruhiko Okumura's LZSS encoder-decoder, lzss.c ("LZSS encoder-decoder
+    (Haruhiko Okumura; public domain)"), from https://oku.edu.mie-u.ac.jp/~okumura/compression/lzss.c,
+    downloaded through the Internet Archive
+    (https://web.archive.org/web/2020id_/https://oku.edu.mie-u.ac.jp/~okumura/compression/lzss.c,
+    SHA-256 c2afd81862464871868fc552ccf552d7037b7370d1f0b18659eb45191d892a24) on 2026-10-25,
+    compiled with clang and run as `lzss e <name>.bin <name>.11-4.lzss`; each stream was checked to
+    decode back with `lzss d`. The .11-4 streams use the parameters of the file (EI = 11, EJ = 4); the
+    .10-5 streams were made by the same file with its defines changed to EI = 10 and EJ = 5.
+    License: public domain.
+*.bin
+    The inputs: text.bin (words of a small vocabulary), binary.bin (runs, repeats and random bytes),
+    spaces.bin (long runs of spaces, which match the spaces the ring buffer starts with) and one.bin
+    (one byte), made with a seeded pseudorandom generator for these tests.
+    License: made for umilib (MIT).

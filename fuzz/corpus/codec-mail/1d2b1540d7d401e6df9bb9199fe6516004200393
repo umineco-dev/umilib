@@ -1,0 +1,20 @@
+From: Nubject: Sample essage
+MIME-VerVVVVVVVVVVsion: 1.0
+Content-type: multipart/myxed; boundary="simple boundary"
+
+This -VContent-type:e.
+--simple boundary
+h
+ siTi plain US-ASCII text.
+--simple boundary
+Content-type:
+-s imtlicple boundary"
+
+This is thA preamble.
+--simple boundary
+ 
+This is implicitly typed pUS-ASCII text.
+--simple boundary
+Content-type:
+--'imple boundary--
+This is the epilogue.

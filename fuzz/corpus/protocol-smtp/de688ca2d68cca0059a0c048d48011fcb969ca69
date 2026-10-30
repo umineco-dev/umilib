@@ -1,0 +1,4 @@
+EHLO bar.co
+MmAL FRI
+.
+AUTH PLAIN AÕOTIFY=SUIT

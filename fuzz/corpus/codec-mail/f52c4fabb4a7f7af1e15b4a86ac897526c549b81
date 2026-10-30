@@ -1,0 +1,9 @@
+From: NaMIME-Version: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamble.
+--simpleI text.
+--simple boundary
+Content-type: text/plain; charsetDus-asy typed plain US-ASCII text.
+--simple boundary
+Content-type: text/plain; charsetDus-a: text/plain; charset=us the epilogue.

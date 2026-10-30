@@ -1,0 +1,31 @@
+pkits/
+    The NIST Public Key Interoperability Test Suite (PKITS), 2011 version:
+    https://csrc.nist.gov/CSRC/media/Projects/PKI-Testing/documents/PKITS.pdf (the description) and
+    https://csrc.nist.gov/CSRC/media/Projects/PKI-Testing/documents/PKITS_data.zip (the data), downloaded on
+    2026-10-25.
+    License: a work of the U.S. Government (NIST), not subject to copyright in the United States.
+    Format: certs/ and crls/ are the DER certificates (.crt) and CRLs (.crl) of PKITS_data.zip, unchanged. cases.txt
+    has one line per test or sub-test of section 4: number | title | OK or FAIL | settings | objects.
+    - settings: "default" (the default settings of section 3), or a comma-separated list of explicit-policy,
+      policy-set=OID,..., mapping-inhibit and any-inhibit (the initial-* inputs of RFC 5280 section 6.1.1);
+    - objects: the files of certs/ and crls/ in the order of the test's "Certification Path", the trust anchor
+      first and the end entity last.
+    How cases.txt was made: PKITS.pdf was converted to text; each test's title, "Certification Path" list and
+    "Expected Result" were extracted (the object names joined into file names), and the settings were taken from the
+    procedure of each test of sections 4.8 to 4.12. Every row was then checked by hand against the PDF and against its
+    title (Valid or Invalid). The first extraction misclassified six expectations, corrected from the PDF: the text
+    "The path not should validate" (a typo of the PDF) in 4.4.20, 4.4.21 and 4.9.3, and conditional results in 4.12.x.
+    Used: every test; 4.1.4 and 4.1.5 are skipped (DSA signatures). OpenSSL disagreements are discussed in
+    .docs/cert.md.
+
+limbo/
+    x509-limbo (C2SP), https://github.com/C2SP/x509-limbo, commit 1080e565f26e544bbe9cf99953be8a57c08e7e20,
+    https://raw.githubusercontent.com/C2SP/x509-limbo/main/limbo.json downloaded on 2026-10-25.
+    License: Apache License 2.0 (limbo/LICENSE).
+    Format: limbo.json is the suite's JSON (version 1): each test case has its trusted, untrusted and peer
+    certificates (PEM), CRLs, validation time, expected result, purposes and expected peer name.
+    How it was made: tools/limbo_subset.py keeps every case except those of bettertls::nameconstraints, of which it
+    keeps every 16th (905 of 9802 cases); run it on the full limbo.json to remake the file. The tests run the full
+    suite instead when UMILIB_LIMBO names its limbo.json.
+    Used: every case of the file; the 13 that differ by design are listed with their reasons in
+    tests/auth/cert/path.rs (LimboCase::DIVERGENCES).

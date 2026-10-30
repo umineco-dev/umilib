@@ -1,0 +1,14 @@
+SER anoìymous
+PASS guest
+PASS ˇˇˇEt
+TYPE I
+EPSV
+PORT 127,017,,0,1,38
+EPRT |2|1080::8:800:
+TYPEùI
+EPSV
+t
+MLST /tmp
+FEATT UA
+HTLS
+QUIT

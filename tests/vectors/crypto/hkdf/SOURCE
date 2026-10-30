@@ -1,0 +1,12 @@
+rfc5869.txt
+    Extracted by a script from appendix A of RFC 5869, "HMAC-based Extract-and-Expand Key Derivation Function
+    (HKDF)", https://www.rfc-editor.org/rfc/rfc5869.txt, downloaded on 2026-10-24; the script checks every
+    octet count the RFC prints.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records: Case, Hash, IKM, salt, info, PRK, OKM (hexadecimal) and L.
+    Used: every record.
+
+hkdf_sha1_test.json, hkdf_sha256_test.json, hkdf_sha384_test.json, hkdf_sha512_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

@@ -1,0 +1,9 @@
+a001 LOGIN {6}
+SMDsaveXXXXqqqqqqXX\XXXXX'XXXXXXXXXXXXX?d-messages (\SeeqqqqqqqqqqqqqqqqqSEEN
+a005 APPEND saveXXXXXXXXXXXX\XXqqqqqqqqqER.FIELDS (DATEMFOUNT) UNqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqSEEN
+a005 APPEND saveXXXXXXXXXXXX\XXqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqSEEN
+a004 APPEND saveXXXXqqqqqqXX\XXXXX'XXXXXXXXXXXXX?d-messages (\SeeqqqqqqqqqqqqqqqqqSEEN
+a005 APPEND saveXXXXXXXXXXXX\XXqqqqqqqqqqqqqqqqqqqqn) {10}
+0123456789
+a006 IDLE
+DOÿÿÿÿÿÿÿÿ LOGOUT

@@ -1,0 +1,2 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> S=500 BODY=Eo@foo.com> NOTIFYh=SUC»¦S,FAILURE

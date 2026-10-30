@@ -1,0 +1,17 @@
+EHLO bar.comMIME
+RCPT TObQB0YW5zdGFhZn:
+EHLO bar.comMIME
+RCPT TO:.com
+ACPT T
+EHLO b.at.cocoSN
+25>FhZn:
+EHLO 0b.aar.com
+AObQB0YW5zdGFhZn:
+EHLO bar.comMIME
+RCPT TO:.GFhZn:
+EHLO bar.comMIME
+RCPT TO:.com
+ACPT T
+EHLO b.ar.cocoSN
+25>FhZn:
+EHCPT Tnes@foo.com> NOTIFY=SUCCESS,FAILURE OR

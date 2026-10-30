@@ -1,0 +1,6 @@
+EHLMAIL FOM:<Smith@bar.com>O bar.com
+MAIL FOM:<Smith@bar.com> SI^E=500 BOKY=8BITMIME
+RCPT TO:<Jones@com> SIZE=EHLO bar.com
+MAIL FROM:<Smith500 BOKY=8BITMIME
+RCPT TO=:<Jones@foo@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<o@esJnfoo.com> NOTIFEO

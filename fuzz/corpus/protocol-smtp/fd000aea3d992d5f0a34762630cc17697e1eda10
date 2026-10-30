@@ -1,0 +1,12 @@
+EHLO bar.om@DATAö½“—ßŠah blah..?
+AUTH PLAIN A
+BHLO bar.om@D blahLO bar.om
+DA
+AUTH PLAIN A
+BHLO bar.omú@DATA
+Blah blh..?
+AUTH PLAIN A
+BHLO bar.om@DATA
+lah bah blah..?
+AUTH PLAIN A
+BDÙQUI`

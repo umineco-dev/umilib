@@ -1,0 +1,7 @@
+HMAC_DRBG_{no_reseed,pr_false,pr_true}.rsp, Hash_DRBG_{no_reseed,pr_false,pr_true}.rsp, CTR_DRBG_{no_reseed,pr_false,pr_true}.rsp
+    NIST CAVP, DRBG Validation System (DRBGVS) test vectors for SP 800-90A: without reseeding, with reseeding and without prediction resistance, and with prediction resistance.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/drbg/drbgtestvectors.zip (drbgvectors_no_reseed.zip, drbgvectors_pr_false.zip, drbgvectors_pr_true.zip) on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every instantiation, reseed and generate sequence of HMAC_DRBG and Hash_DRBG, and of CTR_DRBG with
+    AES-128, AES-192 and AES-256 with and without the derivation function (the 3KeyTDEA records are not used:
+    umilib does not provide CTR_DRBG over TDEA).

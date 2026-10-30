@@ -1,0 +1,13 @@
+EHLO bar.ctrh@bar.ko8BITMIME&ME&
+RCPT TO:<Jones@foo.com> NOTI
+
+RCPT TO:<Jones@foo.com> NOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPTMAIL  TO:<Jone FROM:<Smith@bar.c‘‰> SIZE=250 BOKY0 BODY=8B.com
+MAIL FROM:<Smith@bar.com> SIZE=500 
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jnes@foo.com> NOTI
+RCPT TO:<Jones@foo.com> NEHLO ba
+RCPT TO:<Jones@foo.com> NOTI
+RCPTMAIL  TO:<Jone ME

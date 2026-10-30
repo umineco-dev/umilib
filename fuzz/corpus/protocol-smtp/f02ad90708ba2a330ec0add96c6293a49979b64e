@@ -1,0 +1,9 @@
+EHLO bar.om
+MAIL FROM:<Smith@bar.com> ÿÿÿ.com
+MAIL FROM:<Smit$@bar.com> SIZE=1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,s.com
+MAIL FROM:<Smit$@bar.com> SIZE=2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,500 BODY=8BITMIME
+RCPT TO:<o@eJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJHþ=500 BO blah.
+.
+AU com
+MAIL FROM:<Smih@tbar.com> SIZE
+RCT

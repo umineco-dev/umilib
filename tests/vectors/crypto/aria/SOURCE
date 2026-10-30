@@ -1,0 +1,7 @@
+aria_gcm_test.json, aria_ccm_test.json, aria_cbc_pkcs5_test.json, aria_cmac_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.
+
+The examples of RFC 5794 appendix A (the key schedule, the round keys and the intermediate values of the
+128-bit key, the ciphertexts of the 192-bit and 256-bit keys) are in tests/crypto/aria.rs.

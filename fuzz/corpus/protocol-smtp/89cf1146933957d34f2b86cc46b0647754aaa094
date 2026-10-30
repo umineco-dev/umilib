@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BOKY=8BITMIME
+RCPT TO:<Jones@fooEHLO bar.com
+MAIL FROM:<Smith@bar.c.com> NOTIFY=SoODY=U

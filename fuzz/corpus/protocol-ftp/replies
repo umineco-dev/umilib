@@ -1,0 +1,7 @@
+211-Features:
+ MDTM
+ SIZE
+ MLST type*;size*;modify*;
+211 End
+213 19980615100045.014
+type=file;size=1024990;modify=19980615100045; /tmp/cap60.pcap

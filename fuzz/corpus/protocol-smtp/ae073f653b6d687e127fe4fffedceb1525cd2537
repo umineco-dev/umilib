@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<Smith@ÿÿÿÿcom> SIZE=500 BODY=8Y.coi
+MAIL FROM:<Smith@bnnnnnnnnnnnar.com> SIZE=500 BODY=8BITMIME
+RCTnhelloQUIT

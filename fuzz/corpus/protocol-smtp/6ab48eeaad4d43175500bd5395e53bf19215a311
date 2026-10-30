@@ -1,0 +1,8 @@
+EHLO bar.com
+MAIL FROM:<Smit$Smit$@bar.com> SIZE=2505 BODY=8BITMr.com
+MAIL FROM:<Smit$Smit$@bar.com> SIZE=2505 BODY=8BITMIMEcom
+MAIL FROM:<Smit$Smit$@bar.com> SIZE=2505 BODY=8BITMr.com
+MAIL FROM:<Smit$Smit$@bar.com> SIZE=2505 BODY=8BITMIME
+RC
+RC^PIME
+RC^PT TO:

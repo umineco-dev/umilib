@@ -1,0 +1,11 @@
+USER anonymous
+PASS guest
+TYPEE' 
+PSV
+PORT 127,0,0,1,7,138
+EPRT |2|10юоееге90ом200C:417A|52ЪЪЪE+RESЪЪ100
+RETR a.txt
+MLST /tmp
+FEAT
+AUTH TLS
+QUIT

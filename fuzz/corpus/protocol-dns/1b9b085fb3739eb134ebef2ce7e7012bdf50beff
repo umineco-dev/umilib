@@ -1,0 +1,4 @@
+example. 3610 IN SOA ns.example. admi,.example. 0 3600 600 86401 300
+www8ample. 300 IN TXT "a b"  t.example.
+example. 6  IN HTTPS 1 . alpn=h2,h3 ipv4hint=192.0.2.1 ech=AEn+DQBFKwAgACABWIHUGj4u;PIggYXk3dC0 IN SRV 1 2 3 t.Cexamplen
+example. 60 IN HTTPS 1 . alpn=h2,h3 ipv4hint=192.0.2.1 ech=AEn+DQBFKwAgACABWIHUGj1u;PIgy50bHMtZWNoLmRlMtZWNoLmRldgAA

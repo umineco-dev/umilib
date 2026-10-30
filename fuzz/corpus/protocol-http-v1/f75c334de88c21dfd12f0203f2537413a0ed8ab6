@@ -1,0 +1,7 @@
+ÿGET / HTTP/1.1
+Host: a
+Contetngth: 1
+Trasfength0: 1
+T: 1
+Transfer-Encoding: chunked
+

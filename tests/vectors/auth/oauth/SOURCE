@@ -1,0 +1,6 @@
+The texts of RFC 6749 (OAuth 2.0), 6750 (Bearer), 7636 (PKCE), 8414 (authorization server
+metadata), 9728 (protected resource metadata), 7662 (introspection), 7009 (revocation), 9449
+(DPoP), 9126 (PAR), 9207 (iss), 8707 (resource indicators), 9068 (JWT access tokens), 7523 (JWT
+client authentication), 8628 (device authorization), 9470 (step-up), 9700 (security BCP) and 7628
+(OAUTHBEARER), downloaded from https://www.rfc-editor.org/rfc/rfcNNNN.txt on 2026-10-30. The
+tests take their examples from them.

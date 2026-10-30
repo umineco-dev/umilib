@@ -1,0 +1,11 @@
+@GET / HTTP/1.1
+Host: a
+
+PO1T /x HTTP/1.1
+|oct:ÿÿT'H /x HTTP/1.1
+|oct:ÿÿH'TP
+|oct:ÿÿH'T /x HT/1.1
+|oct:ÿÿH'
+Host:nt-Length: "
+
+‘”·

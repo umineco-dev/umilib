@@ -1,0 +1,7 @@
+example. 3600 IN SOA ns.example. admin.exFmple. 1 3600 600 86400 300
+w. 3600 IN SOA ns.example. admin.exFmple. 1 3600 600 86400 300
+www.exmin.exFmple.  TXT "a b" "c\034"
+_x._tcp.example.  SOA ns.example. admin.exFmple.
+xample. admin.exFmple. 1 3600 600 86400 300
+w.ample. admin.exFmple. 1 3600 600 86400 300
+ww

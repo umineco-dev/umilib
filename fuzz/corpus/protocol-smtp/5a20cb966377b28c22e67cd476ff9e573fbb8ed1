@@ -1,0 +1,26 @@
+EHLO bar.com
+MAIL FROM:<Smith@barvcom> SIZE=(00 BODY=8BI
+RCPT TOr.com
+MAIL FROM:<Smith@bar.bom> SIZE=m
+IAS SIZE=m
+IASmithY=SoODYZE=m
+IASmithY=SoODYÿÿÿÿÿÿÿÿÿÿÿÿÿm
+MAIL FROM:<Smith@bar.bom> SIZE=m
+IASmi`thelloQUITÿÿÿÿÿÿm
+MAIL FROM:< bar.com
+MAIL FROM:<Smith@barvcom> SIZE=(00 BODY=8BI
+RCPT TOr.com
+MAIL FROM:<Smith@baÿÿÿÿÿÿÿÿÿÿÿÿÿm
+MAIL FROM:<Smith@bar.bom> SIZE=m
+IASmi`thelloQUITÿÿÿÿÿÿm
+MAIL FROM:< bar.com
+MAIL FROM:<Smith@barvcom> SIZE=(00 BODY=8BI
+RCPT TOr.com
+MAIL FROM:<Smith@bar.bom> SIZE=m
+IAS SIZE=m
+IASmithY=SoODYÿÿÿÿÿÿÿÿÿÿÿÿÿm
+MAIL FROM:<Smith@bar.bom> SIZE=m
+IASmi`thelloQUITÿÿÿÿÿÿm
+MAIL FROM:<Smith@bar.bom> SIZE=m
+IASmi`thelloQUITÿ=:<Jones@foÿÿÿÿAIL FROM: BODY=8elloQUIT;Smith@bar.bom> SIZE=m
+IASmi`thelloQUITÿ=:<Jones@foÿÿÿÿAIL FROM: BODY=8elloQUIT;

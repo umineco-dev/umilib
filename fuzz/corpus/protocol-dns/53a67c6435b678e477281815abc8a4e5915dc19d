@@ -1,0 +1,3 @@
+example. 3600 IN SOA ns.example. admin.example. 0 3600 600 86401 300
+www.ample. 150 IN TXT IAA;BAxample.
+example. 60 IN HTTPS 1 . alpn=2.1 ech=AEn+DQBFKwAgACABWIHUGj4u ipv4hint=192.0.2.1 9H4mKAAIAAEAAQA;BAANAEnB1YmxpYy50bHMtZWNoLmRlMtNoLmRlMtZWNoLmRldgAA

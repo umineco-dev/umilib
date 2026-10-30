@@ -1,0 +1,7 @@
+rfc7914.txt
+    Extracted by a script from sections 8 to 12 of RFC 7914, "The scrypt Password-Based Key Derivation Function",
+    https://www.rfc-editor.org/rfc/rfc7914.txt, downloaded on 2026-10-24.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records with the function (Salsa20/8, BlockMix, ROMix, PBKDF2-HMAC-SHA-256, scrypt), its
+    parameters and its input and output in hexadecimal (P and S are the ASCII strings in hexadecimal).
+    Used: every record; the scrypt vector with N = 1048576 (1 GiB of memory) only when the tests are run with --ignored.

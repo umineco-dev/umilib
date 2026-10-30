@@ -1,0 +1,3 @@
+EH=E
+RCPT TO:<ponsJ@foo..com>EHLLO -MAI=E
+RCPT TO:<ponsJ@foo..com>EHLO

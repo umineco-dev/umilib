@@ -1,0 +1,5 @@
+EHLO bar.com
+MAIL FROM:<S1mith@bar.c---5------------------------------------------------------------------------------------------------------om> SIZE=500 BODY=8BITMIME
+500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> NTFOIYm)
+MAIL F

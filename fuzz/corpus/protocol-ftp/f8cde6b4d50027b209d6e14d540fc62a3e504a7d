@@ -1,0 +1,8 @@
+USER anonymous
+PASS guest
+TYPEùI
+EPSV
+&
+MLST /tmp
+FEAT
+AUTH SETLSRST /

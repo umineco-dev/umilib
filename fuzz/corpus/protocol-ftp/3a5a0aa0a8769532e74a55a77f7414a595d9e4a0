@@ -1,0 +1,38 @@
+USE
+FESt
+MLST E I
+EPfV
+PORxt
+MLST /tm`p
+FEAT
+AUTSt
+MLST /tmp
+MLST /tmpH TLSt
+MLST /tmp
+FET 1½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½AT
+AUTSt
+MLST /tmp
+MLST /tmpH TLSt
+MLST /tmp
+FET 1½½½½½½½½½½½½½½½½½½TH TLSt
+MLST /tmp
+MLST 8:00C:417A|05EST 100
+RETR a.txtÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ
+MLST /t
+mFATpE
+AUTH TLSt
+MLST /tmp
+MLST /½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½2:LST /tmP
+FEAT
+AUTH TLSt
+MLST /tmp
+MLST 8:00C:417A|05EST 100
+RETR a.txt
+MLST /tmp
+FEAT
+AUTH TLSt
+MLST /tmp
+MLST /tmp
+FEAT
+AUTH TLS
+QUIT

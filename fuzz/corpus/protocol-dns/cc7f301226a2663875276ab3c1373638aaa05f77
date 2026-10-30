@@ -1,0 +1,4 @@
+example. 3600 IN SOA ns.example. admin.exFmple. 1 3600 600 86 300
+ww.example. 300 IN TXT "34"
+_x._tcp.exampl00 300
+ww

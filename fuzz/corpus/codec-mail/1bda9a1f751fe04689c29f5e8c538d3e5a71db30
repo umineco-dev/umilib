@@ -1,0 +1,18 @@
+From: Natöûniel Borenstein <nsb@bellcore.com>
+To: Ned Freemplicitly typed plain US-ASCII text.
+--simple boundary
+Content-type:
+--simple boundary--
+This is the epilogue. boundary"
+
+This -Version: 2.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preawble.
+--simple boundary
+
+This is implicitly typed plain US-ASCII text.
+--simple boundüèy
+Content-type:
+--simple boundary--
+This is the epilogue.

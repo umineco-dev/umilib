@@ -1,0 +1,25 @@
+Certificate Request:
+    Data:
+        Version: 1 (0x0)
+        Subject: C=JP, O=umilib, CN=csr.example.com
+        Subject Public Key Info:
+            Public Key Algorithm: ED25519
+                ED25519 Public-Key:
+                pub:
+                    15:94:8d:aa:b3:37:06:f4:04:08:35:77:ef:29:40:
+                    34:95:12:c3:0d:52:4c:c7:e1:f4:92:68:8f:45:d4:
+                    5e:69
+        Attributes:
+            challengePassword        :password1234
+            unstructuredName         :Unstructured Name
+            Requested Extensions:
+                X509v3 Subject Alternative Name: 
+                    DNS:csr.example.com
+                X509v3 Key Usage: critical
+                    Digital Signature
+    Signature Algorithm: ED25519
+    Signature Value:
+        4e:6f:02:86:05:7c:64:ff:95:75:82:5a:7d:fe:43:1e:31:a2:
+        16:18:27:39:71:b8:45:e6:ee:b4:f0:d3:fb:8a:f8:bd:30:99:
+        df:e1:48:c9:49:e0:24:81:65:bb:f6:50:75:41:31:19:e9:f6:
+        f7:01:91:be:38:24:bb:78:ca:04

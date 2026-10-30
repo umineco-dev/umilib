@@ -1,0 +1,11 @@
+USER anonymousdddddddddd
+PASS guest
+TYPE 
+IPESV
+PORT 1n7,0,0,1,7,138
+APRT |2|108ƒƒƒƒƒƒƒƒƒƒÿÿ00
+RETR a.txt
+MLST /tmp
+FEAT
+AUTH TLS
+QUIT

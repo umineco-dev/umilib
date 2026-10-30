@@ -1,0 +1,5 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> BODY=Jones+1Bx@foo.com
+DAT
+B
+BDATelloQUIT

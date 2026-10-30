@@ -1,0 +1,2 @@
+example. 360  IN SOA le. admin.xample. 1 3600 600 86400 300
+wwple. 301 IN TXT "a b" c"\034"e

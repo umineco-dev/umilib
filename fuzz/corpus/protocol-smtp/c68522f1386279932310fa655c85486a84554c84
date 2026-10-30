@@ -1,0 +1,5 @@
+EHLO bcr.comMIME
+RCPT TO:</ones@foo.comRhb> NOTIFY=FAILURE ORCPhomM
+DATA
+Blah bME
+RCPT TO:</ones@foo.comRhb> NOTIFY=SUCCESS,FAILURE ORCPT=rff822;

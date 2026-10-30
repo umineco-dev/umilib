@@ -1,0 +1,12 @@
+openssl/
+    Certificates, CRLs and certification requests made by OpenSSL 3.5.7 (openssl-version.txt) in Debian trixie with
+    make.sh and openssl.cnf, on 2026-10-26: an independent implementation the tests check against.
+    License: generated data (OpenSSL is Apache License 2.0; its output is not covered).
+    Format: NAME.der is a certificate in DER and NAME.key its private key (PKCS #8 PEM); NAME.crl is a CRL in DER;
+    NAME.csr is a certification request in DER; NAME.txt, NAME.crl.txt and NAME.csr.txt are the text OpenSSL prints
+    for each (`-noout -text`), for reading. The CRLs' thisUpdate and revocation dates are the time make.sh ran.
+    Used: every certificate, CRL and request; the keys of the leaf, the self-signed certificates and the ML-KEM and
+    X25519 leaves.
+
+The example certificates of RFC 8410, RFC 9881, RFC 9909 and RFC 9935 are read from the RFC texts in
+../key/ (see ../key/SOURCE).

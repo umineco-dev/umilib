@@ -1,0 +1,2 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=5@bar.com> SIZE=499 B

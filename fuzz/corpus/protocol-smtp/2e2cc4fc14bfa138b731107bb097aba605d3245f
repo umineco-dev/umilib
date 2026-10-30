@@ -1,0 +1,6 @@
+EHLO bar.om
+DATAlah.
+.
+AUTH PLAIN AHRpbQB0YW5zdGFhZnRpbQB05YWdzGFhZnRhbnN0YWFm
+BDDT 5 LAST
+helloQUIm

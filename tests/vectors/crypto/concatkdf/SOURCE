@@ -1,0 +1,10 @@
+KDA-OneStep-Sp800-56Cr2.json
+    NIST ACVP, the sample vectors of the one-step key derivation of SP 800-56C Rev. 2 (KDA OneStep), the file
+    gen-val/json-files/KDA-OneStep-Sp800-56Cr2/internalProjection.json of https://github.com/usnistgov/ACVP-Server,
+    downloaded on 2026-10-26.
+    License: NIST ACVP test vectors, a work of the United States government (public domain in the United States).
+    Format: ACVP JSON; FixedInfo is t || uPartyInfo || vPartyInfo || L, a party's information being its partyId
+    then its ephemeralData if any, and L the length of the derived keying material in bits as 32 bits. VAL tests
+    say whether their dkm is the right one (testPassed).
+    Used: every test whose auxiliary function is a hash function (SHA2-224, SHA2-512, SHA3-512) or HMAC with the
+    same hashes; the KMAC tests wait for KMAC in the library.

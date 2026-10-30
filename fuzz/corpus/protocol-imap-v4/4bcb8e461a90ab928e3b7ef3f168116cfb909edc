@@ -1,0 +1,16 @@
+a:01 i nbox
+a:01 GIN {ox
+a:01 LOGIN {5}
+SMITH {6+}
+SESAME
+a]02 inbF002 SELECT ECT x
+a:01 LOGIN {5}
+SMITH {6+}
+SESAME
+a]02 inbF002 SELECT inbox
+a:01 GIN {ox
+a:01 LOGIN {5}
+SMITH {6+}
+SESAME
+a]02 inbF002 SELECT inbox
+a:02 GIN {5}S 

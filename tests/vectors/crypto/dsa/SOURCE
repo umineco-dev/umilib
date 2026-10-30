@@ -1,0 +1,8 @@
+dsa_*_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24: the
+    parameter sizes (2048, 224), (2048, 256) and (3072, 256) with DER signatures and, in the files ending in
+    p1363, the fixed signatures of IEEE P1363.
+    License: Apache License 2.0.
+    Used: every test.
+
+The keys and signatures of RFC 6979 appendix A.2.1 and A.2.2 are read from tests/vectors/math/ec/rfc6979.txt.

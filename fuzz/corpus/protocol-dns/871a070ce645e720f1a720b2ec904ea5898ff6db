@@ -1,0 +1,2 @@
+example. 3600 IN SOA ns.example. admin.example. 1 3600 600 86400 300
+www.examp. 60 IN HTTPS 1 . alpn=h2,AEnB0YmxpYy50bHMtZWNoLmRldgAA

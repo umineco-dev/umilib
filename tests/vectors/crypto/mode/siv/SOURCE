@@ -1,0 +1,5 @@
+aes_siv_cmac_test.json, aead_aes_siv_cmac_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof: AES-SIV (RFC 5297) as a
+    deterministic authenticated encryption and as an AEAD with a nonce, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

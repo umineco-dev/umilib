@@ -1,0 +1,8 @@
+From: Nathaniel Borenstein <nsb@bellcore.coÿÿÿÿÿÿÿÿÿm>
+To: Ned Freed <ned@innosoft.com>
+Subject: Sample message
+MIME-Version: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamble.imple boundary--
+This is the epilogue.

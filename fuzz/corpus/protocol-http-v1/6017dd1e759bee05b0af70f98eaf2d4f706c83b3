@@ -1,0 +1,6 @@
+@GET / HTTP/1.1
+Host: !G
+Transfer-Encoding: chunked
+
+0000000040000000‰							3
+he

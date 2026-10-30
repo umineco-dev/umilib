@@ -1,0 +1,34 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 7 (0x7)
+        Signature Algorithm: ED448
+        Issuer: CN=ed448
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: CN=ed448
+        Subject Public Key Info:
+            Public Key Algorithm: ED448
+                ED448 Public-Key:
+                pub:
+                    00:9c:a4:7d:1e:ac:0d:50:2c:04:b6:a1:e4:87:64:
+                    b6:83:44:0c:2d:da:82:23:9c:ca:4e:50:3c:ba:ff:
+                    88:de:c3:94:79:d8:c6:c9:35:53:5d:1a:19:22:b2:
+                    67:e9:73:7e:83:9c:77:5a:bb:06:53:00
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Digital Signature, Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                A2:AB:03:26:D5:98:DB:A4:C6:54:FE:16:DC:25:5B:9C:82:69:AD:97
+    Signature Algorithm: ED448
+    Signature Value:
+        32:93:49:3d:8c:81:da:6b:f5:27:f5:2e:d3:c4:f7:21:e2:78:
+        72:b0:20:33:41:0d:ea:fb:79:13:f7:5b:43:8c:ae:09:26:4b:
+        07:a4:3d:44:e7:37:96:b4:cd:f5:6c:a8:f5:9d:93:5b:7c:9f:
+        6d:e7:80:00:05:dc:72:5e:a4:cb:5d:b2:08:8d:e1:9b:90:0e:
+        d3:3f:61:1e:9e:f9:2b:2c:18:17:89:fc:d1:f4:8e:b0:67:7d:
+        9e:33:b8:ca:58:64:83:3c:99:77:65:70:ef:4b:c5:4c:0a:72:
+        1e:bc:bd:e9:1e:00

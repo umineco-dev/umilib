@@ -1,0 +1,13 @@
+USER anonymous
+PASS guest
+TYPEùI
+EPSV
+Pp
+FEA7(|50,1,7,138
+EPRuest
+TYPEùI
+EPSV
+Pp
+FEA7A|50,1,7,138
+EPRT |2|1|528.|
+REST 100o

@@ -1,0 +1,22 @@
+rfc768.txt, rfc2675.txt, rfc6335.txt, rfc6935.txt, rfc6936.txt, rfc8085.txt
+    The texts of RFC 768 (User Datagram Protocol), RFC 2675 (IPv6 Jumbograms), RFC 6335 (the procedures
+    of the Service Name and Transport Protocol Port Number Registry), RFC 6935 (IPv6 and UDP Checksums
+    for Tunneled Packets), RFC 6936 (Applicability Statement for the Use of IPv6 UDP Datagrams with Zero
+    Checksums) and RFC 8085 (UDP Usage Guidelines), downloaded from https://www.rfc-editor.org/rfc/ on
+    2026-10-27.
+    License: the IETF Trust's Legal Provisions Relating to IETF Documents.
+    Used: the header format, the checksum and its zero value, the length of jumbograms, and the
+    requirements of the zero checksum of IPv6 that the tests check.
+
+linux.txt
+    Frames that the Linux kernel (7.0.14-linuxkit, of Docker Desktop on arm64, with the tools of Debian
+    trixie) sent between two network namespaces on 2026-10-27: UDP echoes over IPv4 and IPv6 (Python
+    echo servers), an empty and an odd-length payload, an IPv4 datagram without a checksum
+    (SO_NO_CHECK), an IPv6 datagram with a zero checksum (UDP_NO_CHECK6_TX, to a socket with
+    UDP_NO_CHECK6_RX, RFC 6935), datagrams of 3,072 bytes fragmented by the sender over a link of an MTU
+    of 1,500, and datagrams to a closed port with the Port Unreachable errors they caused. Two MLDv2
+    reports of the start are kept. Checksum offloading was turned off.
+    Each frame is a line of hexadecimal after "# " lines with tcpdump's summary of it (`tcpdump -n -e -v`).
+    Made by linux.sh, run as `docker run --rm --privileged -v "$PWD":/out debian:trixie sh /out/linux.sh`,
+    and `python3 ../ethernet/linux.py udp.pcap udp.txt linux.txt`.
+    License: produced for this project (no third-party content).

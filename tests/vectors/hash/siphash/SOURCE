@@ -1,0 +1,6 @@
+vectors.h
+    The SipHash reference test vectors, vectors.h of https://github.com/veorq/SipHash.
+    Downloaded from https://raw.githubusercontent.com/veorq/SipHash/master/vectors.h on 2026-10-24.
+    License: CC0 1.0 Universal (the SipHash reference code is dedicated to the public domain).
+    Used: every array: SipHash-2-4 with 64 and 128 bits of output (key 0x00..0x0f) and HalfSipHash-2-4
+    with 32 and 64 bits of output (key 0x00..0x07), for the messages 0x00.. of 0 to 63 bytes.

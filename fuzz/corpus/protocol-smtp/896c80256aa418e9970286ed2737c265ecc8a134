@@ -1,0 +1,6 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=49com
+MAIL FROM:<Smith@bar.com> SIZE=499`BOKY=8BITM†††††††††b ar.com
+MAIL FROM:<Smith@bar.c.com> NOTIFY=S`BOKY=8BITMIMEÏ
+RCPT T†††††††††††††b ar.com
+MAIL FROM:<Smith@bar.c.com> NOTIFY=SoODY=U

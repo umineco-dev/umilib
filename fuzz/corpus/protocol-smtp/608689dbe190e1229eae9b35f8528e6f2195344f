@@ -1,0 +1,9 @@
+EHLO ba2.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TOo.com
+DATA
+Blah blah búa
+DgrEHLO ;Jones+2Bx¾foo.com
+RhbnN0250f om þ
+BDgrEHLO ;Jones+2Bx¾foo.com
+RhbnN02AT 

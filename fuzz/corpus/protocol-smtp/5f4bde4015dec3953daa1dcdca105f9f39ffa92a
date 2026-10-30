@@ -1,0 +1,8 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT T<:OJones@foo.com> NOTIFY=bar.com
+MAIL FROM:<Smith@bar.com> SIZE=460 BODY=8BITMIME
+Rnes@foo.com> NOTIFY=bar.com
+MAIL FROM:<Smith@bar.com> SIZE=460 BODY=8BITMIME
+RCCPT TO:<Jones@fm
+MAIL FROM:<Smith@bar.com> SIZE=500helloQUIT

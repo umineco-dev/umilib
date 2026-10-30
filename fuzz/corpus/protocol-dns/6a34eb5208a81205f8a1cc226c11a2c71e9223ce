@@ -1,0 +1,5 @@
+example. 3600 IN SOA nsax.pmlee.ns.eple. admin.Example. 1 3600 600 86400 30w0w
+w.example. 300 IN TXT "a b" "c\034e"xamExample. 1 0 300
+www.exa-ample. 3600 IN SOA nsax.pmlee.ns.eple. admin.Example. 1 3600 600 86400 30w0w
+w.example. 300 IN TXT "a b" "c\034"e/amExample. 1 0 300
+www.exa-pwww.example. 3ple. 30x0 IN TXT00 6,#ample. 36.

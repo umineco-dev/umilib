@@ -1,0 +1,17 @@
+From: Nubject: Sample message
+MIME-Version: 1.0
+Content-type: multipart/myxed; boundary="simple boundary"
+
+This-type:e.
+--simple boundary
+
+This is implicple boundary"
+
+This is thA preamble.
+--simple boundary
+
+This is implicitly typed plain US-ASCII text.
+--simple boundary
+Content-type:
+--simple boundary--
+This is the epilogue.

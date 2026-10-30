@@ -1,0 +1,2 @@
+EHLO bar.com
+MAIL FROM:<Smits@foo.com> NOTIFY=SUCCES.,FAILURE ORCPT=rfc822; 5 hT

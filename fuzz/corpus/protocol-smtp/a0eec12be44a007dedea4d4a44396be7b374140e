@@ -1,0 +1,6 @@
+EHLO bãar.com
+AUTHEHLO bar.com
+MAIL FROM:<Smith@bar.com> S50 
+..etc. SNm> 
+MAIL FROM:<Smith@bar.com> S50 
+..et. etc. SNm> NO

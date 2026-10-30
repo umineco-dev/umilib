@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL FROM:<Smitttttttttttt2tttttttttt1ttttttttttttttt2tttttttttt1ttttttttttttttttttttttttttttttttttttttttttttttttttt$@bar.com> SIZE=2500 BODY=8BITMIME
+RCPT TO:<o@esJnfoo.com> E(HLOmNUTH PLAIN
+MA A

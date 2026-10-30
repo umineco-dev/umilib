@@ -1,0 +1,19 @@
+fips203-appendix-a.txt
+    FIPS 203, "Module-Lattice-Based Key-Encapsulation Mechanism Standard" (NIST, August 13, 2024).
+    Downloaded from https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf on 2026-10-24,
+    SHA-256 fe1f12f32a7e44ec9fdebbf400cda843a40b506dee676725234dc6f7923b6cac.
+    License: a work of the United States Government, not subject to copyright in the United States
+    (17 U.S.C. 105).
+    Content: appendix A (pages 44 and 45 of the document), the values zeta^BitRev7(i) mod q and
+    zeta^(2 BitRev7(i) + 1) mod q, as the text layer of the PDF gives it (extracted with pypdf 5.4.0).
+    Used: the tables of MLKEMRing (tests/math/lattice.rs).
+
+fips204-appendix-b.txt
+    FIPS 204, "Module-Lattice-Based Digital Signature Standard" (NIST, August 13, 2024).
+    Downloaded from https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.pdf on 2026-10-24,
+    SHA-256 57239b9f84c03227eda3ca0991204dc7764c79af9ce2e6824eda774918d46b6b.
+    License: a work of the United States Government, not subject to copyright in the United States
+    (17 U.S.C. 105).
+    Content: appendix B (page 51 of the document), zetas[0..255] = zeta^BitRev8(k) mod q, as the text
+    layer of the PDF gives it (extracted with pypdf 5.4.0); zetas[0], unused, is printed as 0.
+    Used: the table of MLDSARing (tests/math/lattice.rs).

@@ -1,0 +1,7 @@
+EHLO b,,lo
+QUIT
+
+I
+DY=AT ITlo
+QUIT
+E=499 B2]50 

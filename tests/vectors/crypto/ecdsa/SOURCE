@@ -1,0 +1,9 @@
+ecdsa_*_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24:
+    the files of the curves secp256r1 (P-256), secp384r1 (P-384), secp521r1 (P-521), secp256k1 and
+    brainpoolP256r1/P384r1/P512r1 with the hash functions SHA-2 and SHA-3, with DER signatures and,
+    in the files ending in p1363, the fixed signatures of IEEE P1363.
+    License: Apache License 2.0.
+    Used: every test, with the uncompressed public key of its group.
+
+The signatures of RFC 6979 appendix A.2.5 to A.2.7 are read from tests/vectors/math/ec/rfc6979.txt.

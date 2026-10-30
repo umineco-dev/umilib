@@ -1,0 +1,5 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<fJs@oneooc.om> N hZnN0YWFm
+BDAT ~5 LAST
+heÿloQU

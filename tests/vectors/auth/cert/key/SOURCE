@@ -1,0 +1,41 @@
+rfc8410.txt
+    RFC 8410, "Algorithm Identifiers for Ed25519, Ed448, X25519, and X448 for Use in the Internet X.509 Public Key
+    Infrastructure", https://www.rfc-editor.org/rfc/rfc8410.txt, downloaded on 2026-10-26.
+    License: IETF Trust Legal Provisions; the examples are data.
+    Format: the text of the RFC; the tests read the PEM blocks of section 10 (the Ed25519 public key, the X25519
+    certificate and the Ed25519 private keys) and the key value printed after the first private key.
+    Used: every example of section 10.
+
+rfc9881.txt
+    RFC 9881, "Internet X.509 Public Key Infrastructure: Algorithm Identifiers for ML-DSA",
+    https://www.rfc-editor.org/rfc/rfc9881.txt, downloaded on 2026-10-26.
+    License: IETF Trust Legal Provisions; the examples are data.
+    Format: the text of the RFC; the tests read the PEM blocks of appendix C with the heading they follow: the
+    private keys of C.1 (seed, expanded and both, for ML-DSA-44, -65 and -87), the public keys of C.2, the
+    certificates of C.3 and the inconsistent private keys of C.4, which must be rejected.
+    Used: every example.
+
+rfc9909.txt
+    RFC 9909, "Internet X.509 Public Key Infrastructure -- Algorithm Identifiers for the Stateless Hash-Based
+    Digital Signature Algorithm (SLH-DSA)", https://www.rfc-editor.org/rfc/rfc9909.txt, downloaded on 2026-10-26.
+    License: IETF Trust Legal Provisions; the examples are data.
+    Format: the text of the RFC; the tests read the public key, private key and certificate of appendix C.
+    Used: every example.
+
+rfc9935.txt
+    RFC 9935, "Internet X.509 Public Key Infrastructure - Algorithm Identifiers for the Module-Lattice-Based
+    Key-Encapsulation Mechanism (ML-KEM)", https://www.rfc-editor.org/rfc/rfc9935.txt, downloaded on 2026-10-26.
+    License: IETF Trust Legal Provisions; the examples are data.
+    Format: the text of the RFC; the tests read the PEM blocks of appendix C with the heading they follow: the
+    private keys of C.1 (seed, expanded and both, for ML-KEM-512, -768 and -1024), the public keys of C.2, the
+    certificates of C.3 and the bad private keys of C.4, which must be rejected.
+    Used: every example.
+
+openssl/
+    Keys, public keys, signatures and encrypted keys made by OpenSSL 3.5.7 (openssl-version.txt) in Debian trixie
+    with make.sh, on 2026-10-26: an independent implementation the tests check against.
+    License: generated data (OpenSSL is Apache License 2.0; its output is not covered).
+    Format: NAME.key is a private key in PEM (PKCS #8, or PKCS #1 / RFC 5915 for rsa.pkcs1.key and p256.sec1.key,
+    encrypted PKCS #8 with the password "umilib" for *.aes*-*.key), NAME.pub its SubjectPublicKeyInfo in PEM,
+    NAME.ALGORITHM.sig the signature of message.txt in the form of a certificate's signatureValue.
+    Used: every file.

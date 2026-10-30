@@ -1,0 +1,5 @@
+The texts of RFC 5321 (SMTP) and of its extensions: RFC 1870 (SIZE), RFC 2034 (ENHANCEDSTATUSCODES),
+RFC 2920 (PIPELINING), RFC 3030 (CHUNKING, BINARYMIME), RFC 3207 (STARTTLS), RFC 3461 (DSN),
+RFC 3463 (enhanced status codes), RFC 4954 (AUTH), RFC 6152 (8BITMIME), RFC 6409 (submission),
+RFC 6531 (SMTPUTF8), RFC 7505 (null MX) and RFC 8314 (implicit TLS), downloaded from
+https://www.rfc-editor.org/rfc/rfcNNNN.txt on 2026-10-29. The tests take their dialogues from them.

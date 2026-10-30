@@ -1,0 +1,8 @@
+*.br
+    Made on 2026-10-25 with the brotli command line utility v1.2.1 from the inputs of ../deflate, and
+    checked with `brotli -t`: text.quality0, 1, 5, 9, 11 (`-q 0` ... `-q 11`), text.window10 (`-q 11
+    -w 10`), text.window24 (`-q 11 -w 24`), repetitive.quality11, random.quality5, zeros.quality11,
+    empty and one (`-q 11`); mixed.window16 (`-q 9 -w 16`) and mixed.quality11 (`-q 11`) from the
+    concatenation of text.bin, random.bin, repetitive.bin and zeros.bin (164,565 bytes, made by the
+    tests from those files).
+    License: data produced by brotli (MIT; the files are outputs, not code).

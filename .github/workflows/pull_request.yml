@@ -1,0 +1,55 @@
+# Tests pull requests and builds debug libraries, after a member approves the run.
+#
+# The `approve` job uses the `pull-request` environment. Configure it in the
+# repository settings (Settings > Environments > pull-request) with the
+# members who may approve as required reviewers; every other job waits until
+# one of them approves. See docs/ci.md.
+name: Pull Request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pull-request-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  approve:
+    runs-on: ubuntu-latest
+    environment: pull-request
+    steps:
+      - run: echo "Approved to test ${{ github.event.pull_request.head.sha }}"
+
+  test:
+    needs: approve
+    uses: ./.github/workflows/test.yml
+    with:
+      ref: ${{ github.sha }}
+
+  build:
+    needs: approve
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu }
+          - { os: macos-latest, target: aarch64-apple-darwin }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }} && rustup default stable
+      - run: cargo rustc --lib --all-features --locked --target ${{ matrix.target }} --crate-type staticlib,cdylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: umilib-debug-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/debug/libumilib.*
+            target/${{ matrix.target }}/debug/umilib.*
+            include/
+            LICENSE
+          if-no-files-found: error

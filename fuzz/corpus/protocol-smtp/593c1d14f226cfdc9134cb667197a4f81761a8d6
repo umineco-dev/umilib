@@ -1,0 +1,11 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.coz> SIZE=500 BODY=8BITMIME
+RCPTom
+DATA
+Bl2Bx@foo.AILURE ORCPT=rfc822;Jones+2Bx@foo.com
+DATA
+Bl2Bx@foo.com
+DATA
+hh blahm
+DATA
+Bl2Bx

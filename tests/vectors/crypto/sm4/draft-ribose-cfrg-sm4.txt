@@ -1,0 +1,136 @@
+# Extracted from appendix A of draft-ribose-cfrg-sm4-10 (see SOURCE); hexadecimal fields.
+
+Name = Example 1 (GB/T 32907-2016 Example 1 Encryption)
+Mode = SM4
+Direction = Encrypt
+Key = 0123456789abcdeffedcba9876543210
+Plaintext = 0123456789abcdeffedcba9876543210
+Ciphertext = 681edf34d206965e86b3e94f536e4246
+RoundKeys = f12186f9,41662b61,5a6ab19a,7ba92077,367360f4,776a0c61,b6bb89b3,24763151,a520307c,b7584dbd,c30753ed,7ee55b57,6988608c,30d895b7,44ba14af,104495a1,d120b428,73b55fa3,cc874966,92244439,e89e641f,98ca015a,c7159060,99e1fd2e,b79bd80c,1d2115b0,0e228aeb,f1780c81,428d3654,62293496,01cf72e5,9124a012
+RoundOutputs = 27fad345,a18b4cb2,11c1e22a,cc13e2ee,f87c5bd5,33220757,77f4c297,7a96f2eb,27dac07f,42dd0f19,b8a5da02,907127fa,8b952b83,d42b7c59,2ffc5831,f69e6888,af2432c4,ed1ec85e,55a3ba22,124b18aa,6ae7725f,f4cba1f9,1dcdfa10,2ff60603,eff24fdc,6fe46b75,893450ad,7b938f4c,536e4246,86b3e94f,d206965e,681edf34
+
+Name = Example 2 (GB/T 32907-2016 Example 1 Decryption)
+Mode = SM4
+Direction = Decrypt
+Key = 0123456789abcdeffedcba9876543210
+Plaintext = 0123456789abcdeffedcba9876543210
+Ciphertext = 681edf34d206965e86b3e94f536e4246
+RoundKeys = f12186f9,41662b61,5a6ab19a,7ba92077,367360f4,776a0c61,b6bb89b3,24763151,a520307c,b7584dbd,c30753ed,7ee55b57,6988608c,30d895b7,44ba14af,104495a1,d120b428,73b55fa3,cc874966,92244439,e89e641f,98ca015a,c7159060,99e1fd2e,b79bd80c,1d2115b0,0e228aeb,f1780c81,428d3654,62293496,01cf72e5,9124a012
+
+Name = Example 3 (GB/T 32907-2016 Example 2 Encryption)
+Mode = SM4
+Direction = Encrypt
+Key = 0123456789abcdeffedcba9876543210
+Plaintext = 0123456789abcdeffedcba9876543210
+Ciphertext = 595298c7c6fd271f0402f804c33d3f66
+Iterations = 1000000
+
+Name = Example 4
+Mode = SM4
+Direction = Encrypt
+Key = fedcba98765432100123456789abcdef
+Plaintext = 000102030405060708090a0b0c0d0e0f
+Ciphertext = f766678f13f01adeac1b3ea955adb594
+RoundKeys = 0d8cc1b4,ac44f213,188c0c40,7537585e,627646f5,54d785ad,51b96dee,0c385958,5e494992,32f3fe04,3a3a733d,0edfb91d,6823cd6b,40f7d825,4bd68ee5,165a36c8,56608984,23f35ff4,8b592b3e,80f7388a,0415c409,afdf1370,cf444772,9af9901f,c457578c,95701c60,2b0f4ee1,7f826139,fa37f8d9,d18af8ce,5bd5d8c6,711138b7
+RoundOutputs = f7eaeb6a,b4967c0f,5b9b2419,f46becba,a8013e25,b38e2abe,3e7c99a1,6dd5f47f,b286430c,ab997de3,80f8f21f,4ef7052e,4462ffaf,14dfd5ea,6d33efed,3a4f8b3c,1a435088,4e64b153,0415ceda,add88955,73964ef1,b0085092,554a1293,4bc6d6a8,7bb650e1,ddfb8a61,5c4dfd78,fd9066fd,55adb594,ac1b3ea9,13f01ade,f766678f
+
+Name = Example 5
+Mode = SM4
+Direction = Decrypt
+Key = fedcba98765432100123456789abcdef
+Plaintext = 000102030405060708090a0b0c0d0e0f
+Ciphertext = f766678f13f01adeac1b3ea955adb594
+RoundKeys = 0d8cc1b4,ac44f213,188c0c40,7537585e,627646f5,54d785ad,51b96dee,0c385958,5e494992,32f3fe04,3a3a733d,0edfb91d,6823cd6b,40f7d825,4bd68ee5,165a36c8,56608984,23f35ff4,8b592b3e,80f7388a,0415c409,afdf1370,cf444772,9af9901f,c457578c,95701c60,2b0f4ee1,7f826139,fa37f8d9,d18af8ce,5bd5d8c6,711138b7
+
+Name = Example 6
+Mode = SM4
+Direction = Encrypt
+Key = fedcba98765432100123456789abcdef
+Plaintext = 000102030405060708090a0b0c0d0e0f
+Ciphertext = 379a96d0a6a5a5060fb460c75d1879ed
+Iterations = 1000000
+
+Name = Example 1
+Mode = SM4-ECB
+Direction = Encrypt
+Key = 0123456789abcdeffedcba9876543210
+Plaintext = aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+Ciphertext = 5ec8143de509cff7b5179f8f474b86192f1d305a7fb17df985f81c8482192304
+
+Name = Example 2
+Mode = SM4-ECB
+Direction = Encrypt
+Key = fedcba98765432100123456789abcdef
+Plaintext = aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+Ciphertext = c5876897e4a59bbba72a10c83872245b12dd90bc2d200692b529a4155ac9e600
+
+Name = Example 1
+Mode = SM4-CBC
+Direction = Encrypt
+Key = 0123456789abcdeffedcba9876543210
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+Ciphertext = 78ebb11cc40b0a48312aaeb2040244cb4cb7016951909226979b0d15dc6a8f6d
+
+Name = Example 2
+Mode = SM4-CBC
+Direction = Encrypt
+Key = fedcba98765432100123456789abcdef
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+Ciphertext = 0d3a6ddc2d21c698857215587b7bb59a91f2c147911a4144665e1fa1d40bae38
+
+Name = Example 1
+Mode = SM4-OFB
+Direction = Encrypt
+Key = 0123456789abcdeffedcba9876543210
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+Ciphertext = ac3236cb861dd316e6413b4e3c7524b71d01aca2487ca582cbf5463e6698539b
+
+Name = Example 2
+Mode = SM4-OFB
+Direction = Encrypt
+Key = fedcba98765432100123456789abcdef
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+Ciphertext = 5dcccd25a84ba16560d7f2658870684933fa16bd5cd9c856cacaa1e101897a97
+
+Name = Example 1
+Mode = SM4-CFB
+Direction = Encrypt
+Key = 0123456789abcdeffedcba9876543210
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+Ciphertext = ac3236cb861dd316e6413b4e3c7524b769d4c54ed433b9a0346009beb37b2b3f
+
+Name = Example 2
+Mode = SM4-CFB
+Direction = Encrypt
+Key = fedcba98765432100123456789abcdef
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+Ciphertext = 5dcccd25a84ba16560d7f265887068490d9b86ff20c3bfe115ffa02ca6192cc5
+
+Name = Example 1
+Mode = SM4-CTR
+Direction = Encrypt
+Key = 0123456789abcdeffedcba9876543210
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccddddddddddddddddeeeeeeeeeeeeeeeeffffffffffffffffaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb
+Ciphertext = ac3236cb970cc20791364c395a1342d1a3cbc1878c6f30cd074cce385cdd70c7f234bc0e24c11980fd1286310ce37b926e02fcd0faa0baf38b2933851d824514
+
+Name = Example 2
+Mode = SM4-CTR
+Direction = Encrypt
+Key = fedcba98765432100123456789abcdef
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccddddddddddddddddeeeeeeeeeeeeeeeeffffffffffffffffaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb
+Ciphertext = 5dcccd25b95ab07417a08512ee160e2f8f661521cbbab44cc87138445bc29e5c0ae0297205d62704173b21239b887f6c8cb5b800917a2488284bde9e16ea2906
+
+Name = Constants
+Mode = SM4
+FamilyKey = a3b1bac6,56aa3350,677d9197,b27022dc
+ConstantKey = 00070e15,1c232a31,383f464d,545b6269,70777e85,8c939aa1,a8afb6bd,c4cbd2d9,e0e7eef5,fc030a11,181f262d,343b4249,50575e65,6c737a81,888f969d,a4abb2b9,c0c7ced5,dce3eaf1,f8ff060d,141b2229,30373e45,4c535a61,686f767d,848b9299,a0a7aeb5,bcc3cad1,d8dfe6ed,f4fb0209,10171e25,2c333a41,484f565d,646b7279
+SBoxInput = ef
+SBoxOutput = 84

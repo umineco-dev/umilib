@@ -1,0 +1,8 @@
+Fr:n:!1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+simpleI text.
+--simple boundary
+Content-type: text/plain; chars„-a[sy typed plain US-ASCII text.
+--simple boundary
+Content-type: text/plain; charsetDus-a: textset=us  plainilogue.

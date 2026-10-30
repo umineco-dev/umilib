@@ -1,0 +1,9 @@
+EHLO bar.com
+MAIL FRh blah blah.
+.
+AUTH PLAIN AHRpbQB0YW5zdGFhZnRhbnN0YWFm
+BDAT 5 LASDATA
+Blah blah blah.
+.
+AUTH PLAIN AHRpbQB0YW5zdGFhZnRhbnN0YWFm
+BDAhelloQUIT

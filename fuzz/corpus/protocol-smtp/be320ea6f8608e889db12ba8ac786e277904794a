@@ -1,0 +1,12 @@
+EHLO bar.com
+MAIL FROM:<Sm500 BODY=8B.com
+MAIL Fom
+MAIL FROM:<Sm500 BODY=8B.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.connnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm> ZE=500 8B=8BITMIME
+RCPT TO:<Jones@foo.com> ZE=500 8BYBKO=ITMIME
+RCPT TO:<Hones@foROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.connnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm> ZE=500 8B=8BITMIME
+RCPT TO:<Jones@foo.com> ZE=500 8BYBKO=ITMIME
+RCPT TO:<Hones@fo‡Ñcom> NOTIF
+BDAT MIMEoQUIT

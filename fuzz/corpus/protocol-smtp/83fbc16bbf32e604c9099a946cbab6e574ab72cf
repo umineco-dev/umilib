@@ -1,0 +1,3 @@
+EHLO bar.com
+MAIL FROM:<S@hbtimar.com> SIZE=499 BODY=8BITMItttttttttttttttttttttttttttttME
+RCPT TO:<Jones@foILiO

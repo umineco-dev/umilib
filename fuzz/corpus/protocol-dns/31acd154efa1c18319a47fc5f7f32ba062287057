@@ -1,0 +1,3 @@
+example. 3600 IN SOA ns.example. admin.example. 2 3600 600 86400 300
+www.example. 300 IN TXT ample.
+example. 60 IN HTTPS 1 . a=nlph2,h3 ipv4hint=19BW8uJq9H4RldgAA

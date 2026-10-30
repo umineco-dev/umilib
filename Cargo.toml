@@ -1,0 +1,427 @@
+[package]
+name = "umilib"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+description = "Umineco Library: platform-independent no_std types and implementations of codecs, hashes, cryptography, protocols and authentication."
+repository = "https://github.com/umineco-dev/umilib"
+readme = "README.md"
+keywords = ["no_std", "protocol", "cryptography", "codec", "ffi"]
+categories = ["no-std", "cryptography", "network-programming", "encoding", "compression"]
+include = ["/Cargo.toml", "/Cargo.lock", "/build.rs", "/src", "/include", "/LICENSE", "/README.md"]
+autotests = false
+autobenches = false
+
+[lib]
+crate-type = ["rlib"]
+bench = false
+
+[[test]]
+name = "features"
+path = "tests/features/main.rs"
+
+[[test]]
+name = "bytes"
+path = "tests/bytes/main.rs"
+required-features = ["bytes"]
+
+[[test]]
+name = "calendar"
+path = "tests/calendar/main.rs"
+required-features = ["calendar"]
+
+[[test]]
+name = "secret"
+path = "tests/secret/main.rs"
+required-features = ["secret"]
+
+[[test]]
+name = "codec"
+path = "tests/codec/main.rs"
+required-features = ["codec"]
+
+[[test]]
+name = "crypto"
+path = "tests/crypto/main.rs"
+required-features = ["crypto", "hash"]
+
+[[test]]
+name = "hash"
+path = "tests/hash/main.rs"
+required-features = ["hash"]
+
+[[test]]
+name = "math"
+path = "tests/math/main.rs"
+required-features = ["math"]
+
+[[test]]
+name = "protocol"
+path = "tests/protocol/main.rs"
+required-features = ["protocol", "hash-sha"]
+
+[[test]]
+name = "auth"
+path = "tests/auth/main.rs"
+required-features = ["auth", "codec-json", "hash-md", "hash-sha"]
+
+[[test]]
+name = "runtime"
+path = "tests/runtime/main.rs"
+required-features = ["runtime"]
+
+[[test]]
+name = "service"
+path = "tests/service/main.rs"
+required-features = ["service"]
+
+[[test]]
+name = "ffi"
+path = "tests/ffi/main.rs"
+required-features = ["ffi"]
+
+[[test]]
+name = "platform"
+path = "tests/platform/main.rs"
+required-features = ["platform"]
+
+[[test]]
+name = "fuzz"
+path = "fuzz/main.rs"
+harness = false
+required-features = ["platform-fuzz"]
+
+[[example]]
+name = "echo"
+path = "examples/echo.rs"
+required-features = ["platform-runtime"]
+
+[[example]]
+name = "tls"
+path = "examples/tls.rs"
+required-features = ["platform-native", "protocol-tls", "crypto-hpke", "codec-base-base64", "auth-cert-ocsp"]
+
+[[example]]
+name = "quic"
+path = "examples/quic.rs"
+required-features = ["platform-native", "protocol-quic"]
+
+[[example]]
+name = "http"
+path = "examples/http.rs"
+required-features = ["platform-native", "protocol-http", "protocol-tls", "protocol-quic", "codec-gzip"]
+
+[[example]]
+name = "dns"
+path = "examples/dns.rs"
+required-features = ["platform-native", "protocol-dns"]
+
+[[example]]
+name = "coap"
+path = "examples/coap.rs"
+required-features = ["platform-native", "protocol-coap"]
+
+[[example]]
+name = "dhcp"
+path = "examples/dhcp.rs"
+required-features = ["platform-native", "protocol-dhcp"]
+
+[[example]]
+name = "smtp"
+path = "examples/smtp.rs"
+required-features = ["protocol-smtp"]
+
+[[example]]
+name = "pop3"
+path = "examples/pop3.rs"
+required-features = ["protocol-pop-v3", "hash-md-v5", "secret"]
+
+[[example]]
+name = "integrated"
+path = "examples/integrated.rs"
+required-features = ["auth-oauth", "auth-sasl-oauthbearer", "codec-mail", "platform-runtime", "protocol-http-v1", "protocol-imap-v4", "protocol-pop-v3", "protocol-smtp", "service"]
+
+[[example]]
+name = "imap"
+path = "examples/imap.rs"
+required-features = ["protocol-imap-v4"]
+
+[[example]]
+name = "ftp"
+path = "examples/ftp.rs"
+required-features = ["protocol-ftp"]
+
+[[example]]
+name = "tun"
+path = "examples/tun.rs"
+required-features = ["platform-linux", "protocol-icmp", "protocol-udp", "protocol-tcp"]
+
+[[bench]]
+name = "bench"
+path = "benches/main.rs"
+harness = false
+required-features = ["platform-bench"]
+
+# Feature rules (see .docs/feature-system.md):
+# - "-" separates path segments: "a-b-c" is src/a/b/c and umilib::a::b::c.
+# - A parent feature lists all of its direct children.
+# - An alias lists exactly one canonical feature and has no directory.
+# - One feature per line; build.rs and tests/features read this table.
+[features]
+auth = ["auth-cert", "auth-oauth", "auth-sasl", "auth-totp"]
+auth-cert = ["auth-cert-csr", "auth-cert-key", "auth-cert-ocsp", "auth-cert-path", "auth-cert-x509"]
+auth-cert-csr = ["auth-cert-x509"]
+auth-cert-key = ["codec-asn1-ber", "codec-asn1-der", "codec-pem", "crypto-aes", "crypto-curve-p256", "crypto-curve-p384", "crypto-curve-p521", "crypto-ecdh", "crypto-ecdsa", "crypto-eddsa", "crypto-mldsa", "crypto-mlkem", "crypto-mode-cbc", "crypto-pbkdf2", "crypto-random", "crypto-rsa", "crypto-slhdsa", "hash-sha-v1", "hash-sha-v2", "hash-sha-v3"]
+auth-cert-ocsp = ["auth-cert-x509"]
+auth-cert-path = ["auth-cert-x509"]
+auth-cert-x509 = ["auth-cert-key", "codec-stringprep"]
+auth-oauth = ["codec-base-base64", "codec-json", "codec-uri", "crypto-random", "hash-sha-v2", "protocol-jwt", "secret"]
+auth-sasl = ["auth-sasl-anonymous", "auth-sasl-external", "auth-sasl-oauthbearer", "auth-sasl-plain", "auth-sasl-scram"]
+auth-sasl-anonymous = ["codec-stringprep"]
+auth-sasl-external = ["codec-stringprep"]
+auth-sasl-oauthbearer = ["codec-json", "codec-stringprep"]
+auth-sasl-plain = ["codec-stringprep", "secret"]
+auth-sasl-scram = ["codec-base-base64", "codec-stringprep", "crypto-hmac", "crypto-pbkdf2", "crypto-random", "hash-sha-v1", "hash-sha-v2", "secret"]
+auth-totp = ["crypto-hmac", "secret"]
+default = []
+bytes = []
+calendar = []
+codec = ["codec-asn1", "codec-base", "codec-brotli", "codec-deflate", "codec-filter", "codec-gzip", "codec-hpack", "codec-huffman", "codec-json", "codec-lz4", "codec-lz77", "codec-lz78", "codec-lzma", "codec-lzss", "codec-mail", "codec-pem", "codec-qpack", "codec-rle", "codec-stringprep", "codec-uri", "codec-xz", "codec-zlib", "codec-zstandard"]
+codec-asn1 = ["codec-asn1-ber", "codec-asn1-der"]
+codec-asn1-ber = ["codec-asn1-der"]
+codec-asn1-der = ["calendar", "secret"]
+codec-base = ["codec-base-base16", "codec-base-base32", "codec-base-base58", "codec-base-base64", "codec-base-base85"]
+codec-base-base16 = []
+codec-base-base32 = []
+codec-base-base58 = []
+codec-base-base64 = []
+codec-base-base85 = []
+codec-brotli = ["bytes", "codec-huffman-canonical", "codec-lz77"]
+codec-deflate = ["bytes", "codec-huffman-canonical", "codec-lz77"]
+codec-filter = ["codec-filter-bcj", "codec-filter-delta"]
+codec-filter-bcj = []
+codec-filter-delta = []
+codec-gzip = ["codec-deflate", "hash-crc"]
+codec-hpack = ["bytes", "codec-huffman-canonical"]
+codec-huffman = ["codec-huffman-adaptive", "codec-huffman-canonical"]
+codec-huffman-adaptive = ["bytes"]
+codec-huffman-canonical = ["bytes"]
+codec-json = []
+codec-lz4 = ["codec-lz77", "hash-xxhash-xxh32"]
+codec-lz77 = []
+codec-lz78 = ["bytes"]
+codec-lzma = ["codec-lz77"]
+codec-lzss = ["bytes", "codec-lz77"]
+codec-mail = ["calendar", "codec-base-base64"]
+codec-pem = ["codec-base-base64", "secret"]
+codec-qpack = ["codec-hpack"]
+codec-rle = []
+codec-stringprep = ["secret"]
+codec-uri = []
+codec-xz = ["codec-filter-bcj", "codec-filter-delta", "codec-lzma", "hash-crc", "hash-sha-v2"]
+codec-zlib = ["codec-deflate", "hash-adler32"]
+codec-zstandard = ["bytes", "codec-huffman-canonical", "codec-lz77", "hash-xxhash-xxh64"]
+codec-base16 = ["codec-base-base16"]
+codec-base32 = ["codec-base-base32"]
+codec-base58 = ["codec-base-base58"]
+codec-base64 = ["codec-base-base64"]
+codec-base85 = ["codec-base-base85"]
+crypto = ["crypto-aegis", "crypto-aes", "crypto-argon2", "crypto-aria", "crypto-ascon", "crypto-camellia", "crypto-chacha20", "crypto-chacha20poly1305", "crypto-cmac", "crypto-concatkdf", "crypto-curve", "crypto-des", "crypto-dh", "crypto-dragonfly", "crypto-dsa", "crypto-eccsi", "crypto-ecdh", "crypto-ecdsa", "crypto-eddsa", "crypto-gost", "crypto-gostr3410", "crypto-hkdf", "crypto-hmac", "crypto-hpke", "crypto-hybrid", "crypto-ibs", "crypto-idea", "crypto-kbkdf", "crypto-kdftree", "crypto-mldsa", "crypto-mlkem", "crypto-mode", "crypto-pbkdf2", "crypto-poly1305", "crypto-random", "crypto-rc2", "crypto-rc4", "crypto-rsa", "crypto-scrypt", "crypto-seed", "crypto-slhdsa", "crypto-sm2", "crypto-sm4", "crypto-sm9", "crypto-srp"]
+crypto-aegis = ["crypto-aes"]
+crypto-aes = ["secret"]
+crypto-argon2 = ["hash-blake-v2"]
+crypto-aria = ["secret"]
+crypto-ascon = ["hash-ascon"]
+crypto-camellia = ["secret"]
+crypto-chacha20 = ["secret"]
+crypto-chacha20poly1305 = ["crypto-chacha20", "crypto-poly1305"]
+crypto-cmac = ["secret"]
+crypto-concatkdf = ["crypto-hmac"]
+crypto-curve = ["crypto-curve-brainpool", "crypto-curve-curve25519", "crypto-curve-curve448", "crypto-curve-gost", "crypto-curve-p256", "crypto-curve-p384", "crypto-curve-p521", "crypto-curve-secp256k1", "crypto-curve-sm2"]
+crypto-curve-brainpool = ["crypto-curve-brainpool-p256r1", "crypto-curve-brainpool-p384r1", "crypto-curve-brainpool-p512r1"]
+crypto-curve-brainpool-p256r1 = ["math-ec"]
+crypto-curve-brainpool-p384r1 = ["math-ec"]
+crypto-curve-brainpool-p512r1 = ["math-ec"]
+crypto-curve-curve25519 = ["math-ec"]
+crypto-curve-curve448 = ["math-ec"]
+crypto-curve-gost = ["math-ec"]
+crypto-curve-p256 = ["math-ec"]
+crypto-curve-p384 = ["math-ec"]
+crypto-curve-p521 = ["math-ec"]
+crypto-curve-secp256k1 = ["math-ec"]
+crypto-curve-sm2 = ["math-ec"]
+crypto-des = ["secret"]
+crypto-dh = ["crypto-random", "math-modular"]
+crypto-dragonfly = ["crypto-hmac", "crypto-kbkdf", "crypto-random", "math-ec"]
+crypto-dsa = ["crypto-random", "math-modular"]
+crypto-eccsi = ["crypto-random", "math-ec"]
+crypto-ecdh = ["crypto-random", "math-ec"]
+crypto-ecdsa = ["crypto-random", "math-ec"]
+crypto-eddsa = ["crypto-curve-curve25519", "crypto-curve-curve448", "crypto-random", "hash-sha-v2", "hash-sha-v3"]
+crypto-gost = ["crypto-gost-kuznyechik", "crypto-gost-magma"]
+crypto-gost-kuznyechik = ["secret"]
+crypto-gost-magma = ["secret"]
+crypto-gostr3410 = ["crypto-random", "math-ec"]
+crypto-hkdf = ["crypto-hmac"]
+crypto-hmac = ["secret"]
+crypto-hpke = ["crypto-ecdh", "crypto-hkdf"]
+crypto-hybrid = ["crypto-curve-curve25519", "crypto-curve-p256", "crypto-curve-p384", "crypto-ecdh", "crypto-mlkem"]
+crypto-ibs = ["crypto-ibs-chacheon", "crypto-ibs-hess", "crypto-ibs-sm9"]
+crypto-ibs-chacheon = ["crypto-random", "math-pairing"]
+crypto-ibs-hess = ["crypto-random", "math-pairing"]
+crypto-ibs-sm9 = ["crypto-sm9"]
+crypto-idea = ["secret"]
+crypto-kbkdf = ["secret"]
+crypto-kdftree = ["secret"]
+crypto-mldsa = ["crypto-random", "hash-sha-v2", "hash-sha-v3", "math-lattice"]
+crypto-mlkem = ["crypto-random", "hash-sha-v3", "math-lattice"]
+crypto-mode = ["crypto-mode-cbc", "crypto-mode-ccm", "crypto-mode-cfb", "crypto-mode-ctr", "crypto-mode-ecb", "crypto-mode-gcm", "crypto-mode-gcmsiv", "crypto-mode-kw", "crypto-mode-ofb", "crypto-mode-siv", "crypto-mode-xts"]
+crypto-mode-cbc = ["secret"]
+crypto-mode-ccm = ["secret"]
+crypto-mode-cfb = ["secret"]
+crypto-mode-ctr = ["secret"]
+crypto-mode-ecb = ["secret"]
+crypto-mode-gcm = ["crypto-mode-ctr"]
+crypto-mode-gcmsiv = ["crypto-mode-gcm"]
+crypto-mode-kw = ["secret"]
+crypto-mode-ofb = ["secret"]
+crypto-mode-siv = ["crypto-cmac", "crypto-mode-ctr"]
+crypto-mode-xts = ["secret"]
+crypto-pbkdf2 = ["crypto-hmac"]
+crypto-poly1305 = ["secret"]
+crypto-random = ["crypto-hmac"]
+crypto-rc2 = ["secret"]
+crypto-rc4 = ["secret"]
+crypto-rsa = ["crypto-random", "math-modular"]
+crypto-scrypt = ["crypto-pbkdf2", "hash-sha-v2"]
+crypto-seed = ["secret"]
+crypto-slhdsa = ["crypto-hmac", "crypto-random", "hash-sha-v2", "hash-sha-v3"]
+crypto-sm2 = ["crypto-curve-sm2", "crypto-random", "hash-sm3"]
+crypto-sm4 = ["secret"]
+crypto-sm9 = ["crypto-random", "math-pairing"]
+crypto-srp = ["crypto-random", "hash-sha-v1", "math-modular"]
+hash = ["hash-adler32", "hash-ascon", "hash-blake", "hash-crc", "hash-md", "hash-ripemd", "hash-sha", "hash-siphash", "hash-sm3", "hash-streebog", "hash-xxhash"]
+hash-adler32 = ["secret"]
+hash-ascon = ["secret"]
+hash-blake = ["hash-blake-v2", "hash-blake-v3"]
+hash-blake-v2 = ["secret"]
+hash-blake-v3 = ["secret"]
+hash-crc = ["secret"]
+hash-md = ["hash-md-v4", "hash-md-v5"]
+hash-md-v4 = ["secret"]
+hash-md-v5 = ["secret"]
+hash-ripemd = ["secret"]
+hash-sha = ["hash-sha-v1", "hash-sha-v2", "hash-sha-v3"]
+hash-sha-v1 = ["secret"]
+hash-sha-v2 = ["secret"]
+hash-sha-v3 = ["secret"]
+hash-sha1 = ["hash-sha-v1"]
+hash-sha2 = ["hash-sha-v2"]
+hash-sha3 = ["hash-sha-v3"]
+hash-siphash = ["secret"]
+hash-sm3 = ["secret"]
+hash-streebog = ["secret"]
+hash-xxhash = ["hash-xxhash-xxh3", "hash-xxhash-xxh32", "hash-xxhash-xxh64"]
+hash-xxhash-xxh3 = ["secret"]
+hash-xxhash-xxh32 = ["secret"]
+hash-xxhash-xxh64 = ["secret"]
+hash-xxh3 = ["hash-xxhash-xxh3"]
+hash-xxh32 = ["hash-xxhash-xxh32"]
+hash-xxh64 = ["hash-xxhash-xxh64"]
+hash-blake2 = ["hash-blake-v2"]
+hash-blake3 = ["hash-blake-v3"]
+hash-md4 = ["hash-md-v4"]
+hash-md5 = ["hash-md-v5"]
+math = ["math-bigint", "math-ec", "math-lattice", "math-modular", "math-pairing"]
+math-bigint = ["secret"]
+math-ec = ["math-modular"]
+math-lattice = ["secret"]
+math-modular = ["math-bigint"]
+math-pairing = ["math-ec"]
+secret = []
+ffi = []
+platform = ["platform-android", "platform-bench", "platform-darwin", "platform-fuzz", "platform-linux", "platform-native", "platform-runtime", "platform-unix", "platform-windows"]
+platform-android = ["platform-linux"]
+platform-bench = []
+platform-darwin = ["platform-unix"]
+platform-fuzz = []
+platform-linux = ["platform-unix"]
+platform-native = ["platform-android", "platform-darwin", "platform-linux", "platform-unix", "platform-windows"]
+platform-runtime = ["platform-native", "runtime"]
+platform-unix = []
+platform-windows = []
+protocol = ["protocol-arp", "protocol-coap", "protocol-dhcp", "protocol-dns", "protocol-ethernet", "protocol-ftp", "protocol-http", "protocol-icmp", "protocol-imap", "protocol-ip", "protocol-jwt", "protocol-pop", "protocol-quic", "protocol-smtp", "protocol-tcp", "protocol-tls", "protocol-udp", "protocol-websocket"]
+protocol-arp = ["protocol-ethernet", "protocol-ip-v4", "runtime"]
+protocol-coap = ["crypto-random", "protocol-ip-v4", "protocol-ip-v6", "runtime", "service"]
+protocol-dhcp = ["protocol-dhcp-v4", "protocol-dhcp-v6"]
+protocol-dhcp-v4 = ["crypto-random", "protocol-ethernet", "protocol-ip-v4", "runtime"]
+protocol-dhcp-v6 = ["crypto-random", "protocol-ip-v6", "runtime"]
+protocol-dns = ["protocol-dns-dnssec", "protocol-dns-https", "protocol-dns-quic", "protocol-dns-tcp", "protocol-dns-tls", "protocol-dns-udp"]
+protocol-dns-dnssec = ["bytes", "calendar", "codec-base-base16", "codec-base-base32", "codec-base-base64", "crypto-random", "hash-sha-v1", "hash-siphash", "protocol-ip-v4", "protocol-ip-v6", "runtime", "service", "crypto-curve-curve25519", "crypto-curve-p256", "crypto-curve-p384", "crypto-ecdsa", "crypto-eddsa", "crypto-rsa", "hash-sha-v1", "hash-sha-v2"]
+protocol-dns-https = ["bytes", "calendar", "codec-base-base16", "codec-base-base32", "codec-base-base64", "crypto-random", "hash-sha-v1", "hash-siphash", "protocol-ip-v4", "protocol-ip-v6", "runtime", "service", "protocol-http-v2"]
+protocol-dns-quic = ["bytes", "calendar", "codec-base-base16", "codec-base-base32", "codec-base-base64", "crypto-random", "hash-sha-v1", "hash-siphash", "protocol-ip-v4", "protocol-ip-v6", "runtime", "service", "protocol-dns-tcp", "protocol-quic-v1"]
+protocol-dns-tcp = ["bytes", "calendar", "codec-base-base16", "codec-base-base32", "codec-base-base64", "crypto-random", "hash-sha-v1", "hash-siphash", "protocol-ip-v4", "protocol-ip-v6", "runtime", "service"]
+protocol-dns-tls = ["bytes", "calendar", "codec-base-base16", "codec-base-base32", "codec-base-base64", "crypto-random", "hash-sha-v1", "hash-siphash", "protocol-ip-v4", "protocol-ip-v6", "runtime", "service", "protocol-dns-tcp", "protocol-tls-v1_3"]
+protocol-dns-udp = ["bytes", "calendar", "codec-base-base16", "codec-base-base32", "codec-base-base64", "crypto-random", "hash-sha-v1", "hash-siphash", "protocol-ip-v4", "protocol-ip-v6", "runtime", "service"]
+protocol-dhcpv4 = ["protocol-dhcp-v4"]
+protocol-dhcpv6 = ["protocol-dhcp-v6"]
+protocol-doh = ["protocol-dns-https"]
+protocol-doq = ["protocol-dns-quic"]
+protocol-dot = ["protocol-dns-tls"]
+protocol-ethernet = ["bytes", "hash-crc"]
+protocol-ftp = ["bytes", "calendar", "protocol-ip-v4", "protocol-ip-v6", "runtime"]
+protocol-http = ["protocol-http-v1", "protocol-http-v2", "protocol-http-v3", "protocol-http-websocket"]
+protocol-http-v1 = ["bytes", "codec-base-base64", "runtime", "service"]
+protocol-http-v2 = ["bytes", "codec-base-base64", "codec-hpack", "runtime", "service"]
+protocol-http-v3 = ["bytes", "codec-base-base64", "codec-qpack", "protocol-quic-v1", "runtime", "service"]
+protocol-http-websocket = ["bytes", "codec-base-base64", "hash-sha-v1", "protocol-http-v1", "protocol-websocket", "runtime", "service"]
+protocol-http1 = ["protocol-http-v1"]
+protocol-http2 = ["protocol-http-v2"]
+protocol-http3 = ["protocol-http-v3"]
+protocol-icmp = ["protocol-icmp-v4", "protocol-icmp-v6"]
+protocol-icmp-v4 = ["bytes", "protocol-ip-v4", "runtime"]
+protocol-icmp-v6 = ["bytes", "protocol-ip-v6", "runtime"]
+protocol-icmpv4 = ["protocol-icmp-v4"]
+protocol-icmpv6 = ["protocol-icmp-v6"]
+protocol-imap = ["protocol-imap-v4"]
+protocol-imap-v4 = ["bytes", "calendar", "codec-base-base64", "codec-mail", "runtime"]
+protocol-ip = ["protocol-ip-v4", "protocol-ip-v6"]
+protocol-ip-v4 = ["bytes", "runtime"]
+protocol-ip-v6 = ["bytes", "runtime"]
+protocol-pop3 = ["protocol-pop-v3"]
+protocol-imap4 = ["protocol-imap-v4"]
+protocol-ipv4 = ["protocol-ip-v4"]
+protocol-ipv6 = ["protocol-ip-v6"]
+protocol-jwt = ["auth-cert-key", "auth-cert-x509", "codec-base-base64", "codec-deflate", "codec-json", "crypto-aes", "crypto-concatkdf", "crypto-curve-secp256k1", "crypto-ecdh", "crypto-hmac", "crypto-mode-cbc", "crypto-mode-gcm", "crypto-mode-kw", "crypto-pbkdf2", "crypto-random", "crypto-rsa", "hash-sha-v1", "hash-sha-v2"]
+protocol-pop = ["protocol-pop-v3"]
+protocol-pop-v3 = ["bytes", "codec-base-base64", "runtime"]
+protocol-quic = ["protocol-quic-v1", "protocol-quic-v2"]
+protocol-quic-v1 = ["bytes", "crypto-aes", "crypto-chacha20", "crypto-chacha20poly1305", "crypto-hkdf", "crypto-mode-gcm", "crypto-random", "hash-sha-v2", "protocol-ip-v4", "protocol-ip-v6", "protocol-tls-v1_3", "runtime", "service"]
+protocol-quic-v2 = ["bytes", "crypto-aes", "crypto-chacha20", "crypto-chacha20poly1305", "crypto-hkdf", "crypto-mode-gcm", "crypto-random", "hash-sha-v2", "protocol-ip-v4", "protocol-ip-v6", "protocol-tls-v1_3", "runtime", "service"]
+protocol-quicv1 = ["protocol-quic-v1"]
+protocol-quicv2 = ["protocol-quic-v2"]
+protocol-smtp = ["bytes", "codec-base-base64", "protocol-ip-v6", "runtime"]
+protocol-tcp = ["bytes", "hash-siphash", "protocol-ip-v4", "protocol-ip-v6", "runtime", "service"]
+protocol-tls = ["protocol-tls-v1_2", "protocol-tls-v1_3"]
+protocol-tls-v1_2 = ["auth-cert-path", "bytes", "crypto-aes", "crypto-chacha20poly1305", "crypto-curve-curve25519", "crypto-curve-p256", "crypto-curve-p384", "crypto-ecdh", "crypto-ecdsa", "crypto-eddsa", "crypto-hmac", "crypto-mode-gcm", "crypto-random", "crypto-rsa", "hash-sha-v2", "runtime", "service"]
+protocol-tls-v1_3 = ["auth-cert-path", "bytes", "crypto-aes", "crypto-chacha20poly1305", "crypto-curve-curve25519", "crypto-curve-p256", "crypto-curve-p384", "crypto-ecdh", "crypto-ecdsa", "crypto-eddsa", "crypto-hkdf", "crypto-hmac", "crypto-mode-gcm", "crypto-random", "crypto-rsa", "hash-sha-v2", "runtime", "service"]
+protocol-tls12 = ["protocol-tls-v1_2"]
+protocol-tls13 = ["protocol-tls-v1_3"]
+protocol-udp = ["bytes", "protocol-ip-v4", "protocol-ip-v6", "service"]
+protocol-websocket = ["bytes", "codec-deflate", "crypto-random", "hash-sha-v2", "runtime"]
+runtime = []
+service = []
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[profile.bench]
+lto = true
+codegen-units = 1
+
+# The tests run the full Monte Carlo procedures of NIST CAVP, which take
+# minutes without optimization; debug assertions and overflow checks stay on.
+[profile.test]
+opt-level = 1

@@ -1,0 +1,7 @@
+EHLO bar.comMIME
+RCPT TObQB!0Yÿÿÿÿÿÿ0BOKY=8bIO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=666666666666665@E
+RCPT TO:<Jbar.com>ÉSIZar.comMIME
+RCPT TObQB!0Yÿÿÿÿÿÿ0BOKY=8bIO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=666666666666665@E
+RCPT TO:<Jbar.com>ÉSIZE=PPPE=PPPPPP

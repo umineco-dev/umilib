@@ -1,0 +1,18 @@
+[build-system]
+requires = []
+build-backend = "backend"
+backend-path = ["."]
+
+[project]
+name = "umilib"
+version = "0.0.0"
+description = "Python bindings of umilib, the Umineco Library."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

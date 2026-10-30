@@ -1,0 +1,7 @@
+EHLO bar.com
+MAIL FROM:<Smit$@bar.com> SIZE=2500 BODY=8BITMIME
+RCPT TO:<o@esJpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppnfoo.com> NUTH PLAIN AHRpb=499 BO=2500 BODY=8BITMIME
+pppppppppppppppppppppppppppppppppppppppppnfoo.M:<Smit$@bar.com> SIZE=2500 BODY=8BITMIME
+RCPT TO:<o@esJpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppnfoo.com> NUTH PLAIN AHRpb=4com> NUTH PLAIN AHRpb=499 BO=2500 BODY=8BITMIME
+RCPT TO:<o@esJnfbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbboo.comJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ> NUTH PLAIN AHAT 5 LAST
+helloQUIT

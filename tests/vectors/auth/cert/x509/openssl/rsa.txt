@@ -1,0 +1,57 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 7 (0x7)
+        Signature Algorithm: sha512WithRSAEncryption
+        Issuer: CN=rsa
+        Validity
+            Not Before: Jan  1 00:00:00 2026 GMT
+            Not After : Jan  1 00:00:00 2036 GMT
+        Subject: CN=rsa
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:a1:a8:3d:1f:cc:84:52:ca:f9:ec:25:0e:12:19:
+                    0c:c7:64:0a:44:7c:26:05:57:6f:eb:2e:f5:6c:88:
+                    92:a1:81:a2:cd:8f:25:c6:1a:cd:81:54:79:da:42:
+                    67:5b:af:24:50:12:c8:f0:d0:c2:fa:7f:84:ae:7a:
+                    00:08:96:93:8e:9a:1a:10:f0:aa:db:73:09:ed:87:
+                    10:37:bd:6d:af:5c:e8:2b:07:28:76:19:40:c7:2e:
+                    e3:53:d4:08:8a:da:87:c9:84:54:f2:0a:58:4c:74:
+                    bd:0d:08:0a:63:d6:ac:7d:f6:30:79:4a:bf:95:68:
+                    a8:e6:1e:5c:b0:d5:00:62:6d:18:49:ae:18:c5:57:
+                    d4:9d:ba:16:2c:0d:c7:f7:c1:7e:89:a2:5e:4c:b2:
+                    0e:d9:66:57:51:71:40:58:4c:ca:7c:94:80:64:41:
+                    99:01:96:8a:8d:74:c4:ba:8e:42:ac:7c:64:26:ff:
+                    a2:f6:52:3a:3f:a0:87:5c:bc:a1:7d:e1:2b:17:46:
+                    ed:f2:91:19:e3:d4:72:c4:66:48:64:a0:d1:17:e4:
+                    22:49:f0:6b:12:18:4a:68:8e:80:ce:06:b7:09:53:
+                    e8:aa:b2:d7:b9:f6:d5:d0:3e:e6:fd:6f:ce:94:4a:
+                    20:f0:3d:c2:fc:4f:0d:8b:4d:09:e0:bb:c6:ce:f8:
+                    fa:23
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Digital Signature, Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                84:A9:C0:5B:C1:8F:79:C5:2C:CF:01:20:BB:A6:94:DE:3A:CF:A9:60
+    Signature Algorithm: sha512WithRSAEncryption
+    Signature Value:
+        60:ee:d9:e6:dd:b6:8c:37:95:af:07:17:73:af:65:39:ea:54:
+        50:0e:01:c7:ec:40:ff:9c:2d:57:d6:52:5c:cc:53:46:64:cf:
+        9e:93:73:dc:62:e0:ab:00:34:22:98:db:fb:fb:a3:52:3e:63:
+        73:65:f5:41:57:a8:4b:38:63:79:5d:e8:a8:2d:3c:65:73:b4:
+        25:3a:ff:65:73:a6:d6:d2:68:f1:cb:73:8c:66:e3:2a:25:1f:
+        2b:e2:28:5e:70:bc:44:1f:f2:10:11:62:48:8b:dd:16:6f:f2:
+        fc:b3:9d:27:46:4a:bf:f5:e9:f7:a0:59:04:ba:03:34:67:79:
+        98:7b:10:38:ca:80:f1:a7:56:84:88:3f:87:a6:3d:c5:98:b9:
+        02:3e:00:d1:82:36:f8:44:bc:e1:34:22:21:bf:bc:d8:ab:74:
+        2a:af:7d:59:b9:ad:5e:fa:6f:96:11:60:36:6e:0a:2d:55:a2:
+        88:2a:74:f5:6e:c4:b7:e3:9d:66:1b:eb:4f:36:06:34:b9:75:
+        82:85:ee:67:fe:c5:6e:e3:26:88:27:15:7b:d1:1c:b8:bf:a4:
+        b1:c4:1f:10:df:0e:ae:4f:82:8f:4f:36:a0:43:fc:bb:19:e9:
+        d1:8b:ae:61:ea:12:67:66:81:d3:b9:a5:a2:8e:4e:c8:cb:78:
+        41:5b:71:05

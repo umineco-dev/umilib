@@ -1,0 +1,14 @@
+KAS_ECC_CDH_PrimitiveTest.txt
+    NIST CAVP, the ECC CDH primitive tests of SP 800-56A section 5.7.1.2 (CAVS 14.1).
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/components/ecccdhtestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: the records of P-256, P-384 and P-521: QIUT = dIUT × G and ZIUT = x(dIUT × QCAVS).
+
+ecdh_secp256r1_ecpoint_test.json, ecdh_secp384r1_ecpoint_test.json, ecdh_secp521r1_ecpoint_test.json,
+ecdh_secp256k1_test.json, ecdh_brainpoolP256r1_test.json, ecdh_brainpoolP384r1_test.json,
+ecdh_brainpoolP512r1_test.json, x25519_test.json, x448_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test. The public keys of the files without "ecpoint" are X.509 SubjectPublicKeyInfo
+    structures, which the test reads itself; the tests of structures that do not name the curve of the
+    file are invalid there for that reason alone, and only their result is checked.

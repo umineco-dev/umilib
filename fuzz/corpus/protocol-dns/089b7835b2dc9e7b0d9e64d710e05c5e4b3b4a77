@@ -1,0 +1,2 @@
+example. 360 IN SOA nspla. aDmn.example. 1 3600 600 86400 0
+03www.example. 3 HTTPS 1 . alpn=h2,h3 ipv4hint=192..=A

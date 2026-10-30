@@ -1,0 +1,13 @@
+EHLO ba
+RCPT T<Jones@fcomL FROM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO:<EHLO baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaarom
+MAIL FROM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.Jones@foo.com> NOTI«ªªªªªª
+TO:<Jonÿÿ
+RCPT TO:<IIIIIIIIIIIIÿÿÿÿÿÿÿT››IME
+RCPT TO:<Jones@foo.cos>
+MSI4B–r.ÿÿ.r.
+DATA
+Bl2B@foo.com
+DATA
+Blacom> ;sssssssssssssssssssssttttttttttttttttttHtttcttttttts

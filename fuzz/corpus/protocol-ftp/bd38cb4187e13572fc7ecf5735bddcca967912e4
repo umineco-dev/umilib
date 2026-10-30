@@ -1,0 +1,13 @@
+SER anonymous
+PASQ guest
+PASS ÿÿÿEt
+TYPE I
+EPSV
+PORT 127,0,0,ÿÿtype=file;size=1024::8:800:
+TYPEI
+EPSV
+t
+MLST /tmp
+FEATT UA
+HTLS
+QU¤T

@@ -1,0 +1,10 @@
+EHLO bc.tc.O bc.tc.
+.
+AUTH LPYPN AAHR
+..pc
+PN A.
+AUTH LNPY PAAHR
+..pc
+PN AAHRpc.
+
+AUTH LPYPN AAHRI.enNs@foo.

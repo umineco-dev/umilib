@@ -1,0 +1,2 @@
+example.  IN SOA ns.e. admin.example. 2 3600 600 86400 300
+wle. 60 IN HTTPS 1 . alpn=h2,h3 ipv4hint=1.LmRl

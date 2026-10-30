@@ -1,0 +1,3 @@
+example. 3600 IN SOA nspla. aDmin.example. 1 3600 600 86400 0
+03www.example. 300 IN TXT _tcp.example. 60 IN SRV 1 2 3e.x tample.
+example. 60 IN HTTPS 1 . alpn=h2,h3 ipv4hint=192..021 ech=AEu+PIggYXcR0JF000 IN SOA nLs

@@ -1,0 +1,20 @@
+EHLO ba
+RCPT T<Jo.es@fco1mL FROM!<Smit=8BITMIME
+RCPT TO:<Jones@ÿÿhZhZWFm
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿBITMIME
+RCPT TO:<EHLO barmo
+MAIL FROM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@ÿÿhZhZWFm
+BDAT 5 LAST
+helvoÿÿÿÿÿÿÿÿQUITÿÿååååå`åååååååååååååååååååÿÿÿÿ„„„„„„„„„„„„„„„„„„„„„„ÿzÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿòÿÿÿÿÿ¦ÿÿÿÿÿT››IME
+RCPT TO:<Jones@foo.com>
+
+DATA
+Kl2Bx@foo.com
+DATA
+Bla*
+AUT LA
+.
+AUT LAST
+s@foo.com> ZE=00E=50
+0helY=8l

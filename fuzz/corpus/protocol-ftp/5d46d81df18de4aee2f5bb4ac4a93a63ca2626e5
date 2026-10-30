@@ -1,0 +1,7 @@
+USER anony,mous
+PASS guest
+EPRT |2|1080+:>0:200C:417A|5|
+REST 100oUzIT
+t
+EPRT |3|1080+:>0:200C:417A|5|
+RES

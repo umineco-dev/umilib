@@ -1,0 +1,10 @@
+EHLO bar.com
+DATA
+BCESS,;Jones+2Bx@foo.com
+DATA
+Blah blah
+BDAT 5rfc822;Jones+2Bx@foo.coi
+DATA
+Blah bla&
+BDAT 5 LA LAST
+hellOQUIT

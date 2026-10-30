@@ -1,0 +1,17 @@
+EHLO barom
+MAIL FROM:<Smith@bcom> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> NOToo.com> ZE=00E=500Y=8BIT››IME
+RCPT TO:<Jones@foo.com>
+MSI8BIT›IME
+RCPT tO:<Jones@foo.com>
+MSIYZ:<Jones@foo.com>
+MSI8BIT›IME
+RCPT tO:<Jones@foo.com>
+MSIYZE=499Y=8BIT›IME
+RCPT TO:<Jones@foo.com>
+MCPT TO:<Jones@foo.
+RCPT TO:<Jones@foo.com>
+M0 8BYBKONS
+006 NDS
+250 aWDNSNDS
+2.

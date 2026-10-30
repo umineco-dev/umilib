@@ -1,0 +1,11 @@
+From:1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamble.
+--simple bou
+--simple boundary
+Content-type: text/p,ain; charset=us-ascii
+
+Text.
+--simple boundary
+Content-type: text/pla›‘; carset=us`the epilogue.

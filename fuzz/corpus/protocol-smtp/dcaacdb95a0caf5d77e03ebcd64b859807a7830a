@@ -1,0 +1,11 @@
+EHLO bar.com
+MAIL EHLO bar.com
+MAIL 
+MAIL FROHLÿÿO bar.com
+MAIL FROM:<SmitééY+=ME
+RCPT TO:<Jones@fooEHLÿÿO barÿÿÿÿÿÿÿÿÿÿÿ.com
+MAIL FROM:<Sm
+MAIL FROHLÿÿO bar.com
+MAIL FROM:<SmitééY+=ME
+RCPT TO:<Jones@fooEHLÿÿO barÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ.com
+MAIL FROM:<Smith@bar.

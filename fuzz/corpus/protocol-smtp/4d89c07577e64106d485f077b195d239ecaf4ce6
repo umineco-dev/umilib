@@ -1,0 +1,16 @@
+ITMIME
+MIME0-SIZE
+9250-N
+EHLO bar.com
+MAIL FROM:<Smith@ba> SIZE=50
+00reets00-8B250 `SIZE
+9250-N
+EHLO bar.com
+MAIL FROM:<Smþÿÿ²ba> SIZE=EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT 
+DATA
+Bl2Bx@foo.com–
+DATA250-DSo
+DATAc.N
+nRhbnN

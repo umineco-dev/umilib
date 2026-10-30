@@ -1,0 +1,7 @@
+ripemd.txt
+    The test values of RIPEMD-128 and RIPEMD-160 from appendix B of H. Dobbertin, A. Bosselaers, B. Preneel,
+    "RIPEMD-160: A strengthened version of RIPEMD" (AB-9601, https://homes.esat.kuleuven.be/~bosselae/ripemd160/pdf/AB-9601/AB-9601.pdf),
+    and those of RIPEMD-256 and RIPEMD-320 from https://homes.esat.kuleuven.be/~bosselae/ripemd160.html, both downloaded on 2026-10-24,
+    extracted into one file by a script.
+    License: published test values of the designers; values only.
+    Format: variant, repetitions of the message, the message in hexadecimal ("-" for the empty string), the hash result.

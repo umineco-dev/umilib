@@ -1,0 +1,23 @@
+EHLO bar.com
+AUTHEHLO bar.com
+MAIL FROM:<Smith@bar.com> S50 
+..etc. etÿ. SNm> 
+MAIL FROM:<Smith@bar.com> S50 
+..ear.com
+:<Smith@bar.com> S50 
+..etc. etÿ. SNm> 
+MAIL FROM:<Smith@bar.com> S50 
+..ear.com
+AUTHEHLO. SNm>
+MAIL FROM:<Smith@bar.com> S50 
+..ear.com
+:<Smith@bar.com> S50 
+..etc. etÿEHLO bar.com
+MAIL FROM:<Smith@bar.com> S50 
+..etc. et bar.com
+MAIL FROM:<Smith@bar.com> S50 
+..etc. etc. SAUTHEHLO bar.com
+MAIL FROM:<Smith@bar.com> S50 
+.>etc. etc. SNm> 
+MAIL FROM:<Smith@bar.com> S25 
+..et. etc. SNm> NO

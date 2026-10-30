@@ -1,0 +1,9 @@
+USER anonymous
+PASS guest
+TYPEùI
+EPSV
+t
+MLST /tmp
+FEAT
+AUTH TLS
+QUIT

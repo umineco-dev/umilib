@@ -1,0 +1,6 @@
+USEaon RH 
+2|]+REST 140
+RETR a.txt
+MLRTE 
+RETR 0
+RETR a./t

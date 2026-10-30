@@ -1,0 +1,9 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=8BITMIME
+RCPT TO:<Jones@foo.com> NOTIFY=SUCCESS-FAIL-SIZEm greets bar.com
+500-8BITMIME
+250-SIZE
+250-DSN
+250 
+..etc. etc. etc.
+.BDAT>helloQUIT

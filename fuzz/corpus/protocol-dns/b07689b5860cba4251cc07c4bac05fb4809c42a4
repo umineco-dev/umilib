@@ -1,0 +1,2 @@
+example. 3599 IN SOA ns.example. an.example. 1 3600 600 86400 300
+ TXT "a b" "c\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\034"example.pTPS 1 . alpnxampln=e

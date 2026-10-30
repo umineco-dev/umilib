@@ -1,0 +1,3 @@
+EHLO bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BODY=ME
+loÿQU

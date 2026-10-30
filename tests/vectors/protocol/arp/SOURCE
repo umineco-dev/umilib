@@ -1,0 +1,9 @@
+rfc826.txt, rfc1122.txt, rfc5227.txt
+    The texts of RFC 826 (An Ethernet Address Resolution Protocol), RFC 1122 (Requirements for Internet Hosts
+    -- Communication Layers) and RFC 5227 (IPv4 Address Conflict Detection), downloaded from
+    https://www.rfc-editor.org/rfc/ on 2026-10-26.
+    License: the IETF Trust's Legal Provisions Relating to IETF Documents.
+    Used: the packet format and the reception algorithm of RFC 826, the cache rules of RFC 1122 §2.3.2, and
+    the probes, announcements and conflicts of RFC 5227.
+
+The ARP packets of the Linux kernel are in ../ethernet/linux.txt (see ../ethernet/SOURCE).

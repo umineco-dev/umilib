@@ -1,0 +1,6 @@
+5 APPEND saved-messagSMITH {0+}
+SE LOGIN {5}
+SMITH {6+}
+SESa002 SELECT inboN
+a005 APPEND saved-mess.agSMITH {0+}
+S»ßÖ³°¸007 LOGOUT

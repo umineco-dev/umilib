@@ -1,0 +1,7 @@
+@GET / HTTP/1.1
+Host: aG
+Transfer-Encoding: chunked
+
+19103239;000'03230NNNNNN..#######;000'000000000+00000H=d
+
+

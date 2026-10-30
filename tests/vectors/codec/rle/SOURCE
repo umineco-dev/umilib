@@ -1,0 +1,7 @@
+tn1023.txt
+    Apple Technical Note TN1023, "Understanding PackBits" (dated February 1, 1996; page copyright 2016 Apple Inc.).
+    Downloaded from https://developer.apple.com/library/archive/technotes/tn/tn1023.html on 2026-10-25.
+    License: Apple documentation; the two lines of hexadecimal bytes of its example are quoted for
+    interoperability testing.
+    Used: the example of the section "Using PackBits": the unpacked data and the result of packing them
+    (PackBits writes a repeat for three or more equal bytes).

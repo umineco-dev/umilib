@@ -1,0 +1,14 @@
+FroVersion: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is tlee boundary
+
+This is impli itly typed plain US-ASCII text.
+--simple boundary
+-ontent-type: text/pl explicitly typSCII texYgeW91IGNhbiByZWFkIHar}FroVersion: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+T
+This is impli itly typed plain US-ASCII text.
+--si;mple boundary
+-ontent-type: text/pl explicitly tytSCII --

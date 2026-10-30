@@ -1,0 +1,8 @@
+@GET / HTTP/1.1
+Host: aG
+Transfer-Encoding: chunked
+
+00000000;0ddddddddddddddddd............................1.1 200 OK@GE@GE:
+000000]0000
+0003
+heO

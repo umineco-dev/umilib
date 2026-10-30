@@ -1,0 +1,6 @@
+USER anonymous
+EST 140
+RETR a.txt
+MLST /tmp
+FEAT
+AUTH TLSŠQUIT

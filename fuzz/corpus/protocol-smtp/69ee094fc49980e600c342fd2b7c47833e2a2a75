@@ -1,0 +1,9 @@
+EHLO bar.’ò=8BITMIME
+RCPT TO:<Jones@f
+DATA
+Blah blah blah...
+..etc. etc}. etc.
+.
+AUTH PL@IN Am
+BDAT 5 LAST
+helloQUIT

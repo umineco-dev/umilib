@@ -1,0 +1,12 @@
+rfc6070.txt
+    Extracted by a script from section 2 of RFC 6070, "PKCS #5: Password-Based Key Derivation Function 2
+    (PBKDF2) Test Vectors", https://www.rfc-editor.org/rfc/rfc6070.txt, downloaded on 2026-10-24.
+    License: IETF Trust Legal Provisions; the vectors are data.
+    Format: Key = Value records: P and S (the ASCII strings in hexadecimal), c and DK (PBKDF2 with HMAC-SHA1).
+    Used: every record; the one with c = 16777216 only when the tests are run with --ignored.
+
+pbkdf2_hmacsha1_test.json, pbkdf2_hmacsha224_test.json, pbkdf2_hmacsha256_test.json, pbkdf2_hmacsha384_test.json,
+pbkdf2_hmacsha512_test.json
+    Project Wycheproof, testvectors_v1 of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.

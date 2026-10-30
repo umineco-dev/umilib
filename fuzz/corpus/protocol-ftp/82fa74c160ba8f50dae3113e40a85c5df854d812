@@ -1,0 +1,41 @@
+USER an8/
+EPRT |2|::1|
+SUSonymo
+T7A
+EPRT |2|::
+EPRT |2|::17A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/tmp
+FM5282|
+
+EPRT |2|::17A|5282|
+S
+/tmp
+FE
+EPRT |2|::17A|5282|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/tmp
+FMAT
+@S
+/tmp
+FE
+EPRT |2|::17A|5283|
+S
+FE
+EPRT |2|::17A|5282|
+S
+/tmp
+FMAT
+@UTL TLSA/
+@UT
+E

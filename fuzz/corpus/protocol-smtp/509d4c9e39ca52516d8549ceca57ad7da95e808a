@@ -1,0 +1,23 @@
+þÿÿÿÿÿÿÿÿEHLO barTVIME
+RCPT TO:<HoSmith@bar.cm> ZE=500 8BYBKO=ITMIME
+RCPT TO:<Hones@foo.com> NMIME
+RCPT TO:<Hones@foo.com> NOTIF
+BDATAT MIME
+RCPT TO:<HoSmith@bar.com> SIZE=502 BODY=8BITMIME
+RCPT"TO:<Jones@foo.com> ZE=500 8BYBKO=ITMIME
+RCPT TO:<Hones@foo.com> NOTIF
+BDAT MIME
+RCPT TO:<Hones@foo.com> NOTIF
+B]AT 4 LST 5 LST
+heLelloQUIT
+ones@foo.com> ZE=50IME
+RCPT TO:<Hones@foo.com> NMIME
+RCPT TO:<Hones@foo.com> NOTIF
+BDATAT MIME
+RCPT TO:<H> SIZE=502 BODY=8BITMIME
+RCPT T.com> ZE=50] 8BYBKO=ITMIME
+RCPT TO:<Hones@foo.com> NOTIF
+BDAT MIME
+RCPT TO:O:<Jones@foo.com> ZE=500 8BYBKO=ITMIME
+RCPT TO:<Hones@foo.com> NOTIF
+BDAT

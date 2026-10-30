@@ -1,0 +1,7 @@
+catalogue.txt
+    The parameter lines of the "Catalogue of parametrised CRC algorithms" of CRC RevEng (Greg Cook),
+    https://reveng.sourceforge.io/crc-catalogue/all.htm, downloaded on 2026-10-24: every line of the
+    form width=... name="..." extracted unchanged (113 algorithms). The parameters are facts about
+    published algorithms; the catalogue supplies them without warranty.
+    Used: the parameters, check values and residues of every algorithm; src/hash/crc/catalogue.rs is
+    generated from this file by tools/crc_catalogue.py.

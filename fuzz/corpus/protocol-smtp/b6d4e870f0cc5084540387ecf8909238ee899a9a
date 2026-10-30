@@ -1,0 +1,2 @@
+EHLO barºcom
+MAIL FROM:<Smi@foo.com> NOTIFY=SS.URE ORCPT=rfc822; 5 hT

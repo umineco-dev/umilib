@@ -1,0 +1,7 @@
+nbox
+aSEEN
+a005 APPEND saved-messages (\Seen) {10}
+0123456789
+a006 IDLE
+DONE
+a007 LOGOUT

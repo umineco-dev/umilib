@@ -1,0 +1,208 @@
+# Publishes a release when a tag `v<semver>` is pushed or a release is published.
+#
+# 1. prepare: on the tagged commit, sets the version of Cargo.toml and
+#    port/python/pyproject.toml to the tag without its "v", updates the lock
+#    files and commits the change with the date of the tagged commit, so that
+#    every run for the same tag creates the same commit. The commit is pushed to
+#    the default branch when the tag is its head, and to `release/<tag>`
+#    otherwise. The tag itself is not moved. If the release is already
+#    complete (GitHub release with SHA256SUMS, crates.io and PyPI), the
+#    remaining jobs are skipped; this happens when both triggers fire.
+# 2. test:    runs test.yml on that commit.
+# 3. build:   builds every archive umilib-<tag>-<arch>-<platform>.tar.xz and
+#    the Python wheels.
+# 4. publish: publishes to crates.io and PyPI with API tokens and attaches the
+#    archives to the GitHub release. Every step skips what is already published,
+#    so re-running a release is safe.
+#
+# Secrets (in the `release` environment): CARGO_REGISTRY_TOKEN, PYPI_API_TOKEN.
+# See docs/ci.md.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  TAG: ${{ github.event.release.tag_name || github.ref_name }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+      version: ${{ steps.version.outputs.version }}
+      python_version: ${{ steps.version.outputs.python_version }}
+      done: ${{ steps.done.outputs.done }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - id: version
+        run: python tools/release.py version "$TAG" >> "$GITHUB_OUTPUT"
+      - name: Update the Python lock file
+        run: cd port/python && uv lock
+      - id: commit
+        name: Commit and push the version
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          tagged=$(git rev-parse HEAD)
+          if ! git diff --quiet; then
+            date=$(git log -1 --format=%cI "$tagged")
+            # Fixed identity and dates make the commit identical across runs for the same tag.
+            GIT_COMMITTER_DATE="$date" git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -am "Release $TAG" --date "$date"
+          fi
+          sha=$(git rev-parse HEAD)
+          if [ "$(git rev-parse "origin/$DEFAULT_BRANCH")" = "$tagged" ] || git merge-base --is-ancestor "$sha" "origin/$DEFAULT_BRANCH"; then
+            branch="$DEFAULT_BRANCH"
+          else
+            branch="release/$TAG"
+          fi
+          if [ "$sha" != "$tagged" ] && ! git merge-base --is-ancestor "$sha" "origin/$branch" 2>/dev/null; then
+            git push origin "HEAD:refs/heads/$branch"
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+        shell: bash
+      - id: done
+        name: Check whether the release is already complete
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PYTHON_VERSION: ${{ steps.version.outputs.python_version }}
+        run: |
+          done=true
+          gh release view "$TAG" --json assets --jq '.assets[].name' 2>/dev/null | grep -qx SHA256SUMS || done=false
+          [ "$(curl -s -o /dev/null -w '%{http_code}' -A "umilib-release (github.com/${{ github.repository }})" "https://crates.io/api/v1/crates/umilib/$VERSION")" = "200" ] || done=false
+          [ "$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/umilib/$PYTHON_VERSION/json")" = "200" ] || done=false
+          echo "done=$done" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: prepare
+    if: needs.prepare.outputs.done != 'true'
+    uses: ./.github/workflows/test.yml
+    with:
+      ref: ${{ needs.prepare.outputs.sha }}
+
+  build:
+    needs: [prepare, test]
+    if: needs.prepare.outputs.done != 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x86, platform: linux, os: ubuntu-latest, targets: "i686-unknown-linux-gnu:lib" }
+          - { arch: x86_64, platform: linux, os: ubuntu-latest, targets: "x86_64-unknown-linux-gnu:lib" }
+          - { arch: aarch32, platform: linux, os: ubuntu-latest, targets: "armv7-unknown-linux-gnueabihf:lib" }
+          - { arch: aarch64, platform: linux, os: ubuntu-latest, targets: "aarch64-unknown-linux-gnu:lib" }
+          - { arch: riscv32, platform: linux, os: ubuntu-latest, targets: "riscv32gc-unknown-linux-gnu:lib", tier3: true }
+          - { arch: riscv64, platform: linux, os: ubuntu-latest, targets: "riscv64gc-unknown-linux-gnu:lib" }
+          - { arch: x86, platform: android, os: ubuntu-latest, targets: "i686-linux-android:lib" }
+          - { arch: x86_64, platform: android, os: ubuntu-latest, targets: "x86_64-linux-android:lib" }
+          - { arch: aarch32, platform: android, os: ubuntu-latest, targets: "armv7-linux-androideabi:lib" }
+          - { arch: aarch64, platform: android, os: ubuntu-latest, targets: "aarch64-linux-android:lib" }
+          - { arch: riscv64, platform: android, os: ubuntu-latest, targets: "riscv64-linux-android:lib", tier3: true }
+          - { arch: x86_64, platform: darwin, os: macos-latest, targets: "x86_64-apple-darwin:lib x86_64-apple-ios:lib/ios-simulator" }
+          - { arch: aarch64, platform: darwin, os: macos-latest, targets: "aarch64-apple-darwin:lib aarch64-apple-ios:lib/ios aarch64-apple-ios-sim:lib/ios-simulator" }
+          - { arch: x86, platform: windows, os: windows-latest, targets: "i686-pc-windows-msvc:lib" }
+          - { arch: x86_64, platform: windows, os: windows-latest, targets: "x86_64-pc-windows-msvc:lib" }
+          - { arch: aarch64, platform: windows, os: windows-latest, targets: "aarch64-pc-windows-msvc:lib" }
+          - { arch: aarch32, platform: windows, os: windows-latest, targets: "thumbv7a-pc-windows-msvc:lib", tier3: true }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the toolchain
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          if [ "${{ matrix.tier3 }}" = "true" ]; then
+            rustup toolchain install nightly --profile minimal --component rust-src
+          else
+            for entry in ${{ matrix.targets }}; do rustup target add "${entry%%:*}"; done
+          fi
+      - name: Install cross toolchains
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          targets=$(for entry in ${{ matrix.targets }}; do printf '%s ' "${entry%%:*}"; done)
+          packages=$(python tools/target.py packages $targets)
+          if [ -n "$packages" ]; then sudo apt-get update && sudo apt-get install -y $packages; fi
+      - name: Build
+        shell: bash
+        run: python tools/release.py build --tag "$TAG" --arch ${{ matrix.arch }} --platform ${{ matrix.platform }} --targets "${{ matrix.targets }}" --output dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.arch }}-${{ matrix.platform }}
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: [prepare, build]
+    if: needs.prepare.outputs.done != 'true'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: release-*
+          merge-multiple: true
+      - name: Build the source distribution
+        run: cd port/python && uv build --sdist --out-dir ../../dist
+      - run: python tools/release.py checksums dist
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          status=$(curl -s -o /dev/null -w '%{http_code}' -A "umilib-release (github.com/${{ github.repository }})" "https://crates.io/api/v1/crates/umilib/$VERSION")
+          if [ "$status" = "200" ]; then
+            echo "umilib $VERSION is already on crates.io"
+          else
+            cargo publish --locked
+          fi
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: uv publish --check-url https://pypi.org/simple/ dist/*.whl dist/*.tar.gz
+      - name: Attach the archives to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes
+          gh release upload "$TAG" dist/*.tar.xz dist/SHA256SUMS --clobber

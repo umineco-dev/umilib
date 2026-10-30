@@ -1,0 +1,4 @@
+USER anonymous
+PAFEAT
+AUTH TLS
+QUIT

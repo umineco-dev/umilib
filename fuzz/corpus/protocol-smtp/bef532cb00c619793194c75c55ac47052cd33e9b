@@ -1,0 +1,8 @@
+EHNO bar.com
+MAIL FROM:<Smith@baomcr.> ISZE=50HNO bar.com
+MAIL r.com
+MAIL FROM:<Smith@baomcr.> ISZE=50HNO bar.com
+MAIL FROM:<Smith@baomcr.> ISZE=500 BOD
+RCPTUREFROMCPT TO:<JoJnes@fo:<Smith@baomcr.> ISZE=500 BOD
+RCPTURE 0 BOD
+RCPTURE ORCPTfoo.co=m

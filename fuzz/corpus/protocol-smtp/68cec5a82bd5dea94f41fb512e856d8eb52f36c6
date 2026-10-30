@@ -1,0 +1,4 @@
+EHLO bar.com
+MAIL Fom
+MAIL FROM:<PoPPPPPPPPPPPPSmith@ba> 
+RCPT TOR

@@ -1,0 +1,7 @@
+EHLO b r.com
+MAIL FROM:<Smith@barvcom> SIZE=500 BODY=8BITMIME
+RCPT TO:<
+.
+AUTH zdm
+BDAT 5 LAST
+helloBDelloQUIT

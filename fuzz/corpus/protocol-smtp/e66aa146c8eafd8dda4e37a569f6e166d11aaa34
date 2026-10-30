@@ -1,0 +1,7 @@
+EHLO bar.om
+MAIL FROM:<Smith@bar.com> SIZE-500 BODATA
+Bl2Bx@foo.comO bar.om
+MAIL FROM:<Smith@bar.com> SIZE-500 BODY=8BITMIME
+CPU`H com
+MAIL Ã­°²:<Smih@tar.com> SIZE=994 BODY=8BITMIME
+RCT

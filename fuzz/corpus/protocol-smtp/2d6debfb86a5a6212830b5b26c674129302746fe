@@ -1,0 +1,5 @@
+EH500 BOKY=8BITMIME
+RCPT TO:<Jones@foo.com> NOTI etc. et bar.com
+MAIL FROM:<Smith@bar.com> SIZE=500 BOKY=8BITMIME
+RCPT TO:<Jones@foo.com> NOTI eBDAT 5 LAST
+helloQUIT

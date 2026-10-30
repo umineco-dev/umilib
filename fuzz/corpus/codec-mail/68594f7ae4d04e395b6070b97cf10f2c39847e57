@@ -1,0 +1,15 @@
+From: Nathanie, Bo
+MIME-Version: 1.0
+Content-type: multipart/mixed; boundary="simple boundary"
+
+This is the preamble.
+Ö-simple boundary
+
+This is implicitly typed plain US-ASCII text.
+--simple boundary
+Content-type: tertt/mixed; boundary="simple boundary"
+
+This is t
+This is implicitly typed plain US-ASCII text.
+--simple boundary
+Content-type: tert/mixed; boun1dary="simple boundary"s/mixed; boun1darye boundary"s the epilogue.

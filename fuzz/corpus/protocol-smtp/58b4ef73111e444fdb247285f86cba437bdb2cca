@@ -1,0 +1,3 @@
+EHLO ar.com
+MAIL FROM:<ith@bar.com> SIZE=500 BOD
+MTA

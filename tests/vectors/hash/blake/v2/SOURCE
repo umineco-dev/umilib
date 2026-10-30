@@ -1,0 +1,12 @@
+blake2-kat.json
+    The BLAKE2 known-answer tests, testvectors/blake2-kat.json of https://github.com/BLAKE2/BLAKE2.
+    Downloaded from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2-kat.json on 2026-10-24.
+    License: CC0 1.0 Universal (the BLAKE2 reference code and test vectors are dedicated to the public domain).
+    Used: every entry: BLAKE2b, BLAKE2s, BLAKE2bp, BLAKE2sp, BLAKE2Xb and BLAKE2Xs, unkeyed and keyed
+    (inputs 0 to 255 bytes; keys 0x00..0x3f for the b variants and 0x00..0x1f for the s variants).
+
+rfc7693.txt
+    RFC 7693, "The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)" (M-J. Saarinen, J-P. Aumasson, November 2015).
+    Downloaded from https://www.rfc-editor.org/rfc/rfc7693.txt on 2026-10-24.
+    License: IETF Trust Legal Provisions (code components and test vectors may be reproduced).
+    Used: the "abc" examples of appendices A and B, and the self-test of appendix E.

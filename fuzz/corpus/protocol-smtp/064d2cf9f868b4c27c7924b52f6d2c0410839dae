@@ -1,0 +1,4 @@
+EHLO bar.ch@bar.co000 BODYIÍE
+RCPT TO:<Jones@foo.co> TmOIN etc. HLO bar.com
+MAIL FROM:<Smith@ba!.com> Y=7BITMIME
+RCPT TO:<Jones@foo.com> NOTellOTell

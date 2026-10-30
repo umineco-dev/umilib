@@ -1,0 +1,10 @@
+gcmEncryptExtIV{128,192,256}.rsp, gcmDecrypt{128,192,256}.rsp
+    NIST CAVP, the Galois/Counter Mode validation system (GCMVS) response files, with external IVs.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every record: IVs of 8 to 1024 bits, tags of 32 to 128 bits, and the decryptions that must fail.
+
+aes_gcm_test.json
+    Project Wycheproof, testvectors_v1/aes_gcm_test.json of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test, including the edge cases of the counter and the invalid tags.

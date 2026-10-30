@@ -1,0 +1,19 @@
+USE
+FESt
+MLST E I
+EPfV
+PORxt
+MLST /tm`p
+FEAT
+AUTSt
+MLST /tmp
+MLST /tmpH TLSt
+MLST /tmp
+FET 12:8:00C:417A|05EST 100
+RETR a.txt
+MLST /tmp
+AUTH TLSt
+MLST /tmp
+MLST /tmp
+FAUTH TLS
+QUIT

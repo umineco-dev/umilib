@@ -1,0 +1,10 @@
+CMACGen{AES128,AES192,AES256,TDES2,TDES3}.rsp, CMACVer{AES128,AES192,AES256,TDES2,TDES3}.rsp
+    NIST CAVP, the CMAC validation system (CMACVS) response files.
+    Downloaded from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/cmactestvectors.zip on 2026-10-24.
+    License: NIST CAVP test vectors, a work of the United States government (public domain in the United States).
+    Used: every record, generation and verification (the TDES files with tags of 1 to 8 bytes).
+
+aes_cmac_test.json
+    Project Wycheproof, testvectors_v1/aes_cmac_test.json of https://github.com/C2SP/wycheproof, downloaded on 2026-10-24.
+    License: Apache License 2.0.
+    Used: every test.
