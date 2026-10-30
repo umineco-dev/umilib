@@ -792,7 +792,12 @@ fn structures_have_the_layout_of_their_rust_types() {
         assert_eq!(std::mem::offset_of!(umilib::protocol::tcp::TCPHeader, data_offset), 12);
         assert_eq!(std::mem::offset_of!(umilib::protocol::tcp::TCPHeader, urgent_pointer), 20);
         assert_eq!(std::mem::offset_of!(umilib::ffi::protocol::tcp::FFITCPOptionSet, sack_blocks), 16);
-        assert_eq!(std::mem::offset_of!(umilib::ffi::protocol::tcp::FFITCPConnectionInfo, timer), 64);
+        // The fields before `timer` end at 57; the timer starts at the next multiple of the
+        // alignment of its `u64` fields, which is 4 on i386 System V and 8 elsewhere.
+        assert_eq!(
+            std::mem::offset_of!(umilib::ffi::protocol::tcp::FFITCPConnectionInfo, timer),
+            57usize.next_multiple_of(std::mem::align_of::<u64>())
+        );
     }
     #[cfg(umilib_feature = "protocol-icmp-v6")]
     {
@@ -806,8 +811,13 @@ fn structures_have_the_layout_of_their_rust_types() {
         assert_eq!(std::mem::offset_of!(umilib::hash::blake::v2::BLAKE2bParameters, salt), 18);
         assert_eq!(std::mem::offset_of!(umilib::hash::blake::v2::BLAKE2sParameters, personal), 24);
     }
+    // `width`, then two `U128`s (two `u64`s each) and two `bool`s, each `U128` at a multiple of
+    // the alignment of `u64` (4 on i386 System V, 8 elsewhere).
     #[cfg(umilib_feature = "hash-crc")]
-    assert_eq!(std::mem::offset_of!(umilib::ffi::hash::crc::CRCParameters, xor_output), 48);
+    assert_eq!(
+        std::mem::offset_of!(umilib::ffi::hash::crc::CRCParameters, xor_output),
+        (4usize.next_multiple_of(std::mem::align_of::<u64>()) + 32 + 2).next_multiple_of(std::mem::align_of::<u64>())
+    );
     #[cfg(all(umilib_feature = "protocol-http-v2", target_pointer_width = "64"))]
     {
         assert_eq!(std::mem::offset_of!(umilib::ffi::protocol::http::v2::FFIH2Config, max_concurrent_streams), 80);

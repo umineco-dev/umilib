@@ -35,7 +35,7 @@ def random() -> HMACDRBG:
 
 
 def rfc(name: str) -> str:
-    return (VECTORS / name).read_text()
+    return (VECTORS / name).read_text(encoding="utf-8")
 
 
 def s256(verifier: str) -> str:

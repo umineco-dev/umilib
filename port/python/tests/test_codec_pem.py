@@ -8,7 +8,7 @@ import pytest
 from umilib.codec.base import BaseError
 from umilib.codec.pem import PEMConfig, PEMDocument, PEMError, PEMLabel, PEMLineEnding, PEMStrictness
 
-RFC = (Path(__file__).resolve().parents[3] / "tests" / "vectors" / "codec" / "pem" / "rfc7468.txt").read_text()
+RFC = (Path(__file__).resolve().parents[3] / "tests" / "vectors" / "codec" / "pem" / "rfc7468.txt").read_text(encoding="utf-8")
 
 
 def test_rfc7468_examples():

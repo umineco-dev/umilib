@@ -67,7 +67,7 @@ class MathVectors:
             "# operation precision operands... = results..., in hexadecimal.",
         ]
         MathVectors.OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-        MathVectors.OUTPUT.write_text("\n".join(header + MathVectors().lines()) + "\n")
+        MathVectors.OUTPUT.write_text("\n".join(header + MathVectors().lines()) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

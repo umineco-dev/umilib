@@ -263,8 +263,8 @@ fn frame_check_sequences_reject_an_output_in_the_frame() {
     let frame = [0x5a; 60];
     // The four bytes of the sequence, at the end of the frame or across it.
     for offset in [56, 58] {
-        rejects_overlap::<u8>(&frame, offset, |input, length, out| unsafe {
-            umilib_protocol_ethernet_ethernet_frame_fcs(input, length, out)
+        rejects_overlap::<[u8; 4]>(&frame, offset, |input, length, out| unsafe {
+            umilib_protocol_ethernet_ethernet_frame_fcs(input, length, out.cast())
         });
     }
 }

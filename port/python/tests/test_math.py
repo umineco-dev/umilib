@@ -11,7 +11,7 @@ from umilib.math.bigint import BoxedUint, MathError
 from umilib.math.modular import BoxedModulus, BoxedResidue
 from umilib.secret import Choice
 
-RFC3526 = (Path(__file__).resolve().parents[3] / "tests" / "vectors" / "math" / "modular" / "rfc3526.txt").read_text()
+RFC3526 = (Path(__file__).resolve().parents[3] / "tests" / "vectors" / "math" / "modular" / "rfc3526.txt").read_text(encoding="utf-8")
 PRECISIONS = [64, 128, 192, 256, 384, 521, 1024, 2048, 4096]
 
 

@@ -35,7 +35,7 @@ class CRCCatalogue:
     def main() -> None:
         entries = []
         names: dict[str, list[str]] = {f"u{bits}": [] for bits in (8, 16, 32, 64, 128)}
-        for line in CRCCatalogue.INPUT.read_text().splitlines():
+        for line in CRCCatalogue.INPUT.read_text(encoding="utf-8").splitlines():
             match = CRCCatalogue.LINE.fullmatch(line)
             if match is None:
                 raise SystemExit(f"unexpected line: {line}")
@@ -72,15 +72,15 @@ class CRCCatalogue:
             "#[rustfmt::skip]\n"
             "impl CRCCatalogue {\n" + "\n".join(entries) + "}\n"
         )
-        CRCCatalogue.OUTPUT.write_text(source)
+        CRCCatalogue.OUTPUT.write_text(source, encoding="utf-8")
         attributes = "".join(
             f'    {CRCCatalogue.identifier(name)} = Preset(lambda: CRCCatalogue.find("{name}"))\n'
-            for name in (CRCCatalogue.LINE.fullmatch(line).group(9) for line in CRCCatalogue.INPUT.read_text().splitlines())
+            for name in (CRCCatalogue.LINE.fullmatch(line).group(9) for line in CRCCatalogue.INPUT.read_text(encoding="utf-8").splitlines())
         )
-        python = CRCCatalogue.PYTHON.read_text()
+        python = CRCCatalogue.PYTHON.read_text(encoding="utf-8")
         start = python.index("    # BEGIN CATALOGUE\n") + len("    # BEGIN CATALOGUE\n")
         end = python.index("    # END CATALOGUE\n")
-        CRCCatalogue.PYTHON.write_text(python[:start] + attributes + python[end:])
+        CRCCatalogue.PYTHON.write_text(python[:start] + attributes + python[end:], encoding="utf-8")
 
 
 if __name__ == "__main__":

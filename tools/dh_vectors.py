@@ -36,13 +36,13 @@ class DHVectors:
 
     def groups(self) -> list[tuple[str, int]]:
         groups = []
-        text = self.RFC7919.read_text()
+        text = self.RFC7919.read_text(encoding="utf-8")
         for index, bits in enumerate([2048, 3072, 4096, 6144, 8192]):
             section = text[text.index(f"\nA.{index + 1}.  ffdhe{bits}\n") :]
             start = section.index("The hexadecimal representation of p is:")
             end = section.index("The generator is: g = 2", start)
             groups.append((f"ffdhe{bits}", self.hexadecimal(section[start:end])))
-        text = self.RFC3526.read_text()
+        text = self.RFC3526.read_text(encoding="utf-8")
         for bits in [1536, 2048, 3072, 4096, 6144, 8192]:
             section = text[text.index(f"{bits}-bit MODP Group\n") :]
             start = section.index("Its hexadecimal value is:")
@@ -65,7 +65,7 @@ class DHVectors:
                 values = [a.to_bytes(size, "big"), b.to_bytes(size, "big")]
                 values += [value.to_bytes(size, "big") for value in (y_a, y_b, z)]
                 lines.append(" ".join([name] + [value.hex() for value in values]))
-        self.OUTPUT.write_text("\n".join(lines) + "\n")
+        self.OUTPUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

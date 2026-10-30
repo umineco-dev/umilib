@@ -48,7 +48,7 @@ def fixture(name: str) -> bytes:
 
 
 def key(name: str) -> PrivateKey:
-    return PrivateKey.from_pem((FIXTURES / f"{name}.key").read_text())
+    return PrivateKey.from_pem((FIXTURES / f"{name}.key").read_text(encoding="utf-8"))
 
 
 def test_integers_are_minimal_twos_complement():
@@ -110,7 +110,7 @@ def test_certificates_of_openssl():
     chain = Certificate.from_pem_all(leaf.to_pem() + intermediate.to_pem() + root.to_pem())
     assert chain == [leaf, intermediate, root]
     with pytest.raises(X509StatusError) as error:
-        Certificate.from_pem((FIXTURES / "root.key").read_text())
+        Certificate.from_pem((FIXTURES / "root.key").read_text(encoding="utf-8"))
     assert error.value.name == "PEMLabel"
 
 

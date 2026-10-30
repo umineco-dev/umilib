@@ -21,7 +21,7 @@ VECTORS = Path(__file__).resolve().parents[3] / "tests" / "vectors" / "codec" / 
 def rfc4648(name: str) -> list[tuple[bytes, str]]:
     prefix = f'{name}("'
     vectors = []
-    for line in (VECTORS / "rfc4648.txt").read_text().splitlines():
+    for line in (VECTORS / "rfc4648.txt").read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if line.startswith(prefix):
             data, text = line[len(prefix):].split('") = "')

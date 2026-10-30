@@ -28,7 +28,7 @@ from umilib.protocol.ip.v6 import (
 def frames():
     """The frames of the Linux capture: (description, bytes)."""
     entries, description = [], []
-    for line in (ROOT / "protocol/ethernet/linux.txt").read_text().splitlines():
+    for line in (ROOT / "protocol/ethernet/linux.txt").read_text(encoding="utf-8").splitlines():
         if line.startswith("# "):
             description.append(line[2:])
         elif line.strip():

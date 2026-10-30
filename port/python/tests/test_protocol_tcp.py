@@ -41,7 +41,7 @@ from umilib.protocol.tcp import (
 def segments():
     """The TCP segments of the capture: (tcpdump's TCP line, source, destination, bytes)."""
     found, description = [], []
-    for line in (ROOT / "protocol/tcp/linux.txt").read_text().splitlines():
+    for line in (ROOT / "protocol/tcp/linux.txt").read_text(encoding="utf-8").splitlines():
         if line.startswith("# "):
             description.append(line[2:])
             continue

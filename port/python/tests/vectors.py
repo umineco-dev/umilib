@@ -27,7 +27,7 @@ class Record:
         header: dict[str, str] = {}
         fresh = False
         current = Record()
-        for line in (ROOT / path).read_text().splitlines():
+        for line in (ROOT / path).read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line.startswith("#"):
                 continue
@@ -71,7 +71,7 @@ class Wycheproof:
 
     @staticmethod
     def tests(path: str) -> Iterator[tuple[dict[str, Any], dict[str, Any]]]:
-        document = json.loads((ROOT / path).read_text())
+        document = json.loads((ROOT / path).read_text(encoding="utf-8"))
         for group in document["testGroups"]:
             for test in group["tests"]:
                 yield group, test
@@ -97,7 +97,7 @@ class GMT:
         """The text of ``path`` without its page breaks: the "=== page" marker of the extraction and the
         page number on the line after it."""
         kept, skip = [], False
-        for line in (ROOT / path).read_text().splitlines():
+        for line in (ROOT / path).read_text(encoding="utf-8").splitlines():
             if line.startswith("=== page"):
                 skip = True
                 continue

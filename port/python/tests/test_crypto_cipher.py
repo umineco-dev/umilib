@@ -85,7 +85,7 @@ def test_block_ciphers_follow_their_specifications():
             check_block(TDES, key, record.bytes("PLAINTEXT"), record.bytes("CIPHERTEXT"))
     # The NESSIE vectors of IDEA: "Set n, vector# m:" followed by "name=value" lines.
     vectors: list[dict[str, str]] = []
-    for line in (ROOT / "crypto/idea/Idea-128-64.verified.test-vectors").read_text().splitlines():
+    for line in (ROOT / "crypto/idea/Idea-128-64.verified.test-vectors").read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if line.startswith("Set "):
             vectors.append({})

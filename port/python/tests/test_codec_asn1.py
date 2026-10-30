@@ -10,7 +10,7 @@ from umilib.codec.asn1 import ASN1Error, ASN1Integer, ASN1String, ASN1Time, BitS
 from umilib.codec.asn1.ber import BERReader
 from umilib.codec.asn1.der import DERReader, DERWriter
 
-RFC = (Path(__file__).resolve().parents[3] / "tests" / "vectors" / "codec" / "pem" / "rfc7468.txt").read_text()
+RFC = (Path(__file__).resolve().parents[3] / "tests" / "vectors" / "codec" / "pem" / "rfc7468.txt").read_text(encoding="utf-8")
 
 
 def test_sequence_example_of_section_8_9():

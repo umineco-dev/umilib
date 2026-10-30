@@ -1112,8 +1112,11 @@ fn lossy_reordering_network() {
                     _ => network.deliver(&flight),
                 }
             }
-            if random.next().is_multiple_of(3) && !held.is_empty() {
-                let flight = held.remove((random.next() as usize) % held.len());
+            // A flight released now may let a side send again without a timer, so it counts as
+            // activity below. The index is taken in u64 so that every platform plays the same network.
+            let released = random.next().is_multiple_of(3) && !held.is_empty();
+            if released {
+                let flight = held.remove((random.next() % held.len() as u64) as usize);
                 network.deliver(&flight);
             }
             got_a.extend(read_all(&mut network.a));
@@ -1125,7 +1128,7 @@ fn lossy_reordering_network() {
             if done && got_a.len() == total && got_b.len() == total {
                 break;
             }
-            if sent == 0 && held.is_empty() {
+            if sent == 0 && !released && held.is_empty() {
                 let next = [network.a.poll_timeout(), network.b.poll_timeout()].into_iter().flatten().min();
                 match next {
                     Some(next) => network.now = network.now.max(next),

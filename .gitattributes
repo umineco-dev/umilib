@@ -2,3 +2,5 @@
 tests/vectors/** -text
 fuzz/corpus/** -text
 src/codec/brotli/dictionary.bin -text
+# Generated C headers, compared with the generator's output (LF) by tests/ffi/manifest.rs.
+include/** text eol=lf

@@ -14,7 +14,7 @@ from umilib.protocol.udp import UDPConfig, UDPDatagram, UDPError, UDPHeader, UDP
 
 def frames():
     entries, description = [], []
-    for line in (ROOT / "protocol/udp/linux.txt").read_text().splitlines():
+    for line in (ROOT / "protocol/udp/linux.txt").read_text(encoding="utf-8").splitlines():
         if line.startswith("# "):
             description.append(line[2:])
         elif line.strip():

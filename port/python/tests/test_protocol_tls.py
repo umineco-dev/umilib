@@ -44,7 +44,7 @@ def certificate(name: str) -> bytes:
 
 
 def certified(name: str) -> TLSCertifiedKey:
-    return TLSCertifiedKey.new([certificate(name)], PrivateKey.from_pem((CERTIFICATES / f"{name}.key").read_text()))
+    return TLSCertifiedKey.new([certificate(name)], PrivateKey.from_pem((CERTIFICATES / f"{name}.key").read_text(encoding="utf-8")))
 
 
 def verifier() -> TLSPathVerifier:

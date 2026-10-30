@@ -177,7 +177,7 @@ def test_blake2_agrees_with_hashlib_for_every_parameter():
 
 
 def test_blake2_known_answers():
-    entries = json.loads((VECTORS / "hash" / "blake" / "v2" / "blake2-kat.json").read_text())
+    entries = json.loads((VECTORS / "hash" / "blake" / "v2" / "blake2-kat.json").read_text(encoding="utf-8"))
     for entry in entries[::37]:
         data, key, expected = (bytes.fromhex(entry[name]) for name in ("in", "key", "out"))
         out = bytearray(len(expected))
@@ -195,7 +195,7 @@ def test_blake2_known_answers():
 
 
 def test_blake3_follows_the_official_vectors():
-    document = json.loads((VECTORS / "hash" / "blake" / "v3" / "test_vectors.json").read_text())
+    document = json.loads((VECTORS / "hash" / "blake" / "v3" / "test_vectors.json").read_text(encoding="utf-8"))
     key, context = document["key"].encode(), document["context_string"].encode()
     for case in document["cases"]:
         data = bytes(index % 251 for index in range(case["input_len"]))
@@ -241,7 +241,7 @@ def test_siphash_follows_the_reference():
 
 
 def test_xxhash_follows_the_reference():
-    lines = (VECTORS / "hash" / "xxhash" / "xxhash.txt").read_text().splitlines()
+    lines = (VECTORS / "hash" / "xxhash" / "xxhash.txt").read_text(encoding="utf-8").splitlines()
     secrets = {line.split()[1]: bytes.fromhex(line.split()[2]) for line in lines if line.startswith("secret ")}
     state, data = 0x9E3779B9, bytearray()
     for _ in range(12000):

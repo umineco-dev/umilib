@@ -25,7 +25,7 @@ def generator(label: bytes) -> HMACDRBG:
 
 
 def groups(path: str) -> list[dict]:
-    return json.loads((ROOT / path).read_text())["testGroups"]
+    return json.loads((ROOT / path).read_text(encoding="utf-8"))["testGroups"]
 
 
 def first_group(path: str, name: str, **fields: object) -> dict:

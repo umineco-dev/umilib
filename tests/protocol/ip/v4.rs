@@ -8,7 +8,7 @@ use umilib::bytes::Buffer;
 use umilib::protocol::ip::v4::{
     IPv4Error, IPv4Fragmenter, IPv4Header, IPv4OptionKind, IPv4Options, IPv4Reassembler, IPv4ReassemblyConfig,
 };
-use umilib::protocol::ip::{IPError, IPProtocol, IPv4Address, InternetChecksum};
+use umilib::protocol::ip::{IPError, IPFragmentBuffer, IPProtocol, IPv4Address, InternetChecksum};
 use umilib::runtime::Instant;
 
 use super::super::Capture;
@@ -453,13 +453,15 @@ fn reassembly_limits_drop_the_oldest_datagrams() {
     assert_eq!(reassembler.receive(&fragment(2), &data[..16], at(1)), Ok(None));
     assert_eq!(reassembler.receive(&fragment(3), &data[..16], at(3)), Ok(None));
     assert_eq!(identifications(&reassembler), [1, 3]);
-    // So do bytes beyond the limit, but a fragment that alone exceeds it fails.
-    let config = IPv4ReassemblyConfig { maximum_buffered: 64, ..IPv4ReassemblyConfig::default() };
+    // So do bytes beyond the limit, but a fragment that alone exceeds it fails. The limit holds
+    // one 24-byte fragment with its record and the data, but not the record, of another.
+    let limit = 24 + IPFragmentBuffer::FRAGMENT_RECORD + 24;
+    let config = IPv4ReassemblyConfig { maximum_buffered: limit, ..IPv4ReassemblyConfig::default() };
     let mut reassembler = IPv4Reassembler::new(config);
     assert_eq!(reassembler.receive(&fragment(1), &data[..24], at(1)), Ok(None));
     assert_eq!(reassembler.receive(&fragment(2), &data[..24], at(2)), Ok(None));
     assert_eq!(identifications(&reassembler), [2]);
-    assert!(reassembler.table.buffered <= 64);
+    assert!(reassembler.table.buffered <= limit);
     assert_eq!(reassembler.receive(&fragment(3), &data[..64], at(3)), Err(IPv4Error::Limit));
     // A datagram beyond the largest to reassemble.
     let config = IPv4ReassemblyConfig { maximum_length: 576, ..IPv4ReassemblyConfig::default() };
@@ -528,7 +530,9 @@ fn reassembly_byte_limits_keep_abandoned_datagrams() {
     let mut header =
         IPv4Header::new(IPv4Address::new(192, 0, 2, 1), IPv4Address::new(192, 0, 2, 2), IPProtocol::UDP, 0).unwrap();
     header.more_fragments = true;
-    let config = IPv4ReassemblyConfig { maximum_buffered: 120, ..IPv4ReassemblyConfig::default() };
+    // Room for one 48-byte fragment with its record and the data, but not the record, of another.
+    let limit = 48 + IPFragmentBuffer::FRAGMENT_RECORD + 48;
+    let config = IPv4ReassemblyConfig { maximum_buffered: limit, ..IPv4ReassemblyConfig::default() };
     let mut reassembler = IPv4Reassembler::new(config);
     let first = IPv4Header { identification: 1, ..header };
     reassembler.receive(&first, &[0; 16], Instant::ZERO).unwrap();

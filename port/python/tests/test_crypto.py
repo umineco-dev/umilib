@@ -54,7 +54,7 @@ def records(path: Path):
     """The records of a CAVP DRBG file with their bracketed headers."""
     header, fields = {}, []
     fresh = False
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if line.startswith("#"):
             continue

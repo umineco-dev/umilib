@@ -91,7 +91,7 @@ class Appendix:
     @staticmethod
     def rfc6507(name: str) -> bytes:
         """The value "name := 0x ...;" of RFC 6507 appendix A, or for a hash the value after "=", across lines."""
-        text = (ROOT / "crypto/eccsi/rfc6507.txt").read_text()
+        text = (ROOT / "crypto/eccsi/rfc6507.txt").read_text(encoding="utf-8")
         section = text[text.index("\nAppendix A.  Test Data") :]
         value = section[section.index(f"\n      {name} ") + 1 :]
         if "hash(" in value[: value.index("\n")]:
@@ -103,7 +103,7 @@ class Appendix:
     @staticmethod
     def rfc5054(name: str) -> bytes:
         """The value after "name =" in RFC 5054 appendix B, in groups of hexadecimal digits."""
-        text = (ROOT / "crypto/srp/rfc5054.txt").read_text()
+        text = (ROOT / "crypto/srp/rfc5054.txt").read_text(encoding="utf-8")
         lines = [line.strip() for line in text[text.index("\nAppendix B.  SRP Test Vectors") : text.index("\nAppendix C.")].splitlines()]
         index = next(position for position, line in enumerate(lines) if line.startswith(f"{name} ="))
         digits = "".join(lines[index][len(name) + 2 :].split())
@@ -120,7 +120,7 @@ class Appendix:
     @staticmethod
     def pairing(name: str) -> dict[str, bytes]:
         """The inputs and e_0 to e_11 of the curve ``name`` in appendix B of the pairing draft."""
-        text = (ROOT / "math/pairing/draft-irtf-cfrg-pairing-friendly-curves-11.txt").read_text()
+        text = (ROOT / "math/pairing/draft-irtf-cfrg-pairing-friendly-curves-11.txt").read_text(encoding="utf-8")
         appendix = text[text.index("\nAppendix B.  Test Vectors") :]
         start = appendix.index(f"\n   {name}:")
         end = appendix.find(":\n\n   Input x value", start + 10)
@@ -146,7 +146,7 @@ class Setups:
 
     @staticmethod
     def all() -> list[dict]:
-        text = (ROOT / "crypto/hpke/rfc9180.txt").read_text()
+        text = (ROOT / "crypto/hpke/rfc9180.txt").read_text(encoding="utf-8")
         text = text[text.index("\nA.1.  DHKEM(X25519") : text.index("\nAcknowledgements")]
         setups: list[dict] = []
         part, last = "fields", None

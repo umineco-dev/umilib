@@ -10,8 +10,8 @@ import pytest
 from umilib.codec.uri import URIAuthority, URIError, URIForm, URIHostKind, URIPercent, URIReference
 
 VECTORS = Path(__file__).resolve().parents[3] / "tests" / "vectors"
-RFC3986 = (VECTORS / "codec" / "uri" / "rfc3986.txt").read_text()
-RFC6749 = (VECTORS / "auth" / "oauth" / "rfc6749.txt").read_text()
+RFC3986 = (VECTORS / "codec" / "uri" / "rfc3986.txt").read_text(encoding="utf-8")
+RFC6749 = (VECTORS / "auth" / "oauth" / "rfc6749.txt").read_text(encoding="utf-8")
 
 
 def resolution_examples() -> list[tuple[str, str]]:

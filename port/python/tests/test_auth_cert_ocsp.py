@@ -40,7 +40,7 @@ def certificate(name: str) -> Certificate:
 
 
 def key(name: str) -> PrivateKey:
-    return PrivateKey.from_pem((FIXTURES / f"{name}.key").read_text())
+    return PrivateKey.from_pem((FIXTURES / f"{name}.key").read_text(encoding="utf-8"))
 
 
 def response(name: str) -> OCSPResponse:

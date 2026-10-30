@@ -14,7 +14,7 @@ DATA = b"".join(bytes([index % 5 + 97]) * (index % 9) for index in range(3000)) 
 
 
 def test_packbits_follows_tn1023():
-    lines = (ROOT / "codec/rle/tn1023.txt").read_text().splitlines()
+    lines = (ROOT / "codec/rle/tn1023.txt").read_text(encoding="utf-8").splitlines()
     unpacked = bytes.fromhex(lines[0].split(": ")[1])
     packed = bytes.fromhex(lines[1].split(": ")[1])
     assert PackBitsCompressor().compress_to_vec(unpacked) == packed

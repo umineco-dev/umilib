@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "vectors.c"
             binary = Path(directory) / "vectors"
-            source.write_text(program)
+            source.write_text(program, encoding="utf-8")
             subprocess.run(["clang", "-std=c99", "-O1", "-I", str(header.parent), str(source), "-o", str(binary)], check=True)
             output = subprocess.run([str(binary)], check=True, capture_output=True, text=True).stdout
         lines = [
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
             "# the key a seed in hexadecimal or a secret, the value in hexadecimal.",
         ]
         XXHashVectors.OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-        XXHashVectors.OUTPUT.write_text("\n".join(lines) + "\n" + output)
+        XXHashVectors.OUTPUT.write_text("\n".join(lines) + "\n" + output, encoding="utf-8")
 
 
 if __name__ == "__main__":

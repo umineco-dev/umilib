@@ -467,7 +467,8 @@ fn coap_structures_have_the_layout_of_their_rust_types() {
     ] {
         assert_eq!(Layout::of(&Type::Named(name), &structures), (size, align), "{name}");
     }
-    assert_eq!(std::mem::offset_of!(FFICoAPEvent, peer), 32);
+    // `kind`, padding to the alignment of `u64` (4 on i386 System V, 8 elsewhere), then three `u64`s.
+    assert_eq!(std::mem::offset_of!(FFICoAPEvent, peer), std::mem::align_of::<u64>() + 24);
 }
 
 #[test]

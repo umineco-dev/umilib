@@ -52,12 +52,12 @@ def header(**parameters: str) -> JOSEHeader:
 
 def test_cookbook_keys_read_back_and_have_their_thumbprints():
     for name in ["3_1.ec_public_key", "3_2.ec_private_key", "3_3.rsa_public_key", "3_4.rsa_private_key", "3_6.symmetric_key_encryption"]:
-        value = json.loads((COOKBOOK / "jwk" / f"{name}.json").read_text())
+        value = json.loads((COOKBOOK / "jwk" / f"{name}.json").read_text(encoding="utf-8"))
         key = jwk(value)
         assert json.loads(key.to_json()) == value, name
         assert key.key_id == value["kid"]
         assert key.key_type == value["kty"]
-    private = jwk(json.loads((COOKBOOK / "jwk" / "3_2.ec_private_key.json").read_text()))
+    private = jwk(json.loads((COOKBOOK / "jwk" / "3_2.ec_private_key.json").read_text(encoding="utf-8")))
     assert private.is_secret and not private.to_public().is_secret
     from_key = JWK.from_public_key(private.public_key())
     assert from_key.thumbprint(HashAlgorithm.SHA256) == private.thumbprint(HashAlgorithm.SHA256)
@@ -83,7 +83,7 @@ def test_cookbook_keys_read_back_and_have_their_thumbprints():
 
 def test_jws_follows_the_cookbook():
     for name in ["4_2.rsa-pss_signature", "4_3.ecdsa_signature", "4_4.hmac-sha2_integrity_protection", "4_6.protecting_specific_header_fields", "4_8.multiple_signatures"]:
-        example = json.loads((COOKBOOK / "jws" / f"{name}.json").read_text())
+        example = json.loads((COOKBOOK / "jws" / f"{name}.json").read_text(encoding="utf-8"))
         keys = example["input"]["key"]
         keys = [jwk(key) for key in (keys if isinstance(keys, list) else [keys])]
         output = example["output"]
@@ -121,7 +121,7 @@ def test_jws_signs_and_refuses_what_rfc_8725_refuses():
 def test_jwe_follows_the_cookbook():
     config = every_jwe()
     for path in sorted((COOKBOOK / "jwe").glob("5_*.json")) + [COOKBOOK / "curve25519" / "ecdh-es.json"]:
-        example = json.loads(path.read_text())
+        example = json.loads(path.read_text(encoding="utf-8"))
         source = example["input"]
         keys = source["key"] if "key" in source else JWK.symmetric(source["pwd"].encode())
         keys = [key if isinstance(key, JWK) else jwk(key) for key in (keys if isinstance(keys, list) else [keys])]
@@ -139,7 +139,7 @@ def test_jwe_follows_the_cookbook():
 
 
 def test_jwe_encrypts_for_several_recipients():
-    rsa = jwk(json.loads((COOKBOOK / "jwk" / "3_4.rsa_private_key.json").read_text()))
+    rsa = jwk(json.loads((COOKBOOK / "jwk" / "3_4.rsa_private_key.json").read_text(encoding="utf-8")))
     rsa.key_use = None
     wrap, gcm = JWK.symmetric(b"\x01" * 16), JWK.symmetric(b"\x02" * 32)
     shared = header(cty="text/plain")
@@ -210,7 +210,7 @@ def test_jwts_round_trip_in_every_form():
 
 
 def test_the_nested_example_of_the_cookbook():
-    example = json.loads((COOKBOOK / "6.nesting_signatures_and_encryption.json").read_text())
+    example = json.loads((COOKBOOK / "6.nesting_signatures_and_encryption.json").read_text(encoding="utf-8"))
     signing = jwk(example["sign"]["input"]["key"])
     encryption = jwk(example["encrypt"]["input"]["key"])
     validation = JWTValidation(EXPIRATION - 1, issuer="hobbiton.example", token_type="JWT")
