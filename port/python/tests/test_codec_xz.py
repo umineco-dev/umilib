@@ -57,15 +57,18 @@ def test_bcj_filters_interoperate_with_liblzma(architecture):
 
 
 @pytest.mark.skipif(shutil.which("xz") is None, reason="the xz command line utility is not installed")
-def test_arm64_and_riscv_filters_interoperate_with_xz():
-    for architecture, option in ((BCJArchitecture.ARM64, "--arm64"), (BCJArchitecture.RISCV, "--riscv")):
-        for start_offset in (0, architecture.alignment * 2048):
-            config = XZConfig(filters=[XZFilter.bcj(architecture, start_offset)])
-            stream = XZCompressor(config).compress_to_vec(BCJ)
-            assert subprocess.run(["xz", "-dc"], input=stream, capture_output=True, check=True).stdout == BCJ
-            command = ["xz", "-c", "-T1", f"{option}=start={start_offset}", "--lzma2"]
-            theirs = subprocess.run(command, input=BCJ, capture_output=True, check=True).stdout
-            assert XZDecompressor().decompress_to_vec(theirs, len(BCJ)) == BCJ
+@pytest.mark.parametrize("architecture, option", [(BCJArchitecture.ARM64, "--arm64"), (BCJArchitecture.RISCV, "--riscv")])
+def test_arm64_and_riscv_filters_interoperate_with_xz(architecture, option):
+    # XZ Utils added the ARM64 filter in 5.4.0 and the RISC-V filter in 5.6.0; ask the installed xz directly.
+    if subprocess.run(["xz", "-c", option, "--lzma2"], input=b"", capture_output=True).returncode != 0:
+        pytest.skip(f"the installed xz does not support {option}")
+    for start_offset in (0, architecture.alignment * 2048):
+        config = XZConfig(filters=[XZFilter.bcj(architecture, start_offset)])
+        stream = XZCompressor(config).compress_to_vec(BCJ)
+        assert subprocess.run(["xz", "-dc"], input=stream, capture_output=True, check=True).stdout == BCJ
+        command = ["xz", "-c", "-T1", f"{option}=start={start_offset}", "--lzma2"]
+        theirs = subprocess.run(command, input=BCJ, capture_output=True, check=True).stdout
+        assert XZDecompressor().decompress_to_vec(theirs, len(BCJ)) == BCJ
 
 
 def test_filters_convert_in_place():

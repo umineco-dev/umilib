@@ -93,10 +93,11 @@ def test_checksum_rfc1624_example():
     "text",
     ["2001:db8::1", "::", "::1", "1::", "2001:db8:0:1:1:1:1:1", "2001:0:0:1::1", "2001:db8::1:0:0:1", "fe80::3656:78ff:fe9a:bcde", "::ffff:192.0.2.1"],
 )
-def test_ipv6_canonical_text_matches_python(text):
-    # RFC 5952; Python's ipaddress follows it too.
+def test_ipv6_canonical_text_follows_rfc5952(text):
+    # Every text above is already in the RFC 5952 form, IPv4-mapped ones in the mixed notation of section 5
+    # (Python's ipaddress writes them so only from 3.13, so only the octets are compared with it).
     address = IPv6Address.parse(text)
-    assert str(address) == str(ipaddress.IPv6Address(text))
+    assert str(address) == text
     assert address.octets == ipaddress.IPv6Address(text).packed
 
 

@@ -50,7 +50,8 @@ class Target:
             return []
         packages = [f"gcc-{self.gnu}", f"libc6-dev-{self.debian}-cross", "clang", "lld"]
         if self.qemu:
-            packages.append("qemu-user")
+            # binfmt_misc runs the processes that tests start from the target's binaries under qemu too.
+            packages += ["qemu-user", "qemu-user-binfmt"]
         return packages
 
     def environment(self) -> dict[str, str]:
@@ -60,7 +61,10 @@ class Target:
             variables[f"CARGO_TARGET_{self.variable}_LINKER"] = "clang"
             rustflags += [f"-Clink-arg=--target={self.gnu}", "-Clink-arg=-fuse-ld=lld"]
             if self.qemu:
-                variables[f"CARGO_TARGET_{self.variable}_RUNNER"] = f"{self.qemu} -L /usr/{self.gnu}"
+                variables[f"CARGO_TARGET_{self.variable}_RUNNER"] = self.qemu
+                # The sysroot as an environment variable rather than `-L`: the processes a test starts
+                # inherit it, and the qemu that binfmt_misc runs for them reads it too.
+                variables["QEMU_LD_PREFIX"] = f"/usr/{self.gnu}"
         if self.android is not None:
             ndk = os.environ.get("ANDROID_NDK_LATEST_HOME") or os.environ.get("ANDROID_NDK_HOME", "")
             host = "darwin-x86_64" if sys.platform == "darwin" else "linux-x86_64"
@@ -118,9 +122,13 @@ class Targets:
         if sys.argv[1] == "packages":
             print(" ".join(sorted({package for target in targets for package in target.packages()})))
         else:
+            variables: dict[str, str] = {}
             for target in targets:
                 for key, value in target.environment().items():
-                    print(f"{key}={value}")
+                    if variables.setdefault(key, value) != value:
+                        raise SystemExit(f"{key} differs between the targets; set up one at a time")
+            for key, value in variables.items():
+                print(f"{key}={value}")
 
 
 if __name__ == "__main__":

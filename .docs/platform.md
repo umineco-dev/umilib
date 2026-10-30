@@ -102,7 +102,8 @@ direction counts the readiness events it received (`ticks`). `poll_io`
 reads the count before the operation, and on `WouldBlock` registers the
 waker. If the count changed meanwhile, an event came between the
 operation and the registration, so it retries rather than waiting for an
-event that already passed.
+event that already passed. The count is an `AtomicUsize` that wraps: only
+a change matters, and some targets (riscv32gc) have no 64-bit atomics.
 
 `epoll_wait` and `kevent` are never restarted after a signal handler
 (signal(7)), so a wait may return `EINTR`; the pollers then report no

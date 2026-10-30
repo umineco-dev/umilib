@@ -308,7 +308,7 @@ fn configurations_that_cannot_work_are_refused() {
         TCPConfig { initial_window: Some(0), ..base },
         TCPConfig { minimum_rto: Duration::ZERO, initial_rto: Duration::ZERO, ..base },
         TCPConfig { receive_buffer: TCPConfig::MAXIMUM_BUFFER + 1, ..base },
-        TCPConfig { send_buffer: 1 << 32, ..base },
+        TCPConfig { send_buffer: TCPConfig::MAXIMUM_BUFFER + 1, ..base },
     ] {
         assert_eq!(broken.check(), Err(TCPError::Config), "{broken:?}");
         let opened =

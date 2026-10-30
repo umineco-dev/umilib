@@ -209,7 +209,7 @@ fn constant_time_table_matches_an_array() {
     table_matches_an_array::<8, 32>();
     assert_eq!(ConstantTimeTable::<32, 8>::ENTRIES, 256);
     assert_eq!(ConstantTimeTable::<1, 4>::ENTRIES_PER_WORD, 16);
-    for (a, b) in [(0, 0), (1, 0), (0, usize::MAX), (usize::MAX, usize::MAX), (1 << 63, 0)] {
+    for (a, b) in [(0, 0), (1, 0), (0, usize::MAX), (usize::MAX, usize::MAX), (1 << (usize::BITS - 1), 0)] {
         assert_eq!(ConstantTimeTable::<1, 8>::mask(a, b), if a == b { u64::MAX } else { 0 });
     }
     assert_eq!(format!("{:?}", ConstantTimeTable::<32, 8>::new()), "ConstantTimeTable(256 entries of 8 bits, ..)");

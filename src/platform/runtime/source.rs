@@ -1,6 +1,6 @@
 use std::io;
 use std::os::fd::{AsRawFd, RawFd};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 use std::vec::Vec;
@@ -21,7 +21,7 @@ pub enum Direction {
 /// waiting (several tasks may wait on one socket, as on a shared listener).
 #[derive(Debug, Default)]
 pub struct Readiness {
-    ticks: AtomicU64,
+    ticks: AtomicUsize,
     wakers: Mutex<Vec<Waker>>,
 }
 

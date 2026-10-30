@@ -17,13 +17,16 @@ static int fails_with(const umilib_ffi_Status* status, const char* domain, const
     return status != NULL && strcmp(status->domain, domain) == 0 && strcmp(status->name, name) == 0;
 }
 
-/* Writes the bytes of the hexadecimal text into `out`, which has half its length. */
+/* The value of a lowercase hexadecimal digit. */
+static uint8_t nibble(char digit) {
+    return (uint8_t)(digit <= '9' ? digit - '0' : digit - 'a' + 10);
+}
+
+/* Writes the bytes of the lowercase hexadecimal text into `out`, which has half its length. */
 static void from_hex(const char* text, uint8_t* out) {
     size_t index;
     for (index = 0; text[2 * index] != '\0'; index++) {
-        unsigned int value = 0;
-        sscanf(text + 2 * index, "%2x", &value);
-        out[index] = (uint8_t)value;
+        out[index] = (uint8_t)(nibble(text[2 * index]) << 4 | nibble(text[2 * index + 1]));
     }
 }
 

@@ -1,0 +1,4 @@
+# Data compared byte for byte: Git must never convert its line endings (core.autocrlf on Windows would).
+tests/vectors/** -text
+fuzz/corpus/** -text
+src/codec/brotli/dictionary.bin -text
