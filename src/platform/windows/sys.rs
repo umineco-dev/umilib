@@ -1,6 +1,6 @@
 //! The Windows functions and constants the Windows layer uses, declared
 //! from the Windows SDK headers (as mingw-w64 has them): Winsock 2
-//! (`ws2_32`), I/O completion ports (`kernel32`) and `ProcessPrng`
+//! (`ws2_32`), I/O completion ports, events and thread-pool waits (`kernel32`) and `ProcessPrng`
 //! (`bcryptprimitives`, the system's random generator since Windows 10).
 
 use core::ffi::{c_int, c_void};
@@ -55,6 +55,10 @@ pub type ConnectEx = unsafe extern "system" fn(
     sent: *mut u32,
     overlapped: *mut Overlapped,
 ) -> c_int;
+
+/// `WAITORTIMERCALLBACK`: the context given to `RegisterWaitForSingleObject`
+/// and whether the wait timed out (`BOOLEAN`).
+pub type WaitCallback = unsafe extern "system" fn(context: *mut c_void, timed_out: u8);
 
 /// `OVERLAPPED_ENTRY`.
 #[derive(Clone, Copy, Debug)]
@@ -202,6 +206,22 @@ unsafe extern "system" {
     pub fn PostQueuedCompletionStatus(port: Handle, bytes: u32, key: usize, overlapped: *mut c_void) -> c_int;
     pub fn SetHandleInformation(object: Handle, mask: u32, flags: u32) -> c_int;
     pub fn CancelIoEx(file: Handle, overlapped: *mut Overlapped) -> c_int;
+    pub fn CreateEventW(
+        attributes: *const c_void,
+        manual_reset: c_int,
+        initial_state: c_int,
+        name: *const u16,
+    ) -> Handle;
+    pub fn WaitForSingleObject(handle: Handle, milliseconds: u32) -> u32;
+    pub fn RegisterWaitForSingleObject(
+        wait: *mut Handle,
+        object: Handle,
+        callback: WaitCallback,
+        context: *mut c_void,
+        milliseconds: u32,
+        flags: u32,
+    ) -> c_int;
+    pub fn UnregisterWaitEx(wait: Handle, completion_event: Handle) -> c_int;
 }
 
 #[cfg_attr(target_arch = "x86", link(name = "bcryptprimitives", kind = "raw-dylib", import_name_type = "undecorated"))]
@@ -269,6 +289,10 @@ impl Windows {
     pub const WSAEINVAL: i32 = 10022;
     pub const INFINITE: u32 = u32::MAX;
     pub const WAIT_TIMEOUT: i32 = 258;
+    /// `WT_EXECUTEINWAITTHREAD`: the callback runs on the wait thread (it must be short).
+    pub const WT_EXECUTEINWAITTHREAD: u32 = 0x04;
+    /// `WT_EXECUTEONLYONCE`: the wait ends after its first callback.
+    pub const WT_EXECUTEONLYONCE: u32 = 0x08;
     /// The size of `WSAPROTOCOL_INFOW`.
     pub const PROTOCOL_INFO_SIZE: usize = 628;
     /// The size of `SOCKADDR_STORAGE`.

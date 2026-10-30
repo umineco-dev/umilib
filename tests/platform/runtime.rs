@@ -199,6 +199,68 @@ mod sockets {
         assert_eq!(result.unwrap_err().kind, IOErrorKind::ConnectionRefused);
     }
 
+    /// A worker's listener is a duplicate of the supervisor's
+    /// (`WSADuplicateSocketW`): it shares the underlying socket, which another
+    /// worker's completion port may already be associated with, and a socket
+    /// may be associated with only one port. Here the original is associated
+    /// with one reactor and a duplicate for this process accepts through
+    /// another, by events.
+    #[cfg(windows)]
+    #[test]
+    fn duplicated_listeners_accept_beside_an_associated_one() {
+        use umilib::platform::native::Socket;
+        use umilib::platform::runtime::CompletionRoute;
+
+        async fn read_to_end(stream: &mut TCPStream) -> Vec<u8> {
+            let mut received = Vec::new();
+            loop {
+                let (result, buffer) = stream.read(Vec::with_capacity(16)).await;
+                if result.unwrap() == 0 {
+                    return received;
+                }
+                received.extend_from_slice(&buffer);
+            }
+        }
+
+        let (first, second) =
+            (Reactor::new(&ReactorConfig::default()).unwrap(), Reactor::new(&ReactorConfig::default()).unwrap());
+        let original = ListenerConfig::default().bind(LOCALHOST).unwrap();
+        let duplicate = Socket::from_duplicate(&original.duplicate(std::process::id()).unwrap()).unwrap();
+        assert!(duplicate.is_duplicate() && !original.is_duplicate());
+        assert_eq!(first.register(&original).unwrap(), CompletionRoute::Port);
+        assert_eq!(second.register(&duplicate).unwrap(), CompletionRoute::Event);
+        let original = TCPListener::from_socket(&first, original).unwrap();
+        let duplicate = TCPListener::from_socket(&second, duplicate).unwrap();
+        let address = original.local_address().unwrap();
+        let pool = pool(2);
+        // An accept dropped before a connection is cancelled; its completion still comes and frees it.
+        let waited = pool.block_on(second.timer().timeout(Duration::from_millis(50), duplicate.accept()));
+        assert!(waited.is_err());
+        // Each listener accepts a connection and echoes it, the duplicate's by events.
+        for listener in [duplicate, original] {
+            let client = {
+                let reactor = second.clone();
+                pool.spawn(async move {
+                    let mut stream = TCPStream::connect(&reactor, address).await.unwrap();
+                    let (result, _) = stream.write_all(b"shared".to_vec()).await;
+                    result.unwrap();
+                    stream.shutdown().await.unwrap();
+                    read_to_end(&mut stream).await
+                })
+            };
+            let server = pool.spawn(async move {
+                let (mut stream, _) = listener.accept().await.unwrap();
+                let received = read_to_end(&mut stream).await;
+                let (result, _) = stream.write_all(received).await;
+                result.unwrap();
+                stream.shutdown().await.unwrap();
+            });
+            let served = pool.block_on(second.timer().timeout(Duration::from_secs(30), JoinAll::new(vec![server])));
+            assert_eq!(served.unwrap(), vec![Ok(())]);
+            assert_eq!(pool.block_on(client).unwrap(), b"shared");
+        }
+    }
+
     #[test]
     fn udp_sockets_exchange_datagrams() {
         let reactor = Reactor::new(&ReactorConfig::default()).unwrap();

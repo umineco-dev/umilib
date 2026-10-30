@@ -64,6 +64,8 @@ pub struct Socket {
     socket: OwnedSocket,
     /// Whether it is nonblocking (Winsock cannot be asked).
     nonblocking: AtomicBool,
+    /// Whether it was made from another process's socket ([`Socket::from_duplicate`]).
+    duplicated: bool,
 }
 
 impl Socket {
@@ -100,6 +102,7 @@ impl Socket {
         Ok(Socket {
             socket: unsafe { OwnedSocket::from_raw_socket(raw as StdRawSocket) },
             nonblocking: AtomicBool::new(false),
+            duplicated: false,
         })
     }
 
@@ -146,9 +149,17 @@ impl Socket {
         let protocol = Windows::FROM_PROTOCOL_INFO;
         // SAFETY: the protocol information is readable; the result is checked.
         let raw = unsafe { sys::WSASocketW(protocol, protocol, protocol, duplicate.bytes.as_ptr().cast(), 0, flags) };
-        let socket = Socket::adopt(raw)?;
+        let mut socket = Socket::adopt(raw)?;
         socket.set_not_inherited()?;
+        socket.duplicated = true;
         Ok(socket)
+    }
+
+    /// Whether the socket was made from another process's socket
+    /// ([`Socket::from_duplicate`]). It then shares that socket's underlying
+    /// socket, which only one completion port may be associated with.
+    pub fn is_duplicate(&self) -> bool {
+        self.duplicated
     }
 
     pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
@@ -427,7 +438,7 @@ impl IntoRawSocket for Socket {
 
 impl From<OwnedSocket> for Socket {
     fn from(socket: OwnedSocket) -> Socket {
-        Socket { socket, nonblocking: AtomicBool::new(false) }
+        Socket { socket, nonblocking: AtomicBool::new(false), duplicated: false }
     }
 }
 

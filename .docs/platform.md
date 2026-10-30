@@ -114,9 +114,50 @@ test that waits for events must therefore wait in a loop (as
 
 ### Reactor on Windows
 
-Every socket is associated with the completion port (key 0). An
-`Operation` is `#[repr(C)]` with its `OVERLAPPED` first, so the address
-the port reports is the operation's.
+`Reactor::register` associates a socket with the completion port (key 0),
+except a socket made from another process's socket
+(`Socket::from_duplicate`, `Socket::is_duplicate`). An `Operation` is
+`#[repr(C)]` with its `OVERLAPPED` first, so the address the port reports
+is the operation's.
+
+A duplicated socket shares its underlying socket with the original, and a
+socket can be associated with only one completion port: once one worker
+of a `Supervisor` associated its listener, every other worker's
+`CreateIoCompletionPort` failed with `ERROR_INVALID_PARAMETER` (87). Such
+a socket takes `CompletionRoute::Event`:
+
+- `Operation::start` gives the operation a manual-reset event in
+  `OVERLAPPED.hEvent` with the low bit set. Windows then queues the
+  completion to no port. Without it, the completion would go to the port
+  the underlying socket is associated with, which may be another
+  process's, and that process would take this process's `OVERLAPPED`
+  address for one of its own operations.
+- After the call is issued, `RegisterWaitForSingleObject`
+  (`WT_EXECUTEINWAITTHREAD | WT_EXECUTEONLYONCE`) waits for the event. Its
+  callback posts the operation's address to the reactor's port, so the
+  completion is taken back by `Operation::complete` on the reactor's
+  thread, as on `CompletionRoute::Port`. If the post fails, the callback
+  completes the operation itself, so the task still wakes.
+- The wait is unregistered in `Operation`'s `Drop`, without blocking
+  (`UnregisterWaitEx` with a null event), so it may even run in the
+  callback. `Drop` comes after `start` stored the wait handle and after
+  the completion, so the handle is never read before it is written.
+- If the wait cannot be registered, `start` cancels the operation, waits
+  for the event, and takes the reference back itself.
+- The route is decided from `is_duplicate`, which is known, not from the
+  error 87, which could have other causes. Even a worker that could have
+  associated its listener first uses events, so every worker behaves the
+  same, also after a restart.
+
+Rejected: the supervisor accepting the connections and passing each to
+a worker (the default of Node.js's cluster on Windows). Every accepted
+socket is distinct, so the limit does not apply, but every connection
+then passes through the supervisor, and the supervisor and the workers
+would behave differently on Windows and Unix. Events keep the model of
+Unix, where the workers share the listener and the system spreads the
+connections, at the cost of one event and one thread-pool wait per
+operation on a shared listener (an accept); the accepted sockets are
+ordinary and use the port.
 
 - `Operation::start` gives the system one reference (`Arc::into_raw`),
   which the reactor takes back (`Operation::complete`, `Arc::from_raw`)

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::vec;
 use std::vec::Vec;
 
-use super::{Conversion, ListenerConfig, Operation, Reactor};
+use super::{CompletionRoute, Conversion, ListenerConfig, Operation, Reactor};
 use crate::platform::windows::sys::{self, ConnectEx, Windows};
 use crate::platform::windows::{RawSocketAddress, Socket, SocketDomain, SocketKind};
 use crate::runtime::{AsyncDatagram, AsyncRead, AsyncWrite, IOError, IOErrorKind, SocketAddress};
@@ -16,6 +16,7 @@ pub struct TCPListener {
     reactor: Reactor,
     socket: Socket,
     domain: SocketDomain,
+    route: CompletionRoute,
 }
 
 impl TCPListener {
@@ -27,8 +28,8 @@ impl TCPListener {
     /// A listener of a listening socket created overlapped (as [`Socket::new`] does).
     pub fn from_socket(reactor: &Reactor, socket: Socket) -> Result<TCPListener, IOError> {
         let domain = SocketDomain::of(&socket.local_address().map_err(Conversion::error)?);
-        reactor.associate(&socket).map_err(Conversion::error)?;
-        Ok(TCPListener { reactor: reactor.clone(), socket, domain })
+        let route = reactor.register(&socket).map_err(Conversion::error)?;
+        Ok(TCPListener { reactor: reactor.clone(), socket, domain, route })
     }
 
     pub fn local_address(&self) -> Result<SocketAddress, IOError> {
@@ -41,7 +42,7 @@ impl TCPListener {
         let (listener, target) = (self.socket.raw(), accepted.raw());
         // AcceptEx writes the local and the peer address, each in 16 bytes more than its largest size.
         let output = vec![0; 2 * Windows::ACCEPT_ADDRESS_LENGTH];
-        let operation = Arc::new(Operation::new(&self.reactor, listener, output).with_accepted(accepted));
+        let operation = Arc::new(Operation::new(&self.reactor, listener, self.route, output).with_accepted(accepted));
         let length = Windows::ACCEPT_ADDRESS_LENGTH as u32;
         let pending = operation.start(|operation| {
             let output = operation.buffer(0).data;
@@ -78,6 +79,7 @@ impl AsRawSocket for TCPListener {
 pub struct TCPStream {
     reactor: Reactor,
     socket: Socket,
+    route: CompletionRoute,
 }
 
 impl TCPStream {
@@ -115,11 +117,11 @@ impl TCPStream {
             SocketAddr::V6(_) => SocketAddr::from((Ipv6Addr::UNSPECIFIED, 0)),
         };
         socket.bind(&unspecified).map_err(Conversion::error)?;
-        reactor.associate(&socket).map_err(Conversion::error)?;
+        let route = reactor.register(&socket).map_err(Conversion::error)?;
         let connect = TCPStream::connect_function(&socket).map_err(Conversion::error)?;
         let raw = socket.raw();
         let target = RawSocketAddress::from_std(&address);
-        let operation = Arc::new(Operation::new(reactor, raw, Vec::new()).with_address(target));
+        let operation = Arc::new(Operation::new(reactor, raw, route, Vec::new()).with_address(target));
         let pending = operation.start(|operation| {
             let address = operation.address();
             // SAFETY: the address (held by the operation until it is done) and the OVERLAPPED are valid.
@@ -139,13 +141,13 @@ impl TCPStream {
         socket
             .set_option_bytes(Windows::SOL_SOCKET, Windows::SO_UPDATE_CONNECT_CONTEXT, &[])
             .map_err(Conversion::error)?;
-        Ok(TCPStream { reactor: reactor.clone(), socket })
+        Ok(TCPStream { reactor: reactor.clone(), socket, route })
     }
 
     /// A stream of a connected socket created overlapped (as [`Socket::new`] does).
     pub fn from_socket(reactor: &Reactor, socket: Socket) -> Result<TCPStream, IOError> {
-        reactor.associate(&socket).map_err(Conversion::error)?;
-        Ok(TCPStream { reactor: reactor.clone(), socket })
+        let route = reactor.register(&socket).map_err(Conversion::error)?;
+        Ok(TCPStream { reactor: reactor.clone(), socket, route })
     }
 
     pub fn local_address(&self) -> Result<SocketAddress, IOError> {
@@ -180,7 +182,7 @@ impl AsyncRead for TCPStream {
         }
         buffer.resize(buffer.capacity(), 0);
         let raw = self.socket.raw();
-        let operation = Arc::new(Operation::new(&self.reactor, raw, buffer));
+        let operation = Arc::new(Operation::new(&self.reactor, raw, self.route, buffer));
         let pending = operation.start(|operation| {
             let target = operation.buffer(start);
             // SAFETY: the WSABUF points into the operation's buffer, which with the flags and the OVERLAPPED stays valid until it is done.
@@ -209,7 +211,7 @@ impl AsyncWrite for TCPStream {
             return (Ok(0), buffer);
         }
         let raw = self.socket.raw();
-        let operation = Arc::new(Operation::new(&self.reactor, raw, buffer));
+        let operation = Arc::new(Operation::new(&self.reactor, raw, self.route, buffer));
         let pending = operation.start(|operation| {
             let source = operation.buffer(0);
             // SAFETY: the WSABUF points into the operation's buffer, which with the OVERLAPPED stays valid until it is done.
@@ -236,6 +238,7 @@ impl AsyncWrite for TCPStream {
 pub struct UDPSocket {
     reactor: Reactor,
     socket: Socket,
+    route: CompletionRoute,
 }
 
 impl UDPSocket {
@@ -252,8 +255,8 @@ impl UDPSocket {
     /// its receives, as on Unix.
     pub fn from_socket(reactor: &Reactor, socket: Socket) -> Result<UDPSocket, IOError> {
         UDPSocket::ignore_resets(&socket).map_err(Conversion::error)?;
-        reactor.associate(&socket).map_err(Conversion::error)?;
-        Ok(UDPSocket { reactor: reactor.clone(), socket })
+        let route = reactor.register(&socket).map_err(Conversion::error)?;
+        Ok(UDPSocket { reactor: reactor.clone(), socket, route })
     }
 
     /// Turns off `SIO_UDP_CONNRESET` on `socket`.
@@ -296,7 +299,7 @@ impl AsyncDatagram for UDPSocket {
     async fn send_to(&mut self, buffer: Vec<u8>, address: SocketAddress) -> (Result<usize, IOError>, Vec<u8>) {
         let raw = self.socket.raw();
         let target = RawSocketAddress::from_std(&Conversion::std_address(address));
-        let operation = Arc::new(Operation::new(&self.reactor, raw, buffer).with_address(target));
+        let operation = Arc::new(Operation::new(&self.reactor, raw, self.route, buffer).with_address(target));
         let pending = operation.start(|operation| {
             let source = operation.buffer(0);
             let address = operation.address();
@@ -329,7 +332,7 @@ impl AsyncDatagram for UDPSocket {
         let room = u32::try_from(buffer.capacity() - start).unwrap_or(u32::MAX);
         buffer.resize(buffer.capacity(), 0);
         let raw = self.socket.raw();
-        let operation = Arc::new(Operation::new(&self.reactor, raw, buffer));
+        let operation = Arc::new(Operation::new(&self.reactor, raw, self.route, buffer));
         let pending = operation.start(|operation| {
             let target = operation.buffer(start);
             let address = operation.address();

@@ -167,7 +167,11 @@ receives a `WorkerHandshake` naming the listening sockets:
 
 - on Unix, the descriptors, which the worker inherits across `exec`;
 - on Windows, sockets duplicated for its process with
-  `WSADuplicateSocketW`.
+  `WSADuplicateSocketW`. A duplicated socket shares its underlying socket,
+  which only one completion port can be associated with, so the reactor
+  does not associate it: each of its operations (an accept, on a
+  listener) signals an event that a wait of the system's thread pool
+  passes to the reactor. The connections accepted are ordinary sockets.
 
 On Unix a listener may not be descriptor 0, 1 or 2: the worker's
 standard streams replace them. That can only happen in a supervisor

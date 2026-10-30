@@ -32,7 +32,7 @@ pub use net_unix::{TCPListener, TCPStream, UDPSocket};
 #[cfg(windows)]
 pub use net_windows::{TCPListener, TCPStream, UDPSocket};
 #[cfg(windows)]
-pub use operation::{Operation, PendingOperation};
+pub use operation::{CompletionRoute, Operation, PendingOperation};
 pub use park::ThreadPark;
 pub use pool::{ParkWaker, PoolShared, PoolSpawner, PoolTask, ThreadPool, ThreadPoolConfig};
 pub use reactor::{Reactor, ReactorConfig, ReactorDriver, ReactorOwner, ReactorShared, ReactorWaker};

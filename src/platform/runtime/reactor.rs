@@ -175,11 +175,20 @@ impl Reactor {
         &self.owner.shared
     }
 
-    /// Associates `socket` with the completion port of the reactor: its
-    /// overlapped operations ([`super::Operation`]) complete on the reactor's thread.
+    /// Registers `socket` with the reactor: its overlapped operations
+    /// ([`super::Operation`]) complete on the reactor's thread, by the route
+    /// returned. A socket made from another process's socket
+    /// ([`crate::platform::native::Socket::is_duplicate`]) is never associated
+    /// with the completion port, which its underlying socket may already be
+    /// (in that process); its operations signal events instead
+    /// ([`super::CompletionRoute::Event`]).
     #[cfg(windows)]
-    pub fn associate(&self, socket: &impl std::os::windows::io::AsRawSocket) -> io::Result<()> {
-        self.owner.shared.driver.associate(socket.as_raw_socket() as std::os::windows::io::RawHandle, 0)
+    pub fn register(&self, socket: &crate::platform::native::Socket) -> io::Result<super::CompletionRoute> {
+        if socket.is_duplicate() {
+            return Ok(super::CompletionRoute::Event);
+        }
+        self.owner.shared.driver.associate(socket.raw() as std::os::windows::io::RawHandle, 0)?;
+        Ok(super::CompletionRoute::Port)
     }
 
     /// The timer of the reactor ([`Timer::sleep`], [`Timer::timeout`]): its
