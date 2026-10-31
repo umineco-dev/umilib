@@ -341,6 +341,7 @@ mod linux {
     /// container: `--cap-add NET_ADMIN --device /dev/net/tun`); without them
     /// the test checks the refusal.
     #[test]
+    #[cfg_attr(miri, ignore = "Miri cannot use ioctl on files (TUNSETIFF)")]
     fn tun_devices_are_interfaces_of_the_kernel() {
         // A name has at most IFNAMSIZ - 1 = 15 bytes and no NUL; it is refused before anything is opened.
         for name in ["a-name-too-long!", "a\0b"] {
