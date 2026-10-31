@@ -38,7 +38,8 @@ let path = PathValidator::new(&config, &anchors, &intermediates, &crls).validate
 | `initial_explicit_policy`, `initial_policy_mapping_inhibit`, `initial_any_policy_inhibit` | `false` | The initial policy flags (§6.1.1 (e), (f), (g)). |
 | `initial_name_constraints` | `None` | Permitted and excluded subtrees of every path (§6.1.1 (h), (i)). |
 | `maximum_intermediates` | 8 | The most intermediates, not counting self-issued ones. |
-| `maximum_signatures` | 100 | The most signatures a validation verifies (certificates, CRLs, the paths of CRL issuers). |
+| `maximum_signatures` | 100 | The most signatures a validation verifies (certificates, CRLs, the paths of CRL issuers, revocation sources such as OCSP responses). |
+| `maximum_nested_signers` | 4 | The most CRL issuer paths nested in one another (a CRL issuer whose own revocation needs the CRL of another issuer, and so on). |
 | `maximum_name_checks` | 2^20 | The most comparisons of names with name constraints. |
 | `key_limits` | 16384-bit RSA, 64-bit exponents | The largest keys accepted. |
 | `accept_sha1` | `false` | Whether signatures that hash with SHA-1 are accepted. |
@@ -76,7 +77,8 @@ first, backtracking when a path fails (RFC 4158):
   `maximum_name_checks` name comparisons, so that hostile certificates
   cannot make it run long. Both budgets are for the whole validation:
   they also pay for the signatures of CRLs and delta CRLs, the checks of
-  self-signed certificates, and the paths of CRL issuers.
+  self-signed certificates, the paths of CRL issuers, and the signatures
+  revocation sources verify (OCSP responses and their responders).
 
 The error returned is that of the longest path tried. `PathError` gives
 the index of the certificate (0 for the target, the length of the path for
@@ -127,7 +129,12 @@ certificate of the path has no certificate policies extension.
     starting with a dot (every host below it) (§4.2.1.10).
   - URIs: the host of the URI, as a host or a domain starting with a dot;
     a URI without a host (`urn:`) cannot be compared, so it fails the path
-    when a URI constraint applies to it.
+    when a URI constraint applies to it. The URI must follow the grammar
+    of RFC 3986, as §4.2.1.6 requires (`codec::uri::URIReference::parse`
+    reads it), and its host must be a domain name: otherwise it cannot be
+    compared either. Parsers disagree about the host of a malformed URI
+    (`http://a.example\@b.example/` has the host `a.example` for a WHATWG
+    parser), so guessing one would let a name through a constraint.
   - IP addresses: an address and a mask of the same family, the mask a
     CIDR prefix.
   - Directory names: RDNs prefixes, by §7.1.
@@ -191,7 +198,10 @@ the CRLs (an OCSP response is one, see
 A source that cannot use what it has about the certificate is skipped like
 an unusable CRL, and the path fails with `InvalidResponse` if the status
 stays undetermined. A `RevocationSource` is any type that answers
-`status(certificate, issuer, issuer_key, config)`.
+`status(certificate, issuer, issuer_key, config, budget)`. It spends every
+signature it verifies from `budget` (`PathBudget::spend_signature`, or
+`budget.signatures` directly) and fails with `Work` when it runs out, which
+fails the path.
 
 ## Profiles
 

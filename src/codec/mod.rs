@@ -27,6 +27,8 @@ pub mod brotli;
 pub mod deflate;
 #[cfg(umilib_feature = "codec-filter")]
 pub mod filter;
+#[cfg(umilib_feature = "codec-fse")]
+pub mod fse;
 #[cfg(umilib_feature = "codec-gzip")]
 pub mod gzip;
 #[cfg(umilib_feature = "codec-hpack")]

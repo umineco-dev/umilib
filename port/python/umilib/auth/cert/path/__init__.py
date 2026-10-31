@@ -94,7 +94,7 @@ class ServiceIdentity:
 class PathConfig:
     """The inputs of path validation (RFC 5280 §6.1.1) and the limits of path building. The defaults
     are those of ``PathConfig::new``: the profile of RFC 5280, any policy, no name constraints, at most
-    8 intermediates, 100 signatures and 2^20 name comparisons, SHA-1 refused, no revocation checking,
+    8 intermediates, 100 signatures, 4 nested CRL issuer paths and 2^20 name comparisons, SHA-1 refused, no revocation checking,
     and no usage, purpose or identity asked for."""
 
     time: int
@@ -107,6 +107,7 @@ class PathConfig:
     """The DER ``NameConstraints`` value of the initial permitted and excluded subtrees."""
     maximum_intermediates: int = 8
     maximum_signatures: int = 100
+    maximum_nested_signers: int = 4
     maximum_name_checks: int = 1 << 20
     key_limits: KeyLimits = field(default_factory=KeyLimits)
     accept_sha1: bool = False
@@ -139,7 +140,7 @@ class PathConfig:
                 self.initial_any_policy_inhibit,
             )
             call("umilib_auth_cert_path_path_config_set_initial_name_constraints", handle, *Bytes.readable(self.initial_name_constraints or b""))
-            call("umilib_auth_cert_path_path_config_set_limits", handle, self.maximum_intermediates, self.maximum_signatures, self.maximum_name_checks)
+            call("umilib_auth_cert_path_path_config_set_limits", handle, self.maximum_intermediates, self.maximum_signatures, self.maximum_nested_signers, self.maximum_name_checks)
             call("umilib_auth_cert_path_path_config_set_key_limits", handle, self.key_limits.maximum_rsa_bits, self.key_limits.maximum_rsa_exponent_bits)
             call("umilib_auth_cert_path_path_config_set_accept_sha1", handle, self.accept_sha1)
             revocation = self.revocation

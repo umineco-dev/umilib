@@ -221,7 +221,8 @@ impl FTPServer {
                 Ok(FTPCommand::Stat(None)) if transferring => {
                     let verb =
                         self.pending.front().map(|(command, _)| String::from(command.verb())).unwrap_or_default();
-                    self.answer(211, &alloc::format!("{verb} in progress"));
+                    // The verb is one of the commands this module knows: no line break.
+                    FTPReply::new(211, &alloc::format!("{verb} in progress")).encode(&mut self.output);
                 }
                 Ok(FTPCommand::Quit) if transferring => self.quitting = true,
                 Ok(FTPCommand::Abor) if transferring => {
@@ -249,7 +250,10 @@ impl FTPServer {
         self.deadline = waiting.then(|| now.saturating_add(self.config.idle_timeout));
     }
 
-    pub fn answer(&mut self, code: u16, text: &str) {
+    /// Writes a reply the server makes itself. The text is a constant of the program
+    /// (`&'static str`), never text received or made at run time, which would go unchecked into
+    /// the reply: such text is sent with [`FTPServer::reply`], which checks it.
+    pub fn answer(&mut self, code: u16, text: &'static str) {
         FTPReply::new(code, text).encode(&mut self.output);
     }
 
@@ -298,8 +302,8 @@ impl FTPServer {
                 return reply.encode(&mut self.output);
             }
             FTPCommand::Syst => {
-                let text = server.system.clone();
-                return self.answer(215, &text);
+                // FTPServerConfig::check refuses a system type with a line break.
+                return FTPReply::new(215, &server.system).encode(&mut self.output);
             }
             FTPCommand::Quit => {
                 self.answer(221, "Goodbye");
@@ -515,12 +519,16 @@ impl FTPServer {
         self.epsv_all = false;
     }
 
-    /// Closes the connection with 421 (RFC 959 §4.2): for shutting down.
-    pub fn shutdown(&mut self, text: &str) {
-        if !self.closed {
-            self.answer(421, text);
+    /// Closes the connection with 421 and `text` (RFC 959 §4.2): for shutting down. Fails for a
+    /// text that cannot be written, a line break in it.
+    pub fn shutdown(&mut self, text: &str) -> Result<(), FTPError> {
+        let reply = FTPReply::new(421, text);
+        reply.check()?;
+        if self.is_open() {
+            reply.encode(&mut self.output);
             self.close(None);
         }
+        Ok(())
     }
 
     pub fn transmit(&mut self, out: &mut Vec<u8>) {

@@ -11,22 +11,19 @@ from typing import Any, ClassVar
 from umilib.crypto import StreamCipher
 from umilib.ffi import Bytes, Handle, Library, U128, Words
 
-P = "umilib_crypto_chacha20_chacha20"
-X = "umilib_crypto_chacha20_xchacha20"
-
 
 class ChaCha20(StreamCipher):
     """ChaCha20 with a 32-byte key: a 12-byte nonce and a 32-bit block counter (RFC 8439), or with
     :meth:`with_64_bit_counter` an 8-byte nonce and a 64-bit counter (the original design)."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_chacha20_chacha20"
     KEY_SIZE: ClassVar[int] = 32
     NONCE_SIZE: ClassVar[int] = 12
 
     def __init__(self, key: bytes | bytearray | memoryview, nonce: bytes | bytearray | memoryview, counter: int = 0) -> None:
         key_data, key_length = Bytes.readable(key)
         nonce_data, nonce_length = Bytes.readable(nonce)
-        super().__init__(Handle.create(f"{P}_new", key_data, key_length, nonce_data, nonce_length, counter))
+        super().__init__(Handle.create("umilib_crypto_chacha20_chacha20_new", key_data, key_length, nonce_data, nonce_length, counter))
 
     @classmethod
     def with_64_bit_counter(
@@ -34,12 +31,12 @@ class ChaCha20(StreamCipher):
     ) -> Any:
         key_data, key_length = Bytes.readable(key)
         nonce_data, nonce_length = Bytes.readable(nonce)
-        return cls.from_pointer(Handle.create(f"{P}_with_64_bit_counter", key_data, key_length, nonce_data, nonce_length, counter))
+        return cls.from_pointer(Handle.create("umilib_crypto_chacha20_chacha20_with_64_bit_counter", key_data, key_length, nonce_data, nonce_length, counter))
 
     def remaining_bytes(self) -> int:
         """The bytes of key stream left before the counter wraps."""
         out = U128()
-        self.library.call(f"{P}_remaining_bytes", self.handle, ctypes.byref(out))
+        self.library.call("umilib_crypto_chacha20_chacha20_remaining_bytes", self.handle, ctypes.byref(out))
         return out.to_int()
 
     @staticmethod
@@ -48,28 +45,28 @@ class ChaCha20(StreamCipher):
         key_data, key_length = Bytes.readable(key)
         nonce_data, nonce_length = Bytes.readable(nonce)
         out = (ctypes.c_uint32 * 16)()
-        Library.default().call(f"{P}_initial_state", key_data, key_length, counter, nonce_data, nonce_length, out)
+        Library.default().call("umilib_crypto_chacha20_chacha20_initial_state", key_data, key_length, counter, nonce_data, nonce_length, out)
         return list(out)
 
     @staticmethod
     def quarter_round(state: list[int], a: int, b: int, c: int, d: int) -> list[int]:
         """The 16 words of ``state`` after the quarter round on the words ``a``, ``b``, ``c`` and ``d``."""
         words = ChaCha20.words(state)
-        Library.default().call(f"{P}_quarter_round", words, a, b, c, d)
+        Library.default().call("umilib_crypto_chacha20_chacha20_quarter_round", words, a, b, c, d)
         return list(words)
 
     @staticmethod
     def rounds(state: list[int]) -> list[int]:
         """The 16 words of ``state`` after the 20 rounds."""
         words = ChaCha20.words(state)
-        Library.default().call(f"{P}_rounds", words)
+        Library.default().call("umilib_crypto_chacha20_chacha20_rounds", words)
         return list(words)
 
     @staticmethod
     def block(state: list[int]) -> bytes:
         """The 64-byte block of ``state``: the rounds, then the addition of the input state."""
         out = (ctypes.c_uint8 * 64)()
-        Library.default().call(f"{P}_block", ChaCha20.words(state), out, 64)
+        Library.default().call("umilib_crypto_chacha20_chacha20_block", ChaCha20.words(state), out, 64)
         return bytes(out)
 
     @staticmethod
@@ -81,14 +78,14 @@ class ChaCha20(StreamCipher):
 class XChaCha20(StreamCipher):
     """XChaCha20 with a 32-byte key and a 24-byte nonce, through HChaCha20."""
 
-    PREFIX = X
+    PREFIX = "umilib_crypto_chacha20_xchacha20"
     KEY_SIZE: ClassVar[int] = 32
     NONCE_SIZE: ClassVar[int] = 24
 
     def __init__(self, key: bytes | bytearray | memoryview, nonce: bytes | bytearray | memoryview, counter: int = 0) -> None:
         key_data, key_length = Bytes.readable(key)
         nonce_data, nonce_length = Bytes.readable(nonce)
-        super().__init__(Handle.create(f"{X}_new", key_data, key_length, nonce_data, nonce_length, counter))
+        super().__init__(Handle.create("umilib_crypto_chacha20_xchacha20_new", key_data, key_length, nonce_data, nonce_length, counter))
 
     @classmethod
     def with_64_bit_counter(
@@ -97,12 +94,12 @@ class XChaCha20(StreamCipher):
         """XChaCha20 with the 64-bit counter of the original ChaCha20 (libsodium)."""
         key_data, key_length = Bytes.readable(key)
         nonce_data, nonce_length = Bytes.readable(nonce)
-        return cls.from_pointer(Handle.create(f"{X}_with_64_bit_counter", key_data, key_length, nonce_data, nonce_length, counter))
+        return cls.from_pointer(Handle.create("umilib_crypto_chacha20_xchacha20_with_64_bit_counter", key_data, key_length, nonce_data, nonce_length, counter))
 
     def remaining_bytes(self) -> int:
         """The bytes of key stream left before the counter wraps."""
         out = U128()
-        self.library.call(f"{X}_remaining_bytes", self.handle, ctypes.byref(out))
+        self.library.call("umilib_crypto_chacha20_xchacha20_remaining_bytes", self.handle, ctypes.byref(out))
         return out.to_int()
 
     @staticmethod
@@ -113,7 +110,7 @@ class XChaCha20(StreamCipher):
         nonce_data, nonce_length = Bytes.readable(nonce)
         subkey = (ctypes.c_uint8 * 32)()
         inner = (ctypes.c_uint8 * 12)()
-        Library.default().call(f"{X}_derive", key_data, key_length, nonce_data, nonce_length, subkey, 32, inner, 12)
+        Library.default().call("umilib_crypto_chacha20_xchacha20_derive", key_data, key_length, nonce_data, nonce_length, subkey, 32, inner, 12)
         return bytes(subkey), bytes(inner)
 
     @staticmethod
@@ -122,7 +119,7 @@ class XChaCha20(StreamCipher):
         key_data, key_length = Bytes.readable(key)
         nonce_data, nonce_length = Bytes.readable(nonce)
         out = (ctypes.c_uint8 * 32)()
-        Library.default().call(f"{X}_hchacha20", key_data, key_length, nonce_data, nonce_length, out, 32)
+        Library.default().call("umilib_crypto_chacha20_xchacha20_hchacha20", key_data, key_length, nonce_data, nonce_length, out, 32)
         return bytes(out)
 
 

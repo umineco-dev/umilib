@@ -120,6 +120,20 @@ impl<G: DHKEMGroup, H: HPKEKDF> DHKEM<G, H> {
         result.map(|_| shared)
     }
 
+    /// ExtractAndExpand of the concatenated DH(sk, pk) of `pairs`, dh of
+    /// Encap and AuthEncap (section 4.1). The DH outputs are written in place
+    /// and zeroized on every path, including a failed agreement.
+    pub fn derive(pairs: &[(&G::PrivateKey, &G::PublicKey)], context: &[u8]) -> Result<Vec<u8>, CryptoError> {
+        let mut dh = vec![0u8; pairs.len() * G::SHARED_SECRET_SIZE];
+        let mut agreed = Ok(());
+        for (output, (private, public)) in dh.chunks_exact_mut(G::SHARED_SECRET_SIZE).zip(pairs) {
+            agreed = agreed.and_then(|_| G::agree(private, public, output));
+        }
+        let shared = agreed.and_then(|_| DHKEM::<G, H>::extract_and_expand(&dh, context));
+        dh.zeroize();
+        shared
+    }
+
     /// DH(sk, pk) of `G`, of the bytes of its shared secrets.
     pub fn agree(private: &G::PrivateKey, public: &G::PublicKey) -> Result<Vec<u8>, CryptoError> {
         let mut shared = vec![0u8; G::SHARED_SECRET_SIZE];
@@ -206,16 +220,16 @@ impl<G: DHKEMGroup, H: HPKEKDF> HPKEKEM for DHKEM<G, H> {
         ephemeral: &G::PrivateKey,
         sender: Option<&G::PrivateKey>,
     ) -> Result<(Vec<u8>, Vec<u8>), CryptoError> {
-        let mut dh = DHKEM::<G, H>::agree(ephemeral, recipient)?;
         let encapsulated = DHKEM::<G, H>::serialize_public_key(&G::public_key(ephemeral));
         let mut context = encapsulated.clone();
         context.extend(DHKEM::<G, H>::serialize_public_key(recipient));
-        if let Some(sender) = sender {
-            dh.extend(DHKEM::<G, H>::agree(sender, recipient)?);
-            context.extend(DHKEM::<G, H>::serialize_public_key(&G::public_key(sender)));
-        }
-        let shared = DHKEM::<G, H>::extract_and_expand(&dh, &context);
-        dh.zeroize();
+        let shared = match sender {
+            Some(sender) => {
+                context.extend(DHKEM::<G, H>::serialize_public_key(&G::public_key(sender)));
+                DHKEM::<G, H>::derive(&[(ephemeral, recipient), (sender, recipient)], &context)
+            }
+            None => DHKEM::<G, H>::derive(&[(ephemeral, recipient)], &context),
+        };
         Ok((shared?, encapsulated))
     }
 
@@ -225,15 +239,14 @@ impl<G: DHKEMGroup, H: HPKEKDF> HPKEKEM for DHKEM<G, H> {
         sender: Option<&G::PublicKey>,
     ) -> Result<Vec<u8>, CryptoError> {
         let ephemeral = DHKEM::<G, H>::deserialize_public_key(encapsulated)?;
-        let mut dh = DHKEM::<G, H>::agree(recipient, &ephemeral)?;
         let mut context = encapsulated.to_vec();
         context.extend(DHKEM::<G, H>::serialize_public_key(&G::public_key(recipient)));
-        if let Some(sender) = sender {
-            dh.extend(DHKEM::<G, H>::agree(recipient, sender)?);
-            context.extend(DHKEM::<G, H>::serialize_public_key(sender));
+        match sender {
+            Some(sender) => {
+                context.extend(DHKEM::<G, H>::serialize_public_key(sender));
+                DHKEM::<G, H>::derive(&[(recipient, &ephemeral), (recipient, sender)], &context)
+            }
+            None => DHKEM::<G, H>::derive(&[(recipient, &ephemeral)], &context),
         }
-        let shared = DHKEM::<G, H>::extract_and_expand(&dh, &context);
-        dh.zeroize();
-        shared
     }
 }

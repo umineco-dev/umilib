@@ -102,6 +102,22 @@ class FuzzConfig(Handle):
         self.library.call("umilib_platform_fuzz_fuzz_config_set_maximum_length", self.handle, value)
 
     @property
+    def maximum_corpus_inputs(self) -> int:
+        return self.library.value("umilib_platform_fuzz_fuzz_config_maximum_corpus_inputs", ctypes.c_size_t, self.handle)
+
+    @maximum_corpus_inputs.setter
+    def maximum_corpus_inputs(self, value: int) -> None:
+        self.library.call("umilib_platform_fuzz_fuzz_config_set_maximum_corpus_inputs", self.handle, value)
+
+    @property
+    def sample_interval(self) -> int:
+        return self.library.value("umilib_platform_fuzz_fuzz_config_sample_interval", ctypes.c_size_t, self.handle)
+
+    @sample_interval.setter
+    def sample_interval(self, value: int) -> None:
+        self.library.call("umilib_platform_fuzz_fuzz_config_set_sample_interval", self.handle, value)
+
+    @property
     def iterations(self) -> int | None:
         return self.library.optional("umilib_platform_fuzz_fuzz_config_iterations", ctypes.c_uint64, self.handle)
 

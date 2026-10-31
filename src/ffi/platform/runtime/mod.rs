@@ -63,7 +63,10 @@ crate::ffi_functions! {
             {
                 use crate::platform::runtime::ThreadPoolConfig;
                 let config = ThreadPoolConfig { threads, ..ThreadPoolConfig::default() };
-                let pool = ThreadPool::new(&config).map_err(|_| &PlatformRuntimeStatus::THREAD)?;
+                let pool = ThreadPool::new(&config).map_err(|error| match error.kind() {
+                    std::io::ErrorKind::OutOfMemory => &Status::INVALID_ARGUMENT,
+                    _ => &PlatformRuntimeStatus::THREAD,
+                })?;
                 // SAFETY: the caller passes a writable pointer.
                 unsafe { Pointer::write_handle(out, pool) }
             }

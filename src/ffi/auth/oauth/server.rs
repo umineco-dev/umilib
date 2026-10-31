@@ -48,6 +48,7 @@ pub struct FFIOAuthServerLimits {
     pub maximum_devices: usize,
     pub maximum_assertions: usize,
     pub dpop_maximum_proofs: usize,
+    pub dpop_previous_nonces: usize,
     pub user_code_length: usize,
     pub maximum_parameters: usize,
     pub maximum_codes_per_client: usize,
@@ -84,6 +85,7 @@ impl FFIOAuthServerLimits {
         Parameter { name: "maximum_devices", value: <usize as Value>::TYPE },
         Parameter { name: "maximum_assertions", value: <usize as Value>::TYPE },
         Parameter { name: "dpop_maximum_proofs", value: <usize as Value>::TYPE },
+        Parameter { name: "dpop_previous_nonces", value: <usize as Value>::TYPE },
         Parameter { name: "user_code_length", value: <usize as Value>::TYPE },
         Parameter { name: "maximum_parameters", value: <usize as Value>::TYPE },
         Parameter { name: "maximum_codes_per_client", value: <usize as Value>::TYPE },
@@ -116,6 +118,7 @@ impl FFIOAuthServerLimits {
             maximum_devices: config.maximum_devices,
             maximum_assertions: config.maximum_assertions,
             dpop_maximum_proofs: config.dpop.maximum_proofs,
+            dpop_previous_nonces: config.dpop.previous_nonces,
             user_code_length: config.user_code_length,
             maximum_parameters: config.maximum_parameters,
             maximum_codes_per_client: config.maximum_codes_per_client,
@@ -148,6 +151,7 @@ impl FFIOAuthServerLimits {
         config.maximum_devices = self.maximum_devices;
         config.maximum_assertions = self.maximum_assertions;
         config.dpop.maximum_proofs = self.dpop_maximum_proofs;
+        config.dpop.previous_nonces = self.dpop_previous_nonces;
         config.user_code_length = self.user_code_length;
         config.maximum_parameters = self.maximum_parameters;
         config.maximum_codes_per_client = self.maximum_codes_per_client;

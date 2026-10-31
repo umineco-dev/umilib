@@ -236,7 +236,18 @@ mutations of the fixtures. It found these problems; each now has a test:
   with a name constraint. Both fail with `Work`. The first version gave
   each nested validation of a CRL issuer a fresh budget and verified CRLs
   outside it, so a few hostile intermediates and CRLs multiplied the work.
-  CRL issuer paths nest at most `MAXIMUM_NESTED_SIGNERS` (4) deep.
+  Revocation sources pay from it too: `RevocationSource::status` takes the
+  budget, and the OCSP source verifies with `verify_within`, spending from
+  `budget.signatures` and failing with `Work` when it runs out. It first
+  built an `OCSPConfig` with the default `maximum_signatures` (9) for every
+  response and certificate, outside the budget, so many sources multiplied
+  the work again. Considered: charging each response its worst case up
+  front, or capping each at 9 as well. Rejected: the worst case needs the
+  search of the signer done twice, and a second cap is a second limit to
+  configure for the same thing.
+  CRL issuer paths nest at most `maximum_nested_signers` (4 by default)
+  deep, a field of `PathConfig` (it was the constant
+  `PathValidator::MAXIMUM_NESTED_SIGNERS`).
 - **A CRL issuer covered by its own CRL.** A CRL issuer whose path is
   already being validated (a cycle) is taken as valid for the CRL, and
   that outer validation decides it. NIST PKITS 4.14.30 requires this: the
@@ -255,6 +266,18 @@ mutations of the fixtures. It found these problems; each now has a test:
   critical extensions are checked under the profiles beyond the
   algorithm, because a relying party that trusts an expired root by
   mistake should learn of it.
+- **URI names are parsed by RFC 3986.** `NameMatching::uri_host` reads a
+  URI with `codec::uri::URIReference::parse` (so `auth-cert-path` depends
+  on `codec-uri`, which has no dependencies) and takes the host only of a
+  URI with a scheme, an authority and a registered name that is a DNS
+  name. It first split the text at `:`, `//` and the last `@` by hand, so
+  `http://a.example\@b.example/` gave `b.example` and passed a constraint
+  on it, while WHATWG parsers (browsers, many HTTP clients) connect to
+  `a.example`. RFC 5280 §4.2.1.6 requires URI names to follow RFC 3986;
+  a name that does not cannot be compared, which fails the path when a URI
+  constraint applies (§4.2.1.10: process or reject). Considered: checking
+  the characters of the userinfo and host in place. Rejected: it repeats
+  the grammar that `codec-uri` already checks and tests.
 - **The common name is not an identity** (RFC 9525 §6.3), so the Web PKI
   profile does not check it either. x509-limbo has 9 cases that expect
   checks of it (`LimboCase::DIVERGENCES`). An earlier version had a rule
@@ -377,7 +400,11 @@ mutations of the fixtures. It found these problems; each now has a test:
   without `nextUpdate`) bound their replay.
 - **Work.** `signer` verifies at most `maximum_signatures` signatures, so
   a stapled response with many certificates named like the responder
-  costs little.
+  costs little. Running out is `OCSPError::Work`; it was `Signer`, which
+  claims the signer is unauthorized when the search only gave up, and left
+  path validation unable to tell its budget ran out. `signer_within` and
+  `verify_within` take the count to spend from, which path validation
+  points at its `PathBudget`.
 
 ### Interoperability with OpenSSL 3.5
 

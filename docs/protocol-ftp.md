@@ -103,6 +103,9 @@ The server answers what the RFCs decide and tells the rest:
   `FTPServer.session()`). AUTH TLS and REIN reset them (RFC 4217 §4, RFC
   959 §4.1.1). REIN needs no login. Stop reading the connection while
   `wants_receive` is false.
+- `shutdown(text)` replies 421 and closes (§4.2), for a server shutting
+  down; text of a CR, an LF or a NUL is refused (`Syntax`) and nothing is
+  written.
 
 ## Python and C
 

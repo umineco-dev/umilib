@@ -216,14 +216,21 @@ impl POP3Server {
     }
 
     /// Writes a status line the server makes itself, its code only where response codes are announced.
-    pub fn answer(&mut self, ok: bool, code: &[&str], text: &str) {
+    /// The text is a constant of the program (`&'static str`), never text received or made at run
+    /// time, which would go unchecked into the line: such text is sent with
+    /// [`POP3Server::reply`], which checks it.
+    pub fn answer(&mut self, ok: bool, code: &[&str], text: &'static str) {
+        self.response_of(ok, code, text).encode(&mut self.output);
+    }
+
+    /// The status line the server makes itself: its code only where response codes are announced.
+    pub fn response_of(&self, ok: bool, code: &[&str], text: &str) -> POP3Response {
         let code = if self.server.response_codes { code } else { &[] };
-        let response = POP3Response {
+        POP3Response {
             ok,
             code: code.iter().map(|level| String::from(*level)).collect(),
             text: text.as_bytes().to_vec(),
-        };
-        response.encode(&mut self.output);
+        }
     }
 
     /// Answers a command the server decides itself, or tells it.
@@ -255,7 +262,7 @@ impl POP3Server {
             | POP3Command::Apop { .. }
             | POP3Command::Auth { .. }
             | POP3Command::Stls
-            | POP3Command::Utf8
+            | POP3Command::UTF8
                 if !authorization =>
             {
                 return self.answer(false, &[], "Not in the TRANSACTION state");
@@ -293,7 +300,7 @@ impl POP3Server {
             POP3Command::Stls if !server.stls || self.secure || self.utf8 => {
                 return self.answer(false, &[], "STLS not taken");
             }
-            POP3Command::Utf8 if !server.utf8 => return self.answer(false, &[], "UTF8 not offered"),
+            POP3Command::UTF8 if !server.utf8 => return self.answer(false, &[], "UTF8 not offered"),
             POP3Command::Lang(_) if !server.lang => return self.answer(false, &[], "LANG not offered"),
             _ => {}
         }
@@ -373,7 +380,7 @@ impl POP3Server {
                 self.secure = true;
                 self.events.push_back(POP3ServerEvent::StartTLS);
             }
-            POP3Command::Utf8 if ok => self.utf8 = true,
+            POP3Command::UTF8 if ok => self.utf8 = true,
             POP3Command::Quit => {
                 self.state = POP3State::Update;
                 self.close(None);
@@ -406,6 +413,23 @@ impl POP3Server {
         };
         writer.finish(&mut self.output);
         self.process(now);
+        Ok(())
+    }
+
+    /// Closes the connection with -ERR and `text`, of the code SYS/TEMP where response codes are
+    /// announced (RFC 3206 §4): for shutting down. A multi-line response being sent is not ended:
+    /// the connection is closed without a response, as RFC 1939 §3 lets a server do, so that the
+    /// client does not take a part of it as the whole. Fails for a text that cannot be written, a
+    /// line break in it.
+    pub fn shutdown(&mut self, text: &str) -> Result<(), POP3Error> {
+        let response = self.response_of(false, &["SYS", "TEMP"], text);
+        response.check()?;
+        if self.is_open() {
+            if self.sending.is_none() {
+                response.encode(&mut self.output);
+            }
+            self.close(None);
+        }
         Ok(())
     }
 

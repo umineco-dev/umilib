@@ -14,8 +14,6 @@ from typing import Any, ClassVar
 
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Text
 
-P = "umilib_protocol_ip"
-
 
 class IPError(FFIError):
     """An error of an address or a pseudo-header: ``Syntax``, ``Family``, ``Length`` or ``Overlap``."""
@@ -82,7 +80,7 @@ class IPAddress:
 
     def call(self, method: str, *arguments: Any) -> Any:
         """The result of the C function of ``method`` on this address."""
-        return Library.default().function(f"{P}_{self.C_NAME}_{method}")(self.to_structure(), *arguments)
+        return Library.default().function(f"umilib_protocol_ip_{self.C_NAME}_{method}")(self.to_structure(), *arguments)
 
     def prefix(self, length: int) -> Any:
         """The address with every bit after the first ``length`` cleared."""
@@ -98,7 +96,7 @@ class IPAddress:
         """The prefix of ``length`` bits as :meth:`to_canonical` makes it: an IPv4 prefix for at least 96
         bits of an IPv4-mapped address (RFC 4291 §2.5.5.2); the bits after the length cleared."""
         out, used, bits = (ctypes.c_uint8 * 16)(), ctypes.c_uint8(), ctypes.c_uint8()
-        Library.default().call(f"{P}_ip_address_to_canonical_prefix", self.octets, self.LENGTH, length, out, ctypes.byref(used), ctypes.byref(bits))
+        Library.default().call("umilib_protocol_ip_ip_address_to_canonical_prefix", self.octets, self.LENGTH, length, out, ctypes.byref(used), ctypes.byref(bits))
         return IPAddress.from_octets(bytes(out)[: used.value]), bits.value
 
     def is_unspecified(self) -> bool:
@@ -122,7 +120,7 @@ class IPAddress:
 
     def __str__(self) -> str:
         library = Library.default()
-        return library.output(f"{P}_{self.C_NAME}_to_string", self.to_structure()).decode("utf-8")
+        return library.output(f"umilib_protocol_ip_{self.C_NAME}_to_string", self.to_structure()).decode("utf-8")
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}('{self}')"
@@ -146,7 +144,7 @@ class IPv4Address(IPAddress):
     LENGTH = 4
     BITS = 32
     VERSION = 4
-    C_TYPE = f"{P}_IPv4Address"
+    C_TYPE = "umilib_protocol_ip_IPv4Address"
     C_NAME = "ipv4_address"
     UNSPECIFIED: ClassVar[IPv4Address]
     LOOPBACK: ClassVar[IPv4Address]
@@ -158,7 +156,7 @@ class IPv4Address(IPAddress):
     def parse(cls, text: str) -> IPv4Address:
         """Reads a dotted decimal address; raises ``Syntax``."""
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_ipv4_address_parse", *Text.encode(text), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_ip_ipv4_address_parse", *Text.encode(text), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @staticmethod
@@ -184,7 +182,7 @@ class IPv6Address(IPAddress):
     LENGTH = 16
     BITS = 128
     VERSION = 6
-    C_TYPE = f"{P}_IPv6Address"
+    C_TYPE = "umilib_protocol_ip_IPv6Address"
     C_NAME = "ipv6_address"
     UNSPECIFIED: ClassVar[IPv6Address]
     LOOPBACK: ClassVar[IPv6Address]
@@ -197,7 +195,7 @@ class IPv6Address(IPAddress):
     def parse(cls, text: str) -> IPv6Address:
         """Reads an address in any form of RFC 4291 §2.2; raises ``Syntax``."""
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_ipv6_address_parse", *Text.encode(text), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_ip_ipv6_address_parse", *Text.encode(text), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -221,7 +219,7 @@ class IPv6Address(IPAddress):
         if len(prefix) != 8 or len(interface_identifier) != 8:
             raise ValueError("the prefix and the interface identifier have 8 bytes each")
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_ipv6_address_from_interface_identifier", bytes(prefix), bytes(interface_identifier), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_ip_ipv6_address_from_interface_identifier", bytes(prefix), bytes(interface_identifier), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -240,7 +238,7 @@ class IPv6Address(IPAddress):
     def multicast_scope(self) -> int | None:
         """The scope of a multicast address (RFC 4291 §2.7, RFC 7346), ``None`` for other addresses."""
         found, scope = ctypes.c_bool(), ctypes.c_uint8()
-        Library.default().call(f"{P}_ipv6_address_multicast_scope", self.to_structure(), ctypes.byref(found), ctypes.byref(scope))
+        Library.default().call("umilib_protocol_ip_ipv6_address_multicast_scope", self.to_structure(), ctypes.byref(found), ctypes.byref(scope))
         return scope.value if found.value else None
 
     def is_unique_local(self) -> bool:
@@ -251,7 +249,7 @@ class IPv6Address(IPAddress):
         """The IPv4 address of an IPv4-mapped address, or ``None``."""
         found = ctypes.c_bool()
         structure = Library.default().type(IPv4Address.C_TYPE)()
-        Library.default().call(f"{P}_ipv6_address_to_ipv4_mapped", self.to_structure(), ctypes.byref(found), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_ip_ipv6_address_to_ipv4_mapped", self.to_structure(), ctypes.byref(found), ctypes.byref(structure))
         return IPv4Address.from_structure(structure) if found.value else None
 
     def to_canonical(self) -> IPAddress:
@@ -298,7 +296,7 @@ class IPProtocol(int):
 
     def name(self) -> str | None:
         """The keyword of the registry, for the numbers with a constant."""
-        data = Library.default().optional(f"{P}_ip_protocol_name", Buffer, int(self))
+        data = Library.default().optional("umilib_protocol_ip_ip_protocol_name", Buffer, int(self))
         return data.decode("utf-8") if data is not None else None
 
     def __str__(self) -> str:
@@ -322,7 +320,7 @@ class InternetChecksum:
     """The Internet checksum (RFC 1071) of the bytes added so far, in any number of updates."""
 
     def __init__(self) -> None:
-        self.structure = Library.default().type(f"{P}_InternetChecksum")()
+        self.structure = Library.default().type("umilib_protocol_ip_InternetChecksum")()
 
     @property
     def sum(self) -> int:
@@ -336,34 +334,34 @@ class InternetChecksum:
 
     def update(self, data: bytes | bytearray | memoryview) -> None:
         """Adds ``data``, which follows the bytes added before."""
-        Library.default().call(f"{P}_internet_checksum_update", ctypes.byref(self.structure), *Bytes.readable(data))
+        Library.default().call("umilib_protocol_ip_internet_checksum_update", ctypes.byref(self.structure), *Bytes.readable(data))
 
     def sum16(self) -> int:
         """The one's complement sum, folded to 16 bits."""
-        return Library.default().function(f"{P}_internet_checksum_sum16")(self.structure)
+        return Library.default().function("umilib_protocol_ip_internet_checksum_sum16")(self.structure)
 
     def finish(self) -> int:
         """The checksum: the one's complement of :meth:`sum16`."""
-        return Library.default().function(f"{P}_internet_checksum_finish")(self.structure)
+        return Library.default().function("umilib_protocol_ip_internet_checksum_finish")(self.structure)
 
     @staticmethod
     def checksum(data: bytes | bytearray | memoryview) -> int:
-        return Library.default().value(f"{P}_internet_checksum_checksum", ctypes.c_uint16, *Bytes.readable(data))
+        return Library.default().value("umilib_protocol_ip_internet_checksum_checksum", ctypes.c_uint16, *Bytes.readable(data))
 
     @staticmethod
     def verify(data: bytes | bytearray | memoryview) -> bool:
         """Whether ``data``, which contains its checksum field, sums to all one bits."""
-        return Library.default().value(f"{P}_internet_checksum_verify", ctypes.c_bool, *Bytes.readable(data))
+        return Library.default().value("umilib_protocol_ip_internet_checksum_verify", ctypes.c_bool, *Bytes.readable(data))
 
     @staticmethod
     def fold(value: int) -> int:
         """``value`` folded to 16 bits by adding the carries back."""
-        return Library.default().function(f"{P}_internet_checksum_fold")(value)
+        return Library.default().function("umilib_protocol_ip_internet_checksum_fold")(value)
 
     @staticmethod
     def adjust(checksum: int, old: int, new: int) -> int:
         """The checksum after a 16-bit word changes from ``old`` to ``new`` (RFC 1624 §3)."""
-        return Library.default().function(f"{P}_internet_checksum_adjust")(checksum, old, new)
+        return Library.default().function("umilib_protocol_ip_internet_checksum_adjust")(checksum, old, new)
 
     @staticmethod
     def adjust_bytes(checksum: int, old: bytes, new: bytes) -> int | None:
@@ -372,7 +370,7 @@ class InternetChecksum:
         if len(old) != len(new):
             return None
         out = ctypes.c_uint16()
-        Library.default().call(f"{P}_internet_checksum_adjust_bytes", checksum, bytes(old), bytes(new), len(old), ctypes.byref(out))
+        Library.default().call("umilib_protocol_ip_internet_checksum_adjust_bytes", checksum, bytes(old), bytes(new), len(old), ctypes.byref(out))
         return out.value
 
 
@@ -383,7 +381,7 @@ class IPPseudoHeader:
     def __init__(self, source: IPAddress, destination: IPAddress, protocol: int, length: int) -> None:
         self.source, self.destination, self.protocol, self.length = source, destination, IPProtocol(protocol), length
         self.bytes = Library.default().output(
-            f"{P}_ip_pseudo_header_to_bytes", source.octets, source.LENGTH, destination.octets, destination.LENGTH, int(protocol), length
+            "umilib_protocol_ip_ip_pseudo_header_to_bytes", source.octets, source.LENGTH, destination.octets, destination.LENGTH, int(protocol), length
         )
 
     def to_bytes(self) -> bytes:
@@ -407,13 +405,13 @@ class IPEndpoint:
     @classmethod
     def parse(cls, text: str) -> IPEndpoint:
         """The endpoint of ``address:port`` (IPv4) or ``[address]:port`` (IPv6), as RFC 3986 §3.2.2; raises ``Syntax``."""
-        structure = Library.default().type(f"{P}_IPEndpoint")()
-        Library.default().call(f"{P}_ip_endpoint_parse", *Text.encode(text), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_ip_IPEndpoint")()
+        Library.default().call("umilib_protocol_ip_ip_endpoint_parse", *Text.encode(text), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     def to_structure(self) -> Any:
         """The C structure; raises ``OverflowError`` for a port that does not fit 16 bits."""
-        structure = Library.default().type(f"{P}_IPEndpoint")()
+        structure = Library.default().type("umilib_protocol_ip_IPEndpoint")()
         ctypes.memmove(structure.octets, self.address.octets, self.address.LENGTH)
         structure.length = self.address.LENGTH
         Fields.assign(structure, "port", self.port)
@@ -424,7 +422,7 @@ class IPEndpoint:
         return cls(IPAddress.from_octets(bytes(structure.octets)[: structure.length]), structure.port)
 
     def __str__(self) -> str:
-        return Library.default().output(f"{P}_ip_endpoint_to_string", ctypes.byref(self.to_structure())).decode()
+        return Library.default().output("umilib_protocol_ip_ip_endpoint_to_string", ctypes.byref(self.to_structure())).decode()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -456,7 +454,7 @@ class IPEndpointPattern:
         return dataclasses.replace(self, prefix=address.to_canonical_prefix(length))
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_IPEndpointPattern")()
+        structure = Library.default().type("umilib_protocol_ip_IPEndpointPattern")()
         if self.prefix is not None:
             address, length = self.prefix
             ctypes.memmove(structure.octets, address.octets, address.LENGTH)
@@ -468,7 +466,7 @@ class IPEndpointPattern:
 
     def matches(self, endpoint: IPEndpoint) -> bool:
         return Library.default().value(
-            f"{P}_ip_endpoint_pattern_matches", ctypes.c_bool, ctypes.byref(self.to_structure()), ctypes.byref(endpoint.to_structure())
+            "umilib_protocol_ip_ip_endpoint_pattern_matches", ctypes.c_bool, ctypes.byref(self.to_structure()), ctypes.byref(endpoint.to_structure())
         )
 
 
@@ -479,34 +477,34 @@ class IPFragmentBuffer(Handle):
     """The data of one datagram being reassembled: a fragment that overlaps another raises
     ``Overlap``; only an exact duplicate of a fragment received is ignored."""
 
-    FREE = f"{P}_ip_fragment_buffer_free"
+    FREE = "umilib_protocol_ip_ip_fragment_buffer_free"
 
     def __init__(self) -> None:
-        super().__init__(Handle.create(f"{P}_ip_fragment_buffer_new"))
+        super().__init__(Handle.create("umilib_protocol_ip_ip_fragment_buffer_new"))
 
     def insert(self, offset: int, data: bytes | bytearray | memoryview, last: bool, maximum: int) -> bool:
         """Adds ``data`` at ``offset`` (the last bytes if ``last``) of data of at most ``maximum``
         bytes; returns whether every byte is received."""
-        return self.library.value(f"{P}_ip_fragment_buffer_insert", ctypes.c_bool, self.handle, offset, *Bytes.readable(data), last, maximum)
+        return self.library.value("umilib_protocol_ip_ip_fragment_buffer_insert", ctypes.c_bool, self.handle, offset, *Bytes.readable(data), last, maximum)
 
     def check(self, offset: int, data: bytes | bytearray | memoryview, last: bool, maximum: int) -> int:
         """Checks ``data`` at ``offset`` against the fragments received without adding it; returns how
         much :meth:`memory` would grow (0 for an exact duplicate); raises ``Overlap`` or ``Length``."""
-        return self.library.value(f"{P}_ip_fragment_buffer_check", ctypes.c_size_t, self.handle, offset, *Bytes.readable(data), last, maximum)
+        return self.library.value("umilib_protocol_ip_ip_fragment_buffer_check", ctypes.c_size_t, self.handle, offset, *Bytes.readable(data), last, maximum)
 
     @property
     def data(self) -> bytes:
         """The bytes received at their offsets, zeros between them."""
-        return self.library.output(f"{P}_ip_fragment_buffer_data", self.handle)
+        return self.library.output("umilib_protocol_ip_ip_fragment_buffer_data", self.handle)
 
     @property
     def length(self) -> int | None:
         """The length of the data, known from its last fragment."""
-        return self.library.optional(f"{P}_ip_fragment_buffer_length", ctypes.c_size_t, self.handle)
+        return self.library.optional("umilib_protocol_ip_ip_fragment_buffer_length", ctypes.c_size_t, self.handle)
 
     def progress(self) -> tuple[bool, int]:
         complete, received = ctypes.c_bool(), ctypes.c_size_t()
-        self.library.call(f"{P}_ip_fragment_buffer_progress", self.handle, ctypes.byref(complete), ctypes.byref(received))
+        self.library.call("umilib_protocol_ip_ip_fragment_buffer_progress", self.handle, ctypes.byref(complete), ctypes.byref(received))
         return complete.value, received.value
 
     def is_complete(self) -> bool:
@@ -514,7 +512,7 @@ class IPFragmentBuffer(Handle):
 
     def memory(self) -> int:
         """The bytes the buffer holds, approximately: its data and the record of its fragments."""
-        return self.library.value(f"{P}_ip_fragment_buffer_memory", ctypes.c_size_t, self.handle)
+        return self.library.value("umilib_protocol_ip_ip_fragment_buffer_memory", ctypes.c_size_t, self.handle)
 
     def received_length(self) -> int:
         return self.progress()[1]

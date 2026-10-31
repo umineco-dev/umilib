@@ -44,6 +44,7 @@ impl OCSPStatus {
     pub const NONCE: Status = Status::new(c"auth.cert.ocsp", c"Nonce", c"the nonce does not match");
     pub const UNKNOWN_CRITICAL_EXTENSION: Status =
         Status::new(c"auth.cert.ocsp", c"UnknownCriticalExtension", c"an unknown critical extension");
+    pub const WORK: Status = Status::new(c"auth.cert.ocsp", c"Work", c"too many signatures to verify");
 
     /// The time `seconds` after the epoch.
     pub fn time(seconds: i64) -> Result<ASN1Time, &'static Status> {
@@ -107,6 +108,7 @@ impl ToStatus for OCSPError {
             OCSPError::Time => &OCSPStatus::TIME,
             OCSPError::Nonce => &OCSPStatus::NONCE,
             OCSPError::UnknownCriticalExtension => &OCSPStatus::UNKNOWN_CRITICAL_EXTENSION,
+            OCSPError::Work => &OCSPStatus::WORK,
         }
     }
 }

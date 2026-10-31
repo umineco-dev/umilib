@@ -12,14 +12,12 @@ from typing import Any
 from umilib.ffi import U128, Bytes, Handle, Library
 from umilib.hash import Digest
 
-P = "umilib_hash_xxhash_xxh3"
-
 
 class XXH3_64(Digest):
     """XXH3 with 64 bits of output, keyed by a seed or a secret. The output
     bytes are the canonical, big-endian form of :meth:`value`."""
 
-    PREFIX = f"{P}_xxh3_64"
+    PREFIX = "umilib_hash_xxhash_xxh3_xxh3_64"
 
     @classmethod
     def with_seed(cls, seed: int) -> Any:
@@ -46,7 +44,7 @@ class XXH3_128(Digest):
     """XXH3 with 128 bits of output (XXH128), keyed by a seed or a secret. The
     output bytes are the canonical, big-endian form of :meth:`value`."""
 
-    PREFIX = f"{P}_xxh3_128"
+    PREFIX = "umilib_hash_xxhash_xxh3_xxh3_128"
 
     @classmethod
     def with_seed(cls, seed: int) -> Any:

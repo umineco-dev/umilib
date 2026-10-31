@@ -62,10 +62,27 @@ pub struct ChannelState<T> {
 }
 
 impl<T> ChannelState<T> {
-    /// Wakes every sender waiting for room (they retry, and wait again if needed).
-    pub fn wake_senders(&mut self) {
-        for waker in self.sender_wakers.drain(..) {
-            waker.wake();
+    /// Takes the wakers of the senders waiting for room, to be woken after
+    /// the lock is released (a woken task may run, or be dropped, at once,
+    /// and use the channel); they retry, and wait again if needed.
+    pub fn take_sender_wakers(&mut self) -> VecDeque<Waker> {
+        core::mem::take(&mut self.sender_wakers)
+    }
+
+    /// Keeps `waker` among the senders waiting for room, unless one of them wakes the same task.
+    pub fn register_sender(&mut self, waker: &Waker) {
+        if !self.sender_wakers.iter().any(|waiting| waiting.will_wake(waker)) {
+            self.sender_wakers.push_back(waker.clone());
+        }
+    }
+
+    /// Keeps `waker` as the receiver's; gives back the waker it replaces, to
+    /// be dropped after the lock is released (dropping the last waker of a
+    /// task drops the task, whose future may use the channel).
+    pub fn register_receiver(&mut self, waker: &Waker) -> Option<Waker> {
+        match &self.receiver_waker {
+            Some(current) if current.will_wake(waker) => None,
+            _ => self.receiver_waker.replace(waker.clone()),
         }
     }
 }
@@ -152,7 +169,7 @@ impl<T> Future for SendFuture<'_, T> {
                     context.waker().wake_by_ref();
                     return Poll::Pending;
                 }
-                state.sender_wakers.push_back(context.waker().clone());
+                state.register_sender(context.waker());
                 drop(state);
                 self.value = Some(value);
                 Poll::Pending
@@ -174,7 +191,9 @@ impl<T> Receiver<T> {
         let mut state = self.shared.lock();
         match state.queue.pop_front() {
             Some(value) => {
-                state.wake_senders();
+                let wakers = state.take_sender_wakers();
+                drop(state);
+                wakers.into_iter().for_each(Waker::wake);
                 Ok(value)
             }
             None if state.senders == 0 => Err(ChannelError::Closed),
@@ -191,7 +210,11 @@ impl<T> Receiver<T> {
     pub fn close(&mut self) {
         let mut state = self.shared.lock();
         state.receiver = false;
-        state.wake_senders();
+        let wakers = state.take_sender_wakers();
+        let waker = state.receiver_waker.take();
+        drop(state);
+        wakers.into_iter().for_each(Waker::wake);
+        drop(waker);
     }
 
     /// The values in the channel.
@@ -222,13 +245,17 @@ impl<T> Future for ReceiveFuture<'_, T> {
     fn poll(self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Option<T>> {
         let mut state = self.receiver.shared.lock();
         if let Some(value) = state.queue.pop_front() {
-            state.wake_senders();
+            let wakers = state.take_sender_wakers();
+            drop(state);
+            wakers.into_iter().for_each(Waker::wake);
             return Poll::Ready(Some(value));
         }
         if state.senders == 0 {
             return Poll::Ready(None);
         }
-        state.receiver_waker = Some(context.waker().clone());
+        let replaced = state.register_receiver(context.waker());
+        drop(state);
+        drop(replaced);
         Poll::Pending
     }
 }
@@ -310,7 +337,12 @@ impl<T> Future for OneshotReceiver<T> {
             Some(value) => Poll::Ready(Ok(value)),
             None if !state.sender => Poll::Ready(Err(ChannelError::Closed)),
             None => {
-                state.waker = Some(context.waker().clone());
+                let replaced = match &state.waker {
+                    Some(current) if current.will_wake(context.waker()) => None,
+                    _ => state.waker.replace(context.waker().clone()),
+                };
+                drop(state);
+                drop(replaced);
                 Poll::Pending
             }
         }
@@ -319,6 +351,10 @@ impl<T> Future for OneshotReceiver<T> {
 
 impl<T> Drop for OneshotReceiver<T> {
     fn drop(&mut self) {
-        self.shared.lock().receiver = false;
+        let mut state = self.shared.lock();
+        state.receiver = false;
+        let waker = state.waker.take();
+        drop(state);
+        drop(waker);
     }
 }

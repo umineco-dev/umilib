@@ -1,3 +1,7 @@
+use alloc::string::String;
+
+use crate::codec::uri::{URIHostKind, URIReference};
+
 /// The comparisons of the forms of `GeneralName` that RFC 5280 §4.2.1.10
 /// and §7 and RFC 9525 §6 define: well-formed names, names within the
 /// subtrees of name constraints, and names matching an identity.
@@ -119,22 +123,18 @@ impl NameMatching {
     }
 
     /// The host of the URI `uri` if it is a domain name (RFC 3986 §3.2.2):
-    /// `None` for a URI without an authority or with an IP literal.
-    pub fn uri_host(uri: &str) -> Option<&str> {
-        let (scheme, rest) = uri.split_once(':')?;
-        if scheme.is_empty() || !scheme.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"+-.".contains(&byte)) {
-            return None;
-        }
-        let authority = rest.strip_prefix("//")?;
-        let authority = authority.split(['/', '?', '#']).next().unwrap_or(authority);
-        let host = authority.rsplit_once('@').map_or(authority, |(_, host)| host);
-        if host.starts_with('[') {
-            return None;
-        }
-        let host = host
-            .rsplit_once(':')
-            .map_or(host, |(host, port)| if port.bytes().all(|byte| byte.is_ascii_digit()) { host } else { "" });
-        NameMatching::is_dns_name(host, false).then_some(host)
+    /// `None` for a URI without a scheme or an authority, with an IP
+    /// literal, or that is not of the grammar of RFC 3986 at all, which
+    /// RFC 5280 §4.2.1.6 requires of a URI name. Reading the host of a
+    /// malformed URI would guess: `http://a.example\@b.example/` has the
+    /// host `a.example` for a WHATWG parser, while splitting at `@` gives
+    /// `b.example`.
+    pub fn uri_host(uri: &str) -> Option<String> {
+        let reference = URIReference::parse(uri).ok()?;
+        reference.scheme.as_ref()?;
+        let authority = reference.authority?;
+        let name = authority.host_kind() == URIHostKind::RegName && NameMatching::is_dns_name(&authority.host, false);
+        name.then_some(authority.host)
     }
 
     /// Whether the URI `uri` is within the URI constraint `constraint` (RFC
@@ -145,7 +145,7 @@ impl NameMatching {
     pub fn uri_within(uri: &str, constraint: &str) -> Option<bool> {
         let host = NameMatching::uri_host(uri)?;
         Some(if let Some(domain) = constraint.strip_prefix('.') {
-            host.len() > domain.len() && NameMatching::ends_with_labels(host, domain)
+            host.len() > domain.len() && NameMatching::ends_with_labels(&host, domain)
         } else {
             host.eq_ignore_ascii_case(constraint)
         })

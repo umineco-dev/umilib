@@ -16,11 +16,22 @@ pub struct ReactorConfig {
     pub name: String,
     /// The stack size of the thread, if not std's default.
     pub stack_size: Option<usize>,
+    /// The most events (Unix) or completions (Windows) one wait of the
+    /// thread takes from the system; more wait for the next round.
+    pub maximum_events: usize,
+    /// The pause before the thread waits again after a wait failed (out of
+    /// resources), so that it does not spin.
+    pub retry_delay: Duration,
 }
 
 impl Default for ReactorConfig {
     fn default() -> ReactorConfig {
-        ReactorConfig { name: String::from("umilib-reactor"), stack_size: None }
+        ReactorConfig {
+            name: String::from("umilib-reactor"),
+            stack_size: None,
+            maximum_events: 256,
+            retry_delay: Duration::from_millis(10),
+        }
     }
 }
 
@@ -38,6 +49,7 @@ pub struct ReactorShared {
     #[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
     pub sources: Mutex<super::SourceTable>,
     pub timer: Timer,
+    retry_delay: Duration,
     stopping: AtomicBool,
 }
 
@@ -83,7 +95,7 @@ impl ReactorShared {
         while !self.stopping.load(Ordering::Acquire) {
             if self.turn(&mut events).is_err() {
                 // A failing wait (out of resources) is retried after a pause rather than spinning.
-                std::thread::sleep(Duration::from_millis(10));
+                std::thread::sleep(self.retry_delay);
             }
         }
     }
@@ -142,12 +154,13 @@ pub struct Reactor {
 impl Reactor {
     /// A reactor of the parameters `config`, its thread started.
     pub fn new(config: &ReactorConfig) -> io::Result<Reactor> {
-        let driver = Reactor::driver()?;
+        let driver = Reactor::driver(config)?;
         let shared = Arc::new(ReactorShared {
             driver,
             #[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
             sources: Mutex::new(super::SourceTable::new()),
             timer: Timer::new(Arc::new(MonotonicClock::new())),
+            retry_delay: config.retry_delay,
             stopping: AtomicBool::new(false),
         });
         let mut builder = std::thread::Builder::new().name(config.name.clone());
@@ -159,16 +172,17 @@ impl Reactor {
         Ok(Reactor { owner: Arc::new(ReactorOwner { shared, thread: Mutex::new(Some(thread)) }) })
     }
 
-    /// A new driver of the system: a poller.
+    /// A new driver of the system for `config`: a poller.
     #[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
-    pub fn driver() -> io::Result<ReactorDriver> {
-        ReactorDriver::new()
+    pub fn driver(config: &ReactorConfig) -> io::Result<ReactorDriver> {
+        ReactorDriver::with_maximum_events(config.maximum_events)
     }
 
-    /// A new driver of the system: a completion port (as many concurrent threads as processors).
+    /// A new driver of the system for `config`: a completion port (as many
+    /// concurrent threads as processors).
     #[cfg(windows)]
-    pub fn driver() -> io::Result<ReactorDriver> {
-        ReactorDriver::new(0)
+    pub fn driver(config: &ReactorConfig) -> io::Result<ReactorDriver> {
+        ReactorDriver::with_maximum_completions(0, config.maximum_events)
     }
 
     pub fn shared(&self) -> &Arc<ReactorShared> {

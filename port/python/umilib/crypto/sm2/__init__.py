@@ -20,13 +20,11 @@ from umilib.hash import CryptographicDigest
 from umilib.math.ec import WeierstrassCurve
 from umilib.secret import ConstantTimeEq
 
-P = "umilib_crypto_sm2"
-
 
 class SM2DSA(SignatureScheme):
     """The signatures of SM2 (GB/T 32918.2) on the curve and with the hash function of ``SM2DSA[C, H]``."""
 
-    PREFIX = f"{P}_sm2dsa"
+    PREFIX = "umilib_crypto_sm2_sm2dsa"
     #: The identity of GB/T 35276 for signers without another.
     DEFAULT_IDENTITY: ClassVar[bytes] = b"1234567812345678"
 
@@ -103,11 +101,11 @@ class SM2Signature:
     def from_der(cls, der: bytes | bytearray | memoryview) -> Any:
         scheme = Specialization.require(cls.SCHEME, "SM2Signature")
         data, length = Bytes.readable(der)
-        return cls(Library.default().output(f"{P}_sm2dsa_signature_from_der", *scheme.names(), data, length))
+        return cls(Library.default().output("umilib_crypto_sm2_sm2dsa_signature_from_der", *scheme.names(), data, length))
 
     def to_der(self) -> bytes:
         data, length = Bytes.readable(self.data)
-        return Library.default().output(f"{P}_sm2dsa_signature_to_der", *self.SCHEME.names(), data, length)
+        return Library.default().output("umilib_crypto_sm2_sm2dsa_signature_to_der", *self.SCHEME.names(), data, length)
 
     def __eq__(self, other: object) -> bool:
         if type(other) is not type(self):
@@ -137,7 +135,7 @@ class SM2PKE:
     SCHEME: ClassVar[Any] = None
     PARAMETERS: ClassVar[tuple[Any, ...] | None] = None
     #: The bytes a ciphertext adds to its message: C1 (65) and C3 (32).
-    OVERHEAD: ClassVar[Any] = Preset(lambda: Library.default().function(f"{P}_sm2pke_overhead")())
+    OVERHEAD: ClassVar[Any] = Preset(lambda: Library.default().function("umilib_crypto_sm2_sm2pke_overhead")())
 
     def __class_getitem__(cls, parameters: Any) -> Any:
         curve, hash = Specialization.pair(parameters, "SM2PKE")
@@ -155,7 +153,7 @@ class SM2PKE:
         handle, name, length = random.source()
         with EncodedKey.encodings(key) as [(data, key_length)]:
             Library.default().call(
-                f"{P}_sm2pke_encrypt",
+                "umilib_crypto_sm2_sm2pke_encrypt",
                 *scheme.names(),
                 data,
                 key_length,
@@ -181,7 +179,7 @@ class SM2PKE:
         ciphertext_data, ciphertext_length = Bytes.readable(ciphertext)
         with EncodedKey.encodings(key) as [(data, length)]:
             Library.default().call(
-                f"{P}_sm2pke_decrypt",
+                "umilib_crypto_sm2_sm2pke_decrypt",
                 *scheme.names(),
                 data,
                 length,
@@ -223,7 +221,7 @@ class SM2KeyConfirmation:
 class SM2KEP(Handle):
     """One side of the key exchange of SM2 (GB/T 32918.3) on the curve of SM2 with SM3."""
 
-    FREE = f"{P}_sm2kep_free"
+    FREE = "umilib_crypto_sm2_sm2kep_free"
 
     def __init__(
         self,
@@ -240,7 +238,7 @@ class SM2KEP(Handle):
         identity_data, identity_length = Bytes.readable(identity)
         with EncodedKey.encodings(key, ephemeral) as [(data, length), (ephemeral_data, ephemeral_length)]:
             pointer = Handle.create(
-                f"{P}_sm2kep_new", int(role), data, length, identity_data, identity_length, ephemeral_data, ephemeral_length
+                "umilib_crypto_sm2_sm2kep_new", int(role), data, length, identity_data, identity_length, ephemeral_data, ephemeral_length
             )
         super().__init__(pointer)
         self.role = role
@@ -254,7 +252,7 @@ class SM2KEP(Handle):
         handle, name, name_length = random.source()
         with EncodedKey.encodings(key, handles=(random,)) as [(data, length)]:
             pointer = Handle.create(
-                f"{P}_sm2kep_generate", int(role), data, length, identity_data, identity_length, handle, name, name_length
+                "umilib_crypto_sm2_sm2kep_generate", int(role), data, length, identity_data, identity_length, handle, name, name_length
             )
         Handle.__init__(side, pointer)
         side.role = role
@@ -271,7 +269,7 @@ class SM2KEP(Handle):
     def ephemeral_public_key(self) -> bytes:
         """R, to send to the other party: the uncompressed point."""
         out = (ctypes.c_uint8 * 65)()
-        self.library.call(f"{P}_sm2kep_ephemeral_public_key", self.handle, out, len(out))
+        self.library.call("umilib_crypto_sm2_sm2kep_ephemeral_public_key", self.handle, out, len(out))
         return bytes(out)
 
     def agree(
@@ -289,7 +287,7 @@ class SM2KEP(Handle):
         ephemeral_data, ephemeral_length = Bytes.readable(peer_ephemeral)
         peer_data, peer_length = Bytes.readable(peer.to_bytes())
         self.library.call(
-            f"{P}_sm2kep_agree",
+            "umilib_crypto_sm2_sm2kep_agree",
             self.handle,
             peer_data,
             peer_length,

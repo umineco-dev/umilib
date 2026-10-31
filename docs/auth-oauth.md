@@ -130,7 +130,10 @@ let response = server.token(&request, now, &mut random);
   `dpop_jkt` does (RFC 9449 §10.1). The proof's `htu` is compared with the
   configured endpoint. Set `config.dpop.require_nonce` and call
   `server.dpop().rotate_nonce(random)` before serving and regularly after:
-  without a nonce made, proofs are refused with `server_error`.
+  without a nonce made, proofs are refused with `server_error`. The
+  `config.dpop.previous_nonces` nonces made before the current one (1 by
+  default) are still taken, so that a rotation does not refuse the requests
+  in flight.
 - Revocation (RFC 7009): a token of another client is refused with
   `unauthorized_client` (§2.1); an unknown token is answered 200 (§2.2).
 
@@ -164,6 +167,13 @@ match resource.accept_jwt(&request, now) {
   for this request (method, URI without query and fragment, the hash of the
   token); a bound token sent as `Bearer` is refused. Give the request's
   absolute URI in `OAuthEndpointRequest::uri`, as the client sees it.
+- A token whose `cnf` (RFC 7800) has no `jkt`, such as one bound to a client
+  certificate (`x5t#S256`, RFC 8705), is refused with `invalid_token`: this
+  resource cannot check that binding, and taking the token as a Bearer token
+  would undo it. A malformed `cnf` is refused too. Members of `cnf` beside
+  `jkt` are ignored, as RFC 7800 §3.1 says. An introspection response with
+  such a `cnf` fails to decode (`OAuthMembers::confirmation` reads `cnf` for
+  both), so the token is not taken either.
 - Refusals carry the challenges of RFC 6750 §3 (and `algs` for DPoP,
   `resource_metadata` of RFC 9728 §5.1): a request without credentials gets
   one challenge per scheme and no error code, `insufficient_scope` names the

@@ -29,6 +29,19 @@ DNSKEY/CDNSKEY, RRSIG, NSEC, NSEC3, NSEC3PARAM, TLSA, SVCB/HTTPS with the
 written `\# length hex`. Records read from and write to the presentation
 format of zone files.
 
+Data of a known type that is not of its type's format (an SVCB record of
+malformed parameters, a CAA tag not of letters and digits, an A record not
+of 4 bytes) is a malformed record, to be ignored rather than the message it
+came in (RFC 9460 §2.2 says so of SVCB). `DNSData::decode` keeps it as
+`DNSData::Unknown`, its bytes as they are, when the type's data has no name
+that may be compressed or is lowercased in the canonical form: the bytes are
+then the record whole, written again and signed the same. A reader of the
+type does not take it (`DNSData::SVCB` does not match). Data of the other
+types (NS, MX, SOA, SRV, RRSIG...) that cannot be read makes the message
+malformed. `DNSData::decode_strict` refuses all malformed data. The generic
+form `\# length hex` of a zone file is read as the same bytes in a message
+would be.
+
 `DNSMessage` is a message: header, question, the three sections, and EDNS
 (`DNSEDNS`, RFC 6891) apart from the additional records. `encode(limit)`
 writes it in at most `limit` bytes, leaving out whole RRsets from the end and

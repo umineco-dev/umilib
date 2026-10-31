@@ -8,7 +8,7 @@ use umilib::protocol::jwt::{
 };
 
 use super::{decrypting, folded, jwk, object, path, random};
-use crate::{Json, RFC};
+use crate::{JSON, RFC};
 
 /// The expiration of the claims of RFC 7519 §3.1 and RFC 7520 §6.
 const EXPIRATION: i64 = 1300819380;
@@ -92,7 +92,7 @@ fn rfc_7519_appendix_a() {
 
 #[test]
 fn the_jose_cookbook_nesting() {
-    let example = Json::read(&path("cookbook/6.nesting_signatures_and_encryption.json"));
+    let example = JSON::read(&path("cookbook/6.nesting_signatures_and_encryption.json"));
     let sign = example.field("sign");
     let encrypt = example.field("encrypt");
     let signing_key = jwk(sign.field("input").field("key"));

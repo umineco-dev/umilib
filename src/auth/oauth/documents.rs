@@ -75,6 +75,30 @@ impl<'a> OAuthMembers<'a> {
         }
     }
 
+    /// The thumbprint of the confirmation member `cnf` (RFC 7800 §3.1): its `jkt`, the JWK
+    /// SHA-256 thumbprint of a DPoP key (RFC 9449 §6), which is the one confirmation method this
+    /// module checks. A token whose `cnf` names only other methods (`x5t#S256` of RFC 8705 §3.1)
+    /// is bound all the same, so a `cnf` without `jkt` fails with Missing, and one that is not an
+    /// object, or whose `jkt` is not a non-empty string, with Invalid; other members beside
+    /// `jkt` are ignored (RFC 7800 §3.1).
+    pub fn confirmation(&self) -> Result<Option<String>, OAuthError> {
+        match self.object.get("cnf") {
+            None => Ok(None),
+            Some(JSONValue::Object(cnf)) => OAuthMembers { object: cnf }.required_string("jkt").map(Some),
+            Some(_) => Err(OAuthError::Invalid { parameter: "cnf" }),
+        }
+    }
+
+    /// Inserts the confirmation member `cnf` holding `jkt` if there is a thumbprint; the inverse
+    /// of [`OAuthMembers::confirmation`].
+    pub fn insert_confirmation(object: &mut JSONObject, thumbprint: Option<&str>) {
+        if let Some(thumbprint) = thumbprint {
+            let mut cnf = JSONObject::new();
+            OAuthMembers::insert_string(&mut cnf, "jkt", Some(thumbprint));
+            object.insert("cnf".to_string(), JSONValue::Object(cnf));
+        }
+    }
+
     /// The members whose names are not in `known`.
     pub fn others(&self, known: &[&str]) -> JSONObject {
         let mut other = JSONObject::new();
@@ -193,7 +217,8 @@ pub struct OAuthIntrospectionResponse {
     pub audience: Vec<String>,
     pub issuer: Option<String>,
     pub identifier: Option<String>,
-    /// The JWK SHA-256 thumbprint of the key the token is bound to (`cnf.jkt`, RFC 9449 §6.2).
+    /// The JWK SHA-256 thumbprint of the key the token is bound to (`cnf.jkt`, RFC 9449 §6.2),
+    /// read by [`OAuthMembers::confirmation`]: a response whose `cnf` has no `jkt` fails to decode.
     pub confirmation: Option<String>,
     pub other: JSONObject,
 }
@@ -230,11 +255,6 @@ impl OAuthIntrospectionResponse {
             Some(_) => return Err(OAuthError::Invalid { parameter: "active" }),
             None => return Err(OAuthError::Missing { parameter: "active" }),
         };
-        let confirmation = match object.get("cnf") {
-            None => None,
-            Some(JSONValue::Object(cnf)) => OAuthMembers { object: cnf }.string("jkt")?,
-            Some(_) => return Err(OAuthError::Invalid { parameter: "cnf" }),
-        };
         Ok(OAuthIntrospectionResponse {
             active,
             scope: members.string("scope")?.map(|scope| OAuthScope::parse(&scope)).transpose()?,
@@ -248,7 +268,7 @@ impl OAuthIntrospectionResponse {
             audience: members.strings("aud")?,
             issuer: members.string("iss")?,
             identifier: members.string("jti")?,
-            confirmation,
+            confirmation: members.confirmation()?,
             other: members.others(OAuthIntrospectionResponse::MEMBERS),
         })
     }
@@ -280,11 +300,7 @@ impl OAuthIntrospectionResponse {
         }
         OAuthMembers::insert_string(&mut object, "iss", self.issuer.as_deref());
         OAuthMembers::insert_string(&mut object, "jti", self.identifier.as_deref());
-        if let Some(thumbprint) = &self.confirmation {
-            let mut cnf = JSONObject::new();
-            OAuthMembers::insert_string(&mut cnf, "jkt", Some(thumbprint));
-            object.insert("cnf".to_string(), JSONValue::Object(cnf));
-        }
+        OAuthMembers::insert_confirmation(&mut object, self.confirmation.as_deref());
         for (name, value) in &self.other.members {
             if !OAuthIntrospectionResponse::MEMBERS.contains(&name.as_str()) {
                 object.insert(name.clone(), value.clone());

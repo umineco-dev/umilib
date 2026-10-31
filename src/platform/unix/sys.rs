@@ -47,6 +47,28 @@ unsafe extern "C" {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct POSIX;
 
+// The Linux values below are those of the kernel's generic headers
+// (`asm-generic/socket.h`, `asm-generic/fcntl.h`, `linux/net.h`), which these
+// architectures use. Others define their own (MIPS: `SOCK_STREAM` 2,
+// `SOL_SOCKET` 0xFFFF, `O_NONBLOCK` 0x80; SPARC, Alpha and PA-RISC differ as
+// well), and are refused rather than given values never run.
+#[cfg(all(
+    any(target_os = "linux", target_os = "android"),
+    not(any(
+        target_arch = "x86",
+        target_arch = "x86_64",
+        target_arch = "arm",
+        target_arch = "aarch64",
+        target_arch = "riscv32",
+        target_arch = "riscv64",
+        target_arch = "loongarch64",
+        target_arch = "powerpc",
+        target_arch = "powerpc64",
+        target_arch = "s390x"
+    ))
+))]
+compile_error!("the socket and file constants of Linux are verified only for the architectures of the generic headers");
+
 #[cfg(any(target_os = "linux", target_os = "android"))]
 impl POSIX {
     pub const AF_INET6: c_int = 10;

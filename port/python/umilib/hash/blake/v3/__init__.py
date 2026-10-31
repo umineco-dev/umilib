@@ -10,13 +10,11 @@ import ctypes
 from umilib.ffi import Bytes, Handle, Library
 from umilib.hash import CryptographicDigest, XOFReader
 
-P = "umilib_hash_blake_v3"
-
 
 class BLAKE3Reader(XOFReader):
     """The output of BLAKE3, read in order from any position up to 2^64 bytes."""
 
-    PREFIX = f"{P}_blake3_reader"
+    PREFIX = "umilib_hash_blake_v3_blake3_reader"
 
     def position(self) -> int:
         """The number of bytes before the next one read."""
@@ -32,7 +30,7 @@ class BLAKE3(CryptographicDigest):
     :meth:`with_key` and :meth:`with_context`; 32 bytes of output, or any
     length through :meth:`finalize_xof`."""
 
-    PREFIX = f"{P}_blake3"
+    PREFIX = "umilib_hash_blake_v3_blake3"
     KEY_SIZE = 32
 
     @classmethod
@@ -53,7 +51,7 @@ class BLAKE3(CryptographicDigest):
         out = (ctypes.c_uint8 * 32)()
         key_data, key_length = Bytes.readable(key)
         data, length = Bytes.readable(data)
-        Library.default().call(f"{P}_blake3_keyed_hash", key_data, key_length, data, length, out, 32)
+        Library.default().call("umilib_hash_blake_v3_blake3_keyed_hash", key_data, key_length, data, length, out, 32)
         return bytes(out)
 
     @staticmethod
@@ -62,7 +60,7 @@ class BLAKE3(CryptographicDigest):
         out = (ctypes.c_uint8 * 32)()
         context_data, context_length = Bytes.readable(context)
         data, length = Bytes.readable(material)
-        Library.default().call(f"{P}_blake3_derive_key", context_data, context_length, data, length, out, 32)
+        Library.default().call("umilib_hash_blake_v3_blake3_derive_key", context_data, context_length, data, length, out, 32)
         return bytes(out)
 
     def finalize_xof(self) -> BLAKE3Reader:

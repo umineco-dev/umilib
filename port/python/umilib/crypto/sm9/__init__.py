@@ -23,8 +23,6 @@ from umilib.hash import CryptographicDigest
 from umilib.math.pairing import PairingCurve
 from umilib.secret import ConstantTimeEq, Secret
 
-P = "umilib_crypto_sm9"
-
 
 class SM9Scheme:
     """The curve and the hash function of a type ``T[C, H]`` of this module, named by their C type
@@ -55,7 +53,7 @@ class SM9Scheme:
         """The bytes of a scalar (ke, r), a point of G_1 (Ppub-e, R, C), a point of G_2 (de) and an
         output of the hash function (C3, S_A, S_B)."""
         out = (ctypes.c_size_t * 4)()
-        Library.default().call(f"{P}_sizes", *cls.names(), out)
+        Library.default().call("umilib_crypto_sm9_sizes", *cls.names(), out)
         return out[0], out[1], out[2], out[3]
 
     @classmethod
@@ -84,7 +82,7 @@ class SM9EncryptMasterKey(Handle):
     """The encryption master key of a KGC on the curve of ``SM9EncryptMasterKey[C]``: ke and Ppub-e;
     zeroized when released."""
 
-    FREE = f"{P}_sm9_encrypt_master_key_free"
+    FREE = "umilib_crypto_sm9_sm9_encrypt_master_key_free"
     CURVE: ClassVar[Any] = None
     PARAMETERS: ClassVar[tuple[Any, ...] | None] = None
 
@@ -100,7 +98,7 @@ class SM9EncryptMasterKey(Handle):
         with source:
             with source.locked():
                 data, length = source.location()
-                pointer = Handle.create(f"{P}_sm9_encrypt_master_key_new", *Text.encode(curve.C_TYPE), data, length)
+                pointer = Handle.create("umilib_crypto_sm9_sm9_encrypt_master_key_new", *Text.encode(curve.C_TYPE), data, length)
         super().__init__(pointer)
 
     @classmethod
@@ -109,17 +107,17 @@ class SM9EncryptMasterKey(Handle):
         curve = Specialization.require(cls.CURVE, "SM9EncryptMasterKey")
         key = cls.__new__(cls)
         handle, name, length = random.source()
-        pointer = Handle.create(f"{P}_sm9_encrypt_master_key_generate", *Text.encode(curve.C_TYPE), handle, name, length)
+        pointer = Handle.create("umilib_crypto_sm9_sm9_encrypt_master_key_generate", *Text.encode(curve.C_TYPE), handle, name, length)
         Handle.__init__(key, pointer)
         return key
 
     def secret(self) -> bytearray:
         """ke, a secret to zeroize."""
-        return self.library.output_secret(f"{P}_sm9_encrypt_master_key_secret", self.handle)
+        return self.library.output_secret("umilib_crypto_sm9_sm9_encrypt_master_key_secret", self.handle)
 
     def public_key(self) -> bytes:
         """Ppub-e, x || y."""
-        return self.library.output(f"{P}_sm9_encrypt_master_key_public_key", self.handle)
+        return self.library.output("umilib_crypto_sm9_sm9_encrypt_master_key_public_key", self.handle)
 
     def extract(self, hash: Any, identity: bytes | bytearray | memoryview, hid: int) -> SM9EncryptUserKey:
         """The key of ``identity`` with the identifier ``hid``, with H1 of the hash function ``hash``
@@ -128,7 +126,7 @@ class SM9EncryptMasterKey(Handle):
         hash = Names.require(hash, CryptographicDigest, "SM9EncryptMasterKey.extract")
         data, length = Bytes.readable(identity)
         pointer = Handle.create(
-            f"{P}_sm9_encrypt_master_key_extract", self.handle, *Text.encode(hash.C_TYPE), data, length, hid
+            "umilib_crypto_sm9_sm9_encrypt_master_key_extract", self.handle, *Text.encode(hash.C_TYPE), data, length, hid
         )
         return SM9EncryptUserKey[self.CURVE].from_pointer(pointer)
 
@@ -140,7 +138,7 @@ class SM9EncryptUserKey(Handle):
     """The encryption key of a user on the curve of ``SM9EncryptUserKey[C]``: its identity, hid, de
     and Ppub-e; zeroized when released."""
 
-    FREE = f"{P}_sm9_encrypt_user_key_free"
+    FREE = "umilib_crypto_sm9_sm9_encrypt_user_key_free"
     CURVE: ClassVar[Any] = None
     PARAMETERS: ClassVar[tuple[Any, ...] | None] = None
 
@@ -162,7 +160,7 @@ class SM9EncryptUserKey(Handle):
         arguments: list[Any] = [*Text.encode(curve.C_TYPE), *Bytes.readable(identity), hid]
         arguments.extend(Bytes.readable(key))
         arguments.extend(Bytes.readable(master))
-        super().__init__(Handle.create(f"{P}_sm9_encrypt_user_key_new", *arguments))
+        super().__init__(Handle.create("umilib_crypto_sm9_sm9_encrypt_user_key_new", *arguments))
 
     @classmethod
     def from_pointer(cls, pointer: int) -> Any:
@@ -171,19 +169,19 @@ class SM9EncryptUserKey(Handle):
         return key
 
     def identity(self) -> bytes:
-        return self.library.output(f"{P}_sm9_encrypt_user_key_identity", self.handle)
+        return self.library.output("umilib_crypto_sm9_sm9_encrypt_user_key_identity", self.handle)
 
     def hid(self) -> int:
         """The identifier of the key generating function."""
-        return self.library.value(f"{P}_sm9_encrypt_user_key_hid", ctypes.c_uint8, self.handle)
+        return self.library.value("umilib_crypto_sm9_sm9_encrypt_user_key_hid", ctypes.c_uint8, self.handle)
 
     def key(self) -> bytearray:
         """de, 04 || x || y, a secret to zeroize."""
-        return self.library.output_secret(f"{P}_sm9_encrypt_user_key_key", self.handle)
+        return self.library.output_secret("umilib_crypto_sm9_sm9_encrypt_user_key_key", self.handle)
 
     def master(self) -> bytes:
         """Ppub-e, x || y."""
-        return self.library.output(f"{P}_sm9_encrypt_user_key_master", self.handle)
+        return self.library.output("umilib_crypto_sm9_sm9_encrypt_user_key_master", self.handle)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.identity()!r}, {self.hid():#04x}, ..)"
@@ -213,7 +211,7 @@ class SM9KEP(Handle, SM9Scheme):
     """One side of the key exchange of GM/T 0044.3-2016 on the curve and with the hash function of
     ``SM9KEP[C, H]``; zeroized when released."""
 
-    FREE = f"{P}_sm9kep_free"
+    FREE = "umilib_crypto_sm9_sm9kep_free"
 
     def __class_getitem__(cls, parameters: Any) -> Any:
         curve, hash = SM9Scheme.parameters(parameters, "SM9KEP")
@@ -235,7 +233,7 @@ class SM9KEP(Handle, SM9Scheme):
             with source.locked():
                 data, length = source.location()
                 pointer = Handle.create(
-                    f"{P}_sm9kep_new", key.handle, *self.hash_name(), int(role), identity_data, identity_length, data, length
+                    "umilib_crypto_sm9_sm9kep_new", key.handle, *self.hash_name(), int(role), identity_data, identity_length, data, length
                 )
         super().__init__(pointer)
         self.side_role = SM9Role(role)
@@ -250,7 +248,7 @@ class SM9KEP(Handle, SM9Scheme):
         identity_data, identity_length = Bytes.readable(peer_identity)
         handle, name, length = random.source()
         pointer = Handle.create(
-            f"{P}_sm9kep_generate", key.handle, *cls.hash_name(), int(role), identity_data, identity_length, handle, name, length
+            "umilib_crypto_sm9_sm9kep_generate", key.handle, *cls.hash_name(), int(role), identity_data, identity_length, handle, name, length
         )
         Handle.__init__(side, pointer)
         side.side_role = SM9Role(role)
@@ -261,7 +259,7 @@ class SM9KEP(Handle, SM9Scheme):
 
     def ephemeral_public_key(self) -> bytes:
         """R, x || y, which this side sends to the other."""
-        return self.library.output(f"{P}_sm9kep_ephemeral_public_key", self.handle)
+        return self.library.output("umilib_crypto_sm9_sm9kep_ephemeral_public_key", self.handle)
 
     def agree(self, peer_ephemeral: bytes | bytearray | memoryview, out: bytearray) -> SM9KeyConfirmation:
         """Writes SK of the other side's R into ``out`` (of the length of the key to derive) and returns
@@ -270,7 +268,7 @@ class SM9KEP(Handle, SM9Scheme):
         responder, initiator = (ctypes.c_uint8 * size)(), (ctypes.c_uint8 * size)()
         data, length = Bytes.readable(peer_ephemeral)
         self.library.call(
-            f"{P}_sm9kep_agree", self.handle, data, length, Bytes.mutable(out), len(out), responder, size, initiator, size
+            "umilib_crypto_sm9_sm9kep_agree", self.handle, data, length, Bytes.mutable(out), len(out), responder, size, initiator, size
         )
         return SM9KeyConfirmation(bytes(responder), bytes(initiator))
 
@@ -307,7 +305,7 @@ class SM9KEM(SM9Scheme):
         arguments: list[Any] = [*cls.names(), *Bytes.readable(master), *Bytes.readable(identity), hid]
         handle, name, length = random.source()
         Library.default().call(
-            f"{P}_sm9kem_encapsulate", *arguments, handle, name, length, Bytes.mutable(out), len(out), encapsulated, len(encapsulated)
+            "umilib_crypto_sm9_sm9kem_encapsulate", *arguments, handle, name, length, Bytes.mutable(out), len(out), encapsulated, len(encapsulated)
         )
         return bytes(encapsulated)
 
@@ -329,7 +327,7 @@ class SM9KEM(SM9Scheme):
             with source.locked():
                 data, length = source.location()
                 Library.default().call(
-                    f"{P}_sm9kem_encapsulate_with_ephemeral",
+                    "umilib_crypto_sm9_sm9kem_encapsulate_with_ephemeral",
                     *arguments,
                     data,
                     length,
@@ -347,7 +345,7 @@ class SM9KEM(SM9Scheme):
         ``DecryptionFailed`` if K is zero."""
         cls.check_key(key)
         data, length = Bytes.readable(encapsulated)
-        Library.default().call(f"{P}_sm9kem_decapsulate", key.handle, *cls.hash_name(), data, length, Bytes.mutable(out), len(out))
+        Library.default().call("umilib_crypto_sm9_sm9kem_decapsulate", key.handle, *cls.hash_name(), data, length, Bytes.mutable(out), len(out))
 
 
 class SM9Cipher(Marker, abstract=True):
@@ -410,7 +408,7 @@ class SM9PKE(SM9Scheme):
         arguments: list[Any] = [*cls.names(), *Text.encode(cls.CIPHER.C_TYPE), *Bytes.readable(master)]
         arguments.extend([*Bytes.readable(identity), hid, *Bytes.readable(message)])
         handle, name, length = random.source()
-        return Library.default().output(f"{P}_sm9pke_encrypt", *arguments, handle, name, length)
+        return Library.default().output("umilib_crypto_sm9_sm9pke_encrypt", *arguments, handle, name, length)
 
     @classmethod
     def encrypt_with_ephemeral(
@@ -429,7 +427,7 @@ class SM9PKE(SM9Scheme):
         with source:
             with source.locked():
                 data, length = source.location()
-                return Library.default().output(f"{P}_sm9pke_encrypt_with_ephemeral", *arguments, data, length)
+                return Library.default().output("umilib_crypto_sm9_sm9pke_encrypt_with_ephemeral", *arguments, data, length)
 
     @classmethod
     def decrypt(cls, key: SM9EncryptUserKey, ciphertext: bytes | bytearray | memoryview) -> bytearray:
@@ -438,7 +436,7 @@ class SM9PKE(SM9Scheme):
         cls.check_key(key)
         data, length = Bytes.readable(ciphertext)
         return Library.default().output_secret(
-            f"{P}_sm9pke_decrypt", key.handle, *cls.hash_name(), *Text.encode(cls.CIPHER.C_TYPE), data, length
+            "umilib_crypto_sm9_sm9pke_decrypt", key.handle, *cls.hash_name(), *Text.encode(cls.CIPHER.C_TYPE), data, length
         )
 
 

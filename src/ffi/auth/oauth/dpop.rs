@@ -110,12 +110,13 @@ crate::ffi_functions! {
 
     /// Writes a verifier taking the `count` JWS algorithms at `algorithms`, with an `iat` at most
     /// `maximum_age` seconds old and `leeway` seconds ahead, requiring a nonce if
-    /// `require_nonce`, and keeping at most `maximum_proofs` identifiers, into `out`.
-    pub unsafe extern "C" fn umilib_auth_oauth_dpop_verifier_new(algorithms: *const u8, count: usize, maximum_age: i64, leeway: i64, require_nonce: bool, maximum_proofs: usize, out: *mut *mut DPoPVerifier) -> *const Status {
+    /// `require_nonce`, keeping at most `maximum_proofs` identifiers, and taking the
+    /// `previous_nonces` nonces made before the current one, into `out`.
+    pub unsafe extern "C" fn umilib_auth_oauth_dpop_verifier_new(algorithms: *const u8, count: usize, maximum_age: i64, leeway: i64, require_nonce: bool, maximum_proofs: usize, previous_nonces: usize, out: *mut *mut DPoPVerifier) -> *const Status {
         Status::from_result((|| {
             // SAFETY: the caller passes readable bytes and a writable pointer.
             let algorithms = unsafe { OAuthStatus::algorithms(algorithms, count) }?;
-            let config = DPoPConfig { algorithms, maximum_age, leeway, require_nonce, maximum_proofs };
+            let config = DPoPConfig { algorithms, maximum_age, leeway, require_nonce, maximum_proofs, previous_nonces };
             unsafe { Pointer::write_handle(out, DPoPVerifier::new(config)) }
         })())
     }

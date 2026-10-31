@@ -14,18 +14,29 @@ use crate::platform::unix::{Interest, PollEvent, PollMode, Socket};
 pub struct Poller {
     epoll: OwnedFd,
     notifier: EventFD,
+    maximum_events: usize,
 }
 
 impl Poller {
-    /// The most events one wait returns.
-    pub const MAXIMUM_EVENTS: usize = 256;
+    /// The most events one wait returns, by default.
+    pub const DEFAULT_MAXIMUM_EVENTS: usize = 256;
 
+    /// A poller whose waits return at most [`Poller::DEFAULT_MAXIMUM_EVENTS`] events.
     pub fn new() -> io::Result<Poller> {
+        Poller::with_maximum_events(Poller::DEFAULT_MAXIMUM_EVENTS)
+    }
+
+    /// A poller whose waits return at most `maximum_events` events (1 to
+    /// `i32::MAX`, the range `epoll_wait` takes; `InvalidInput` otherwise).
+    pub fn with_maximum_events(maximum_events: usize) -> io::Result<Poller> {
+        if maximum_events == 0 || i32::try_from(maximum_events).is_err() {
+            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+        }
         // SAFETY: a plain flag; the result is checked.
         let epoll = Socket::check(unsafe { sys::epoll_create1(Linux::EPOLL_CLOEXEC) })?;
         // SAFETY: the descriptor was just created and is owned by nothing else.
         let epoll = unsafe { OwnedFd::from_raw_fd(epoll) };
-        let poller = Poller { epoll, notifier: EventFD::new()? };
+        let poller = Poller { epoll, notifier: EventFD::new()?, maximum_events };
         poller.control(Linux::EPOLL_CTL_ADD, poller.notifier.as_raw_fd(), PollEvent::NOTIFY, Linux::EPOLLIN)?;
         Ok(poller)
     }
@@ -74,6 +85,11 @@ impl Poller {
         if token == PollEvent::NOTIFY { Err(io::Error::from(io::ErrorKind::InvalidInput)) } else { Ok(()) }
     }
 
+    /// The most events one wait returns.
+    pub fn maximum_events(&self) -> usize {
+        self.maximum_events
+    }
+
     /// The milliseconds of `timeout` for `epoll_wait`, rounded up (-1 for none).
     pub fn milliseconds(timeout: Option<Duration>) -> i32 {
         timeout.map_or(-1, |timeout| {
@@ -83,15 +99,19 @@ impl Poller {
     }
 
     /// Waits at most `timeout` (forever if `None`) for events, and replaces
-    /// the contents of `events` with them (at most [`Poller::MAXIMUM_EVENTS`]);
+    /// the contents of `events` with them (at most [`Poller::maximum_events`]);
     /// a notification is one event of token [`PollEvent::NOTIFY`]. An
     /// interrupted wait returns no events.
     pub fn wait(&self, events: &mut Vec<PollEvent>, timeout: Option<Duration>) -> io::Result<usize> {
         events.clear();
-        let mut raw = [EpollEvent::default(); Poller::MAXIMUM_EVENTS];
-        // SAFETY: the array is writable for the count given; the result is checked.
+        let mut raw = Vec::new();
+        raw.try_reserve_exact(self.maximum_events).map_err(|_| io::Error::from(io::ErrorKind::OutOfMemory))?;
+        raw.resize(self.maximum_events, EpollEvent::default());
+        // The constructor checked that the count fits in an `i32`.
+        let capacity = i32::try_from(raw.len()).map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))?;
+        // SAFETY: the buffer is writable for the count given; the result is checked.
         let result = unsafe {
-            sys::epoll_wait(self.epoll.as_raw_fd(), raw.as_mut_ptr(), raw.len() as i32, Poller::milliseconds(timeout))
+            sys::epoll_wait(self.epoll.as_raw_fd(), raw.as_mut_ptr(), capacity, Poller::milliseconds(timeout))
         };
         let count = match Socket::check(result) {
             Ok(count) => count as usize,

@@ -88,11 +88,45 @@ How `protocol::dhcp` is built and why. The user's view is `docs/protocol-dhcp.md
 - **Relays nest at most HOP_COUNT_LIMIT (8) deep** (§7.6): a deeper
   Relay-forward is not answered. Unbounded, one datagram nested a thousand
   times deep took tens of megabytes and could overflow the stack.
-- **Bindings are kept by address** (and prefix length), so that finding a
-  free address costs a lookup per candidate rather than a scan of every
-  binding. Each IA has addresses of its own (§12): the addresses of a
-  client's other IAs, and those already given in the same reply, are not
-  free for it.
+- **Bindings are kept by address** (and prefix length). Each IA has
+  addresses of its own (§12): the addresses of a client's other IAs, and
+  those already given in the same reply (a `BTreeSet`), are not free for it.
+- **The first free candidate is found by walking the bindings,** not the
+  pool. `allocate` iterates the bindings of the pool's range in order
+  beside the candidates, so every candidate passed over is a binding or one
+  already chosen, and the cost is of the bindings, not of the pool's size.
+  The first design tried candidates one by one from the start of the pool
+  and capped the search at 65536 addresses and 2^16 prefixes so that a
+  /64 pool would not loop for ever. The caps were hidden: the server
+  accepted a pool it could lease only the start of. Rejected alternatives:
+  rejecting pools larger than the cap (a /64 of addresses is the normal
+  case), a configurable cap (the same hidden limit with a knob), and a
+  cursor kept between messages (state beside the public `bindings` that a
+  caller restoring bindings would have to keep in step). A prefix with bits
+  set past its length is refused, because the candidates are added to it
+  and would carry the stray bits.
+- **The work of a message is bounded** (audit finding). A message of up to
+  64 KiB holds about 4000 empty IAs, and each IA cost a scan of the
+  bindings (`held`) and a search of the pool that grew with the IAs before
+  it (`chosen` was a `Vec`). One Solicit stalled the server and one Request
+  bound every IA. Now `maximum_ias` (16) IAs get addresses; the others are
+  answered NoAddrsAvail or NoPrefixAvail, which §18.3.9 requires of an IA
+  given nothing (leaving them out of the reply would break that MUST).
+  Release and Decline look each named address up by its key instead of
+  scanning every binding.
+- **The bindings are bounded** (`maximum_bindings`, 65536). An IPv6 pool is
+  far larger than any memory, and DUIDs cost an attacker nothing, so without
+  a bound bindings grow until memory ends. A limit per client was
+  considered and rejected: a client chooses its DUID, so a limit per DUID
+  bounds nothing; the global limit is what bounds memory. An Advertise counts
+  the bindings it would add, so that it offers what a Request would get.
+- **A declined address is out for `decline_time`** (an hour by default, as
+  DHCPv4's `decline_time`). §18.3.8 asks that declined addresses not be
+  assigned to other clients and gives no duration; kept for ever (the first
+  design), a client could request and decline addresses to grow the bindings
+  and empty the pool without end. ISC Kea likewise uses a probation period.
+  `Duration::MAX` keeps them for ever. A declined binding ends at
+  `expires`, and `expire` forgets it then.
 - **A client keeps what is usable, and what a Reply does not name**
   (§18.2.10.1): an IA of T1 above a nonzero T2 is discarded (§21.4), as are
   addresses and prefixes of a preferred lifetime above the valid one

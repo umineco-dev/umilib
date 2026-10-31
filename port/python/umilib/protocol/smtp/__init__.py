@@ -20,7 +20,6 @@ from typing import Any, ClassVar
 
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Nanoseconds, Text
 
-P = "umilib_protocol_smtp"
 
 __all__ = [
     "SMTPClient",
@@ -81,18 +80,18 @@ class SMTPReply:
     def decode(cls, wire: bytes) -> SMTPReply:
         """The reply of its text on the wire: its lines, each with its CRLF."""
         code, lines = ctypes.c_uint16(), Buffer()
-        Library.default().call(f"{P}_smtp_reply_decode", *Bytes.readable(wire), ctypes.byref(code), ctypes.byref(lines))
+        Library.default().call("umilib_protocol_smtp_smtp_reply_decode", *Bytes.readable(wire), ctypes.byref(code), ctypes.byref(lines))
         return cls(code.value, Library.default().take(lines).split(b"\n"))
 
     def encode(self) -> bytes:
         """The text on the wire; raises ``Syntax`` for a code or a line SMTP cannot carry."""
-        return Library.default().output(f"{P}_smtp_reply_encode", self.code, *Bytes.readable(b"\n".join(self.lines)))
+        return Library.default().output("umilib_protocol_smtp_smtp_reply_encode", self.code, *Bytes.readable(b"\n".join(self.lines)))
 
     def status(self) -> SMTPEnhancedStatus | None:
         """The enhanced status code at the start of the first line, of the reply's class (RFC 2034 §4)."""
         found, class_, subject, detail = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_uint16(), ctypes.c_uint16()
         Library.default().call(
-            f"{P}_smtp_reply_status", *Bytes.readable(self.encode()), ctypes.byref(found), ctypes.byref(class_),
+            "umilib_protocol_smtp_smtp_reply_status", *Bytes.readable(self.encode()), ctypes.byref(found), ctypes.byref(class_),
             ctypes.byref(subject), ctypes.byref(detail),
         )  # fmt: skip
         return SMTPEnhancedStatus(class_.value, subject.value, detail.value) if found.value else None
@@ -123,7 +122,7 @@ class SMTPCommand:
     def parse(cls, line: bytes | str, utf8: bool = False) -> SMTPCommand:
         """The command of ``line``; UTF-8 in its paths only if ``utf8`` (RFC 6531). Raises ``Syntax``."""
         data = line.encode("utf-8") if isinstance(line, str) else line
-        return cls(Library.default().output(f"{P}_smtp_command_normalize", *Bytes.readable(data), utf8).decode("utf-8"))
+        return cls(Library.default().output("umilib_protocol_smtp_smtp_command_normalize", *Bytes.readable(data), utf8).decode("utf-8"))
 
     @property
     def verb(self) -> str:
@@ -143,12 +142,12 @@ class SMTPMailbox:
     @classmethod
     def parse(cls, text: str, utf8: bool = False) -> SMTPMailbox:
         local, domain = Buffer(), Buffer()
-        Library.default().call(f"{P}_smtp_mailbox_parse", *Text.encode(text), utf8, ctypes.byref(local), ctypes.byref(domain))
+        Library.default().call("umilib_protocol_smtp_smtp_mailbox_parse", *Text.encode(text), utf8, ctypes.byref(local), ctypes.byref(domain))
         return cls(Library.default().take(local).decode("utf-8"), Library.default().take(domain).decode("utf-8"))
 
     def __str__(self) -> str:
         """The mailbox as it is written, its local part quoted where it must be."""
-        return Library.default().output(f"{P}_smtp_mailbox_format", *Text.encode(self.local), *Text.encode(self.domain)).decode("utf-8")
+        return Library.default().output("umilib_protocol_smtp_smtp_mailbox_format", *Text.encode(self.local), *Text.encode(self.domain)).decode("utf-8")
 
 
 class SMTPXText:
@@ -156,12 +155,12 @@ class SMTPXText:
 
     @staticmethod
     def encode(data: bytes) -> str:
-        return Library.default().output(f"{P}_smtp_xtext_encode", *Bytes.readable(data)).decode("ascii")
+        return Library.default().output("umilib_protocol_smtp_smtp_xtext_encode", *Bytes.readable(data)).decode("ascii")
 
     @staticmethod
     def decode(text: bytes | str) -> bytes:
         data = text.encode("ascii") if isinstance(text, str) else text
-        return Library.default().output(f"{P}_smtp_xtext_decode", *Bytes.readable(data))
+        return Library.default().output("umilib_protocol_smtp_smtp_xtext_decode", *Bytes.readable(data))
 
 
 class SMTPData:
@@ -172,31 +171,31 @@ class SMTPData:
         """``message`` with a period added to each line that begins with one, a CRLF if it does not
         end with one, and the CRLF.CRLF that ends it. Raises ``Content`` for a CR or an LF alone and
         ``TooLong`` for a line longer than ``maximum_line`` with its CRLF."""
-        return Library.default().output(f"{P}_smtp_data_encode", *Bytes.readable(message), maximum_line)
+        return Library.default().output("umilib_protocol_smtp_smtp_data_encode", *Bytes.readable(message), maximum_line)
 
 
 class SMTPDataReader(Handle):
     """A reader of mail data: removes the periods added for transparency and finds its end."""
 
-    FREE = f"{P}_smtp_data_reader_free"
+    FREE = "umilib_protocol_smtp_smtp_data_reader_free"
 
     @classmethod
     def new(cls, maximum_size: int, maximum_line: int) -> SMTPDataReader:
-        return cls(Handle.create(f"{P}_smtp_data_reader_new", maximum_size, maximum_line))
+        return cls(Handle.create("umilib_protocol_smtp_smtp_data_reader_new", maximum_size, maximum_line))
 
     def read(self, data: bytes) -> tuple[int, bytes]:
         """Reads ``data`` to the end of the mail data: how many octets were read, and the data."""
         read, out, end = ctypes.c_size_t(), Buffer(), ctypes.c_bool()
-        self.library.call(f"{P}_smtp_data_reader_read", self.handle, *Bytes.readable(data), ctypes.byref(read), ctypes.byref(out), ctypes.byref(end))
+        self.library.call("umilib_protocol_smtp_smtp_data_reader_read", self.handle, *Bytes.readable(data), ctypes.byref(read), ctypes.byref(out), ctypes.byref(end))
         return read.value, self.library.take(out)
 
     def is_end(self) -> bool:
-        return self.library.value(f"{P}_smtp_data_reader_is_end", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_smtp_smtp_data_reader_is_end", ctypes.c_bool, self.handle)
 
     def error(self) -> SMTPError | None:
         """Why the data cannot be taken: too large, a CR or an LF alone, or a line too long."""
         status = ctypes.c_void_p()
-        self.library.call(f"{P}_smtp_data_reader_error", self.handle, ctypes.byref(status))
+        self.library.call("umilib_protocol_smtp_smtp_data_reader_error", self.handle, ctypes.byref(status))
         return self.library.error(status.value)
 
 
@@ -223,7 +222,7 @@ class SMTPExtensions:
     @classmethod
     def from_reply(cls, reply: SMTPReply) -> SMTPExtensions:
         greeting, entries = Buffer(), Buffer()
-        Library.default().call(f"{P}_smtp_extensions_decode", *Bytes.readable(reply.encode()), ctypes.byref(greeting), ctypes.byref(entries))
+        Library.default().call("umilib_protocol_smtp_smtp_extensions_decode", *Bytes.readable(reply.encode()), ctypes.byref(greeting), ctypes.byref(entries))
         lines = Library.default().take(entries).decode("utf-8")
         return cls(Library.default().take(greeting).decode("utf-8"), [SMTPExtension.parse(line) for line in lines.split("\n") if line])
 
@@ -251,7 +250,7 @@ class SMTPMailExchanger:
         lower than theirs are removed. Raises ``NoMail`` for a null MX (RFC 7505) and when none is left."""
         names = Text.array(local)
         text = Library.default().output(
-            f"{P}_smtp_mail_exchanger_order", *Text.encode(domain), *Text.encode(records), *names[:2], *random.source(),
+            "umilib_protocol_smtp_smtp_mail_exchanger_order", *Text.encode(domain), *Text.encode(records), *names[:2], *random.source(),
         ).decode("utf-8")  # fmt: skip
         hosts = [line.split(" ", 1) for line in text.split("\n") if line]
         return [cls(int(preference), host) for preference, host in hosts]
@@ -276,7 +275,7 @@ class SMTPConfig:
     #: Whether a client sends a password as it is (AUTH PLAIN or LOGIN) only under TLS (RFC 2595 §2.3).
     passwords_require_tls: bool
 
-    C_TYPE: ClassVar[str] = f"{P}_SMTPConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_smtp_SMTPConfig"
     DURATIONS: ClassVar[tuple[str, ...]] = (
         "greeting_timeout", "command_timeout", "data_initiation_timeout", "data_termination_timeout", "server_timeout",
     )  # fmt: skip
@@ -284,7 +283,7 @@ class SMTPConfig:
     @classmethod
     def default(cls) -> SMTPConfig:
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_smtp_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_smtp_smtp_config_default", ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -326,14 +325,14 @@ class SMTPServerConfig:
     requires_auth: bool
     commands: list[str]
 
-    C_TYPE: ClassVar[str] = f"{P}_SMTPServerConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_smtp_SMTPServerConfig"
     LISTS: ClassVar[tuple[str, ...]] = ("domain", "auth_mechanisms", "plaintext_mechanisms", "commands")
 
     @classmethod
     def default(cls) -> SMTPServerConfig:
         """The defaults of the library: a domain of ``localhost``, no mechanism or command offered."""
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_smtp_server_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_smtp_smtp_server_config_default", ctypes.byref(structure))
         values = {field.name: getattr(structure, field.name) for field in dataclasses.fields(cls) if field.name not in cls.LISTS}
         return cls(domain="localhost", auth_mechanisms=[], plaintext_mechanisms=[], commands=[], **values)
 
@@ -385,7 +384,7 @@ class SMTPClientEvent:
         found, kind, last, error = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_bool(), ctypes.c_void_p()
         command, reply, data = Buffer(), Buffer(), Buffer()
         library.call(
-            f"{P}_smtp_client_poll_event", client.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
+            "umilib_protocol_smtp_smtp_client_poll_event", client.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
             ctypes.byref(reply), ctypes.byref(data), ctypes.byref(last), ctypes.byref(error),
         )  # fmt: skip
         line, wire, data_bytes = library.take(command), library.take(reply), library.take(data)
@@ -417,7 +416,7 @@ class SMTPServerEvent:
         found, kind, last, error = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_bool(), ctypes.c_void_p()
         command, reply, data = Buffer(), Buffer(), Buffer()
         library.call(
-            f"{P}_smtp_server_poll_event", server.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
+            "umilib_protocol_smtp_smtp_server_poll_event", server.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
             ctypes.byref(reply), ctypes.byref(data), ctypes.byref(last), ctypes.byref(error),
         )  # fmt: skip
         line, _, data_bytes = library.take(command), library.take(reply), library.take(data)
@@ -434,52 +433,52 @@ class SMTPClient(Handle):
     the extensions the server advertised, pipelines where PIPELINING allows (RFC 2920), and pairs
     each reply with its command."""
 
-    FREE = f"{P}_smtp_client_free"
+    FREE = "umilib_protocol_smtp_smtp_client_free"
 
     @classmethod
     def new(cls, config: SMTPConfig | None, secure: bool, now: int) -> SMTPClient:
         """A client of a new connection, ``secure`` if it is TLS from its start (RFC 8314)."""
-        return cls(Handle.create(f"{P}_smtp_client_new", (config or SMTPConfig.default()).to_structure(), secure, now))
+        return cls(Handle.create("umilib_protocol_smtp_smtp_client_new", (config or SMTPConfig.default()).to_structure(), secure, now))
 
     def is_open(self) -> bool:
-        return self.library.value(f"{P}_smtp_client_is_open", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_smtp_smtp_client_is_open", ctypes.c_bool, self.handle)
 
     def has_extension(self, keyword: str) -> bool:
-        return self.library.value(f"{P}_smtp_client_has_extension", ctypes.c_bool, self.handle, *Text.encode(keyword))
+        return self.library.value("umilib_protocol_smtp_smtp_client_has_extension", ctypes.c_bool, self.handle, *Text.encode(keyword))
 
     def receive(self, data: bytes, now: int) -> None:
-        self.library.call(f"{P}_smtp_client_receive", self.handle, *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_smtp_smtp_client_receive", self.handle, *Bytes.readable(data), now)
 
     def send(self, command: SMTPCommand | str, now: int, utf8: bool = False) -> None:
         """Queues ``command``; raises ``State`` for one the state or the server's extensions do not allow."""
         line = str(command).encode("utf-8")
-        self.library.call(f"{P}_smtp_client_send", self.handle, *Bytes.readable(line), utf8, now)
+        self.library.call("umilib_protocol_smtp_smtp_client_send", self.handle, *Bytes.readable(line), utf8, now)
 
     def send_data(self, message: bytes, now: int) -> None:
         """Sends ``message`` as the mail data, after the 354 to DATA."""
-        self.library.call(f"{P}_smtp_client_send_data", self.handle, *Bytes.readable(message), now)
+        self.library.call("umilib_protocol_smtp_smtp_client_send_data", self.handle, *Bytes.readable(message), now)
 
     def send_chunk(self, data: bytes, last: bool, now: int) -> None:
         """Sends ``data`` as a chunk of BDAT, the last of the message if ``last`` (RFC 3030)."""
-        self.library.call(f"{P}_smtp_client_send_chunk", self.handle, *Bytes.readable(data), last, now)
+        self.library.call("umilib_protocol_smtp_smtp_client_send_chunk", self.handle, *Bytes.readable(data), last, now)
 
     def auth_respond(self, response: bytes, now: int) -> None:
-        self.library.call(f"{P}_smtp_client_auth_respond", self.handle, *Bytes.readable(response), now)
+        self.library.call("umilib_protocol_smtp_smtp_client_auth_respond", self.handle, *Bytes.readable(response), now)
 
     def auth_cancel(self, now: int) -> None:
-        self.library.call(f"{P}_smtp_client_auth_cancel", self.handle, now)
+        self.library.call("umilib_protocol_smtp_smtp_client_auth_cancel", self.handle, now)
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_smtp_client_transmit", self.handle)
+        return self.library.output("umilib_protocol_smtp_smtp_client_transmit", self.handle)
 
     def poll_event(self) -> SMTPClientEvent | None:
         return SMTPClientEvent.poll(self)
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_smtp_client_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_smtp_smtp_client_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_smtp_client_expire", self.handle, now)
+        self.library.call("umilib_protocol_smtp_smtp_client_expire", self.handle, now)
 
 
 class SMTPServer(Handle):
@@ -487,59 +486,59 @@ class SMTPServer(Handle):
     QUIT, commands out of sequence or of extensions not offered, limits) and tells the caller each
     other command, one at a time, to answer with :meth:`reply`."""
 
-    FREE = f"{P}_smtp_server_free"
+    FREE = "umilib_protocol_smtp_smtp_server_free"
 
     @classmethod
     def new(cls, config: SMTPConfig | None, server: SMTPServerConfig | None, secure: bool) -> SMTPServer:
         server = server or SMTPServerConfig.default()
         mechanisms, plaintext, commands = Text.array(server.auth_mechanisms), Text.array(server.plaintext_mechanisms), Text.array(server.commands)
         return cls(Handle.create(
-            f"{P}_smtp_server_new", (config or SMTPConfig.default()).to_structure(), server.to_structure(),
+            "umilib_protocol_smtp_smtp_server_new", (config or SMTPConfig.default()).to_structure(), server.to_structure(),
             *Text.encode(server.domain), *mechanisms[:2], *plaintext[:2], *commands[:2], secure,
         ))  # fmt: skip
 
     def is_open(self) -> bool:
-        return self.library.value(f"{P}_smtp_server_is_open", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_smtp_smtp_server_is_open", ctypes.c_bool, self.handle)
 
     def greeting(self) -> SMTPReply:
         """The 220 of the server's domain."""
-        return SMTPReply.decode(self.library.output(f"{P}_smtp_server_greeting", self.handle))
+        return SMTPReply.decode(self.library.output("umilib_protocol_smtp_smtp_server_greeting", self.handle))
 
     def greet(self, reply: SMTPReply, now: int) -> None:
         """Sends the greeting: 220, or 554 if the server takes no mail (RFC 5321 §3.1)."""
-        self.library.call(f"{P}_smtp_server_greet", self.handle, *Bytes.readable(reply.encode()), now)
+        self.library.call("umilib_protocol_smtp_smtp_server_greet", self.handle, *Bytes.readable(reply.encode()), now)
 
     def extensions(self) -> SMTPExtensions:
         """The extensions the server would advertise now."""
-        return SMTPExtensions.from_reply(SMTPReply.decode(self.library.output(f"{P}_smtp_server_extensions", self.handle)))
+        return SMTPExtensions.from_reply(SMTPReply.decode(self.library.output("umilib_protocol_smtp_smtp_server_extensions", self.handle)))
 
     def wants_receive(self) -> bool:
         """Whether the server takes more input now: stop reading the connection while it is false,
         so that a peer that pipelines cannot make it hold more than ``maximum_buffered``."""
-        return self.library.value(f"{P}_smtp_server_wants_receive", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_smtp_smtp_server_wants_receive", ctypes.c_bool, self.handle)
 
     def receive(self, data: bytes, now: int) -> None:
-        self.library.call(f"{P}_smtp_server_receive", self.handle, *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_smtp_smtp_server_receive", self.handle, *Bytes.readable(data), now)
 
     def reply(self, reply: SMTPReply, now: int) -> None:
         """Answers the command, data or AUTH exchange told; raises ``State`` if none waits."""
-        self.library.call(f"{P}_smtp_server_reply", self.handle, *Bytes.readable(reply.encode()), now)
+        self.library.call("umilib_protocol_smtp_smtp_server_reply", self.handle, *Bytes.readable(reply.encode()), now)
 
     def auth_challenge(self, challenge: bytes, now: int) -> None:
-        self.library.call(f"{P}_smtp_server_auth_challenge", self.handle, *Bytes.readable(challenge), now)
+        self.library.call("umilib_protocol_smtp_smtp_server_auth_challenge", self.handle, *Bytes.readable(challenge), now)
 
     def shutdown(self, text: str) -> None:
-        """Closes the connection with 421 (RFC 5321 §3.8)."""
-        self.library.call(f"{P}_smtp_server_shutdown", self.handle, *Text.encode(text))
+        """Closes the connection with 421 (RFC 5321 §3.8); raises ``Syntax`` for a line break in ``text``."""
+        self.library.call("umilib_protocol_smtp_smtp_server_shutdown", self.handle, *Text.encode(text))
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_smtp_server_transmit", self.handle)
+        return self.library.output("umilib_protocol_smtp_smtp_server_transmit", self.handle)
 
     def poll_event(self) -> SMTPServerEvent | None:
         return SMTPServerEvent.poll(self)
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_smtp_server_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_smtp_smtp_server_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_smtp_server_expire", self.handle, now)
+        self.library.call("umilib_protocol_smtp_smtp_server_expire", self.handle, now)

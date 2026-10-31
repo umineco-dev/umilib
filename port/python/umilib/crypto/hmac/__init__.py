@@ -14,13 +14,11 @@ from umilib.crypto import MAC, Specialization
 from umilib.ffi import Bytes, Handle, Library, Preset, Text
 from umilib.hash import CryptographicDigest
 
-P = "umilib_crypto_hmac_hmac"
-
 
 class HMAC(MAC):
     """HMAC over the hash function ``HMAC[H]``; the key is absorbed once."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_hmac_hmac"
     #: The C type name, by which the KDFs select HMAC as their PRF.
     C_TYPE: ClassVar[str] = "umilib_crypto_hmac_HMAC"
     HASH: ClassVar[type[CryptographicDigest] | None] = None
@@ -44,7 +42,7 @@ class HMAC(MAC):
         hash = Specialization.require(self.HASH, "HMAC")
         name, name_length = Text.encode(hash.C_TYPE)
         data, length = Bytes.readable(key)
-        super().__init__(Handle.create(f"{P}_new", name, name_length, data, length))
+        super().__init__(Handle.create("umilib_crypto_hmac_hmac_new", name, name_length, data, length))
 
     @classmethod
     def new(cls, key: bytes | bytearray | memoryview) -> Any:
@@ -58,22 +56,22 @@ class HMAC(MAC):
         key_data, key_length = Bytes.readable(key)
         data, length = Bytes.readable(data)
         out = (ctypes.c_uint8 * hash.OUTPUT_SIZE)()
-        Library.default().call(f"{P}_mac", name, name_length, key_data, key_length, data, length, out, len(out))
+        Library.default().call("umilib_crypto_hmac_hmac_mac", name, name_length, key_data, key_length, data, length, out, len(out))
         return bytes(out)
 
     def minimum_truncated_length(self) -> int:
-        return self.library.value(f"{P}_minimum_truncated_length", ctypes.c_size_t, self.handle)
+        return self.library.value("umilib_crypto_hmac_hmac_minimum_truncated_length", ctypes.c_size_t, self.handle)
 
     def finalize_reset(self) -> bytes:
         """The tag of the message; returns the state to the key."""
         out = (ctypes.c_uint8 * self.output_size())()
-        self.library.call(f"{P}_finalize_reset", self.handle, out, len(out))
+        self.library.call("umilib_crypto_hmac_hmac_finalize_reset", self.handle, out, len(out))
         return bytes(out)
 
     def verify_truncated(self, tag: bytes | bytearray | memoryview) -> bool:
         """Whether ``tag`` is the leftmost bytes of the tag, of at least
         ``MINIMUM_TRUNCATED_LENGTH`` bytes; releases the state."""
-        return self.verify_with(f"{P}_verify_truncated", tag)
+        return self.verify_with("umilib_crypto_hmac_hmac_verify_truncated", tag)
 
 
 __all__ = ["HMAC"]

@@ -11,7 +11,7 @@ use umilib::hash::sha::v2::{SHA224, SHA256, SHA384, SHA512, SHA512_224, SHA512_2
 use umilib::hash::sha::v3::{SHA3_224, SHA3_256, SHA3_384, SHA3_512};
 use umilib::math::bigint::BoxedUint;
 
-use crate::{Json, Record, Vectors, Wycheproof};
+use crate::{JSON, Record, Vectors, Wycheproof};
 
 /// Runs `$body` with the type `$hash` the hash function named `$name`, in
 /// any of the spellings of CAVP and Wycheproof ("SHA-256", "SHA256",
@@ -175,13 +175,13 @@ fn cavp_signatures() {
 }
 
 /// The public key of a Wycheproof group.
-fn public_key(group: &Json) -> RSAPublicKey {
+fn public_key(group: &JSON) -> RSAPublicKey {
     let key = group.field("publicKey");
     RSAPublicKey::new(&integer(key.field("modulus").as_str()), &integer(key.field("publicExponent").as_str())).unwrap()
 }
 
 /// The private key of a Wycheproof group, with its primes when it has them.
-fn private_key(group: &Json) -> RSAPrivateKey {
+fn private_key(group: &JSON) -> RSAPrivateKey {
     let key = group.field("privateKey");
     let field = |name: &str| integer(key.field(name).as_str());
     let public = RSAPublicKey::new(&field("modulus"), &field("publicExponent")).unwrap();
@@ -202,7 +202,7 @@ fn private_key(group: &Json) -> RSAPrivateKey {
 }
 
 /// Checks the result of a Wycheproof test: valid must succeed, invalid fail.
-fn check_result<T: core::fmt::Debug>(test: &Json, result: &Result<T, CryptoError>, label: &str) {
+fn check_result<T: core::fmt::Debug>(test: &JSON, result: &Result<T, CryptoError>, label: &str) {
     match test.field("result").as_str() {
         "valid" => assert!(result.is_ok(), "{label}: {result:?}"),
         "invalid" => assert!(result.is_err(), "{label}: {result:?}"),
@@ -373,6 +373,25 @@ fn mgf1() {
         expected.extend_from_slice(&hash.finalize());
     }
     assert_eq!(mask, expected[..70]);
+}
+
+#[test]
+#[cfg_attr(miri, ignore = "slow under Miri")]
+fn pss_with_a_modulus_of_8k_plus_1_bits() {
+    // RFC 8017 §8.1.1 and §8.1.2: emBits = modBits - 1, so a modulus of 8k + 1 bits has an encoded
+    // message of k bytes, one fewer than the signature, and no bits of its first byte are cleared.
+    let mut random = random();
+    let e = BoxedUint::from_u64(65537, 64).unwrap();
+    // Primes of 513 and 512 bits whose two top bits are set: their product has 1025 bits.
+    let p = RSAPrivateKey::generate_prime(513, &e, &mut random).unwrap();
+    let q = RSAPrivateKey::generate_prime(512, &e, &mut random).unwrap();
+    let key = RSAPrivateKey::from_primes(&p, &q, &e).unwrap();
+    let public = key.public_key();
+    assert_eq!((public.bits(), public.size()), (1025, 129));
+    let signature = RSAPSS::<SHA256>::sign(&key, b"m", 32, &mut random).unwrap();
+    assert_eq!(signature.len(), 129);
+    assert_eq!(RSAPSS::<SHA256>::verify(public, b"m", &signature, 32), Ok(()));
+    assert_eq!(RSAPSS::<SHA256>::verify(public, b"n", &signature, 32), Err(CryptoError::InvalidSignature));
 }
 
 #[test]

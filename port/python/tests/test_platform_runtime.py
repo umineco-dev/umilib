@@ -4,6 +4,7 @@ import threading
 
 import pytest
 
+from umilib.ffi import FFIError
 from umilib.platform.native import System
 from umilib.platform.runtime import MonotonicClock, Reactor, ThreadPool
 from umilib.runtime import RuntimeStatusError
@@ -54,6 +55,16 @@ def test_tasks_spawn_tasks_through_a_spawner():
     assert len(children) == 5
     for child in children:
         pool.block_on(child)
+
+
+def test_a_failed_spawn_keeps_no_callbacks():
+    pool = ThreadPool(1)
+    spawner = pool.spawner()
+    spawner.free()
+    with pytest.raises(FFIError) as error:
+        spawner.spawn(lambda waker: True)
+    assert error.value.name == "Closed"
+    assert pool.tasks.callbacks == {}
 
 
 def test_a_raising_task_ends_and_block_on_raises():

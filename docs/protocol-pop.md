@@ -88,6 +88,12 @@ while let Some(event) = server.poll_event() {
   before TLS too.
 - The autologout timer (10 minutes at least, §3) closes a silent session
   without a response.
+- `shutdown(text)` answers -ERR, of `[SYS/TEMP]` where response codes are
+  announced (RFC 3206 §4), and closes, for a server shutting down, without
+  the UPDATE state. While a multi-line response is being sent it closes
+  without a response, so that the client does not take the part sent as the
+  whole. Text of a CR, an LF or a NUL is refused (`Syntax`) and nothing is
+  written.
 - After the +OK to STLS, what was received before TLS is discarded (RFC
   2595 §4, CVE-2011-0411). Start TLS at `StartTLS`.
 

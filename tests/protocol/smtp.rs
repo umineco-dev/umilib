@@ -878,6 +878,33 @@ fn server_timeout_of_section_4_5_3_2_7() {
     assert!(!server.is_open());
 }
 
+/// §3.8: a server that must shut down replies 421 and closes; §4.2: a reply's text is of lines
+/// without CR or LF, so text of a line break, which would be replies of its own, is refused.
+#[test]
+fn server_shutdown_of_section_3_8() {
+    let mut server = SMTPServer::new(SMTPConfig::default(), SMTPServerConfig::default(), false).unwrap();
+    server.greet(server.greeting(), T0).unwrap();
+    let mut transcript = Transcript::default();
+    transcript.take(&mut server);
+    for text in ["bye\r\n250 OK", "bye\n250 OK", "bye\r", "bye\0"] {
+        assert!(server.shutdown(text).is_err(), "{text:?}");
+        let mut out = Vec::new();
+        server.transmit(&mut out);
+        assert!(out.is_empty(), "{text:?}");
+        assert!(server.is_open());
+    }
+    server.shutdown("Service not available, closing transmission channel").unwrap();
+    transcript.take(&mut server);
+    assert_eq!(codes(&transcript.replies), [220, 421]);
+    assert!(!server.is_open());
+    assert!(matches!(server.poll_event(), Some(SMTPServerEvent::Closed { error: None })));
+    // Nothing is written once closed.
+    server.shutdown("again").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert!(out.is_empty());
+}
+
 #[test]
 fn client_rules() {
     let ready = |extensions: &[u8]| {

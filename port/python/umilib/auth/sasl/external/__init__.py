@@ -5,28 +5,26 @@ from __future__ import annotations
 
 from umilib.ffi import Buffer, Bytes, Handle, Text
 
-P = "umilib_auth_sasl_external_external_message"
-
 
 class EXTERNALMessage(Handle):
     """The message of EXTERNAL: empty, or the authorization identity."""
 
-    FREE = f"{P}_free"
+    FREE = "umilib_auth_sasl_external_external_message_free"
 
     @staticmethod
     def new(authzid: str | None) -> EXTERNALMessage:
-        return EXTERNALMessage(Handle.create(f"{P}_new", *Text.encode(authzid)))
+        return EXTERNALMessage(Handle.create("umilib_auth_sasl_external_external_message_new", *Text.encode(authzid)))
 
     @staticmethod
     def decode(message: bytes | bytearray | memoryview) -> EXTERNALMessage:
-        return EXTERNALMessage(Handle.create(f"{P}_decode", *Bytes.readable(message)))
+        return EXTERNALMessage(Handle.create("umilib_auth_sasl_external_external_message_decode", *Bytes.readable(message)))
 
     def encode(self) -> bytes:
-        return self.library.output(f"{P}_encode", self.handle)
+        return self.library.output("umilib_auth_sasl_external_external_message_encode", self.handle)
 
     @property
     def authzid(self) -> str | None:
-        data = self.library.optional(f"{P}_authzid", Buffer, self.handle)
+        data = self.library.optional("umilib_auth_sasl_external_external_message_authzid", Buffer, self.handle)
         return None if data is None else data.decode()
 
 

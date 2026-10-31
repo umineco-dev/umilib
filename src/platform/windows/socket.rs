@@ -49,8 +49,11 @@ impl SocketKind {
 
 /// The protocol information of a socket for another process
 /// (`WSAPROTOCOL_INFOW`), from [`Socket::duplicate`]: that process makes a
-/// socket of it with [`Socket::from_duplicate`].
+/// socket of it with [`Socket::from_duplicate`]. It has the alignment of
+/// `WSAPROTOCOL_INFOW` (4: its widest fields are `DWORD`s and `int`s), since
+/// Winsock reads and writes it in place as that structure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(C, align(4))]
 pub struct SocketDuplicate {
     pub bytes: [u8; Windows::PROTOCOL_INFO_SIZE],
 }

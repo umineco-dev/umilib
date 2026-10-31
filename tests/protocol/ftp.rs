@@ -461,6 +461,31 @@ fn rfc4217_ftps() {
     assert!(client.send(FTPCommand::Auth("TLS".into()), T0).is_err(), "TLS in use");
 }
 
+/// §4.2 and §5.4: 421 when the server must close the control connection, for shutting down; a
+/// reply's lines are ended by CRLF, so text of a line break, which would be replies of its own,
+/// is refused.
+#[test]
+fn shutdown_of_section_4_2() {
+    let mut server = logged_in_server(FTPServerConfig::default(), peer());
+    for text in ["bye\r\n226 done", "bye\n226 done", "bye\r", "bye\0"] {
+        assert!(server.shutdown(text).is_err(), "{text:?}");
+        let mut out = Vec::new();
+        server.transmit(&mut out);
+        assert!(out.is_empty(), "{text:?}");
+        assert!(server.is_open());
+    }
+    server.shutdown("Service not available, closing control connection").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert_eq!(out, b"421 Service not available, closing control connection\r\n");
+    assert!(!server.is_open());
+    assert!(matches!(server.poll_event(), Some(FTPServerEvent::Closed { error: None })));
+    server.shutdown("again").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert!(out.is_empty());
+}
+
 #[test]
 fn sequences_of_section_5_4() {
     let mut server = FTPServer::new(FTPConfig::default(), FTPServerConfig::default(), peer(), false).unwrap();

@@ -39,6 +39,7 @@
 #include "umilib/codec/filter.h"
 #include "umilib/codec/filter/bcj.h"
 #include "umilib/codec/filter/delta.h"
+#include "umilib/codec/fse.h"
 #include "umilib/codec/gzip.h"
 #include "umilib/codec/hpack.h"
 #include "umilib/codec/huffman.h"

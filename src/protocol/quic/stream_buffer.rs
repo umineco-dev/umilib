@@ -21,6 +21,12 @@ pub struct QUICReceiveBuffer {
 }
 
 impl QUICReceiveBuffer {
+    /// The size up to which a piece that follows the chunk before it is
+    /// appended to that chunk instead of kept on its own, so that data
+    /// arriving in small pieces is not one allocation each, while reading
+    /// part of a chunk never moves more than this many bytes.
+    pub const CHUNK_SIZE: usize = 16 * 1024;
+
     pub fn new() -> QUICReceiveBuffer {
         QUICReceiveBuffer::default()
     }
@@ -52,7 +58,15 @@ impl QUICReceiveBuffer {
                 next => {
                     let gap_end = next.map_or(end, |range| (*range.start()).min(end));
                     let piece = &data[(position - offset) as usize..(gap_end - offset) as usize];
-                    self.chunks.insert(position, piece.to_vec());
+                    let previous = self.chunks.range_mut(..position).next_back().filter(|(start, chunk)| {
+                        **start + chunk.len() as u64 == position && chunk.len() < QUICReceiveBuffer::CHUNK_SIZE
+                    });
+                    match previous {
+                        Some((_, chunk)) => chunk.extend_from_slice(piece),
+                        None => {
+                            self.chunks.insert(position, piece.to_vec());
+                        }
+                    }
                     self.received.insert(position..=gap_end - 1);
                     position = gap_end;
                 }
@@ -105,6 +119,13 @@ impl QUICReceiveBuffer {
     /// Whether the reader took every byte up to the final size.
     pub fn is_finished(&self) -> bool {
         self.final_size == Some(self.read)
+    }
+
+    /// The number of separate pieces held: what a peer that sends data in
+    /// many small pieces out of order makes grow (each is an allocation),
+    /// which [`QUICConfig::maximum_receive_fragments`](super::QUICConfig::maximum_receive_fragments) bounds.
+    pub fn fragments(&self) -> usize {
+        self.chunks.len()
     }
 
     /// The bytes held for the reader, received in order or not.

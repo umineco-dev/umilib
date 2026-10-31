@@ -17,7 +17,7 @@ impl<H: CryptographicDigest + Default> HOTP<H> {
     /// The shortest key: 128 bits (RFC 4226 R6; 160 are recommended).
     pub const MINIMUM_KEY_SIZE: usize = 16;
     /// The fewest digits of a password (RFC 4226 R4).
-    pub const MINIMUM_DIGITS: u32 = 6;
+    pub const MINIMUM_DIGITS: u32 = OTPCode::MINIMUM_DIGITS as u32;
     /// The most digits of a password: the truncated value is below 2^31.
     pub const MAXIMUM_DIGITS: u32 = OTPCode::MAXIMUM_DIGITS as u32;
 
@@ -54,8 +54,9 @@ impl<H: CryptographicDigest + Default> HOTP<H> {
         Some(u32::from_be_bytes(bytes) & 0x7FFF_FFFF)
     }
 
-    /// The password of `counter`.
-    pub fn generate(&self, counter: u64) -> OTPCode {
+    /// The password of `counter`. `new` checked the digits, so this fails
+    /// only as [`OTPCode::new`] would for them (never).
+    pub fn generate(&self, counter: u64) -> Result<OTPCode, OTPError> {
         let mut mac = self.mac.expose().clone();
         mac.update(&counter.to_be_bytes());
         let mut digest = mac.finalize();
@@ -74,7 +75,7 @@ impl<H: CryptographicDigest + Default> HOTP<H> {
         let mut found = None;
         for step in 0..=look_ahead {
             let Some(candidate) = counter.checked_add(step) else { break };
-            let expected = self.generate(candidate).to_ascii();
+            let Ok(expected) = self.generate(candidate).map(|code| code.to_ascii()) else { break };
             let length = self.digits as usize;
             let matches = code.len() == length && expected[..length].ct_eq(code).into_bool();
             if matches && found.is_none() {

@@ -21,7 +21,6 @@ from umilib.ffi import Buffer, Bytes, Fields, Handle, Library, Text, Words
 from umilib.protocol.dhcp import DHCPDUID, DHCPError, DHCPTime
 from umilib.protocol.ip import IPv6Address
 
-P = "umilib_protocol_dhcp_v6"
 
 __all__ = [
     "DHCPv6Client",
@@ -248,11 +247,11 @@ class DHCPv6StatusCode:
     def decode(cls, data: bytes | bytearray | memoryview) -> DHCPv6StatusCode:
         """Two bytes of code, then UTF-8 text; text that is not UTF-8 is replaced. Raises ``Malformed``."""
         code, buffer = ctypes.c_uint16(), Buffer()
-        Library.default().call(f"{P}_dhcpv6_status_code_decode", *Bytes.readable(data), ctypes.byref(code), ctypes.byref(buffer))
+        Library.default().call("umilib_protocol_dhcp_v6_dhcpv6_status_code_decode", *Bytes.readable(data), ctypes.byref(code), ctypes.byref(buffer))
         return cls(code.value, Library.default().take(buffer).decode("utf-8"))
 
     def encode(self) -> bytes:
-        return Library.default().output(f"{P}_dhcpv6_status_code_encode", self.code, *Text.encode(self.message))
+        return Library.default().output("umilib_protocol_dhcp_v6_dhcpv6_status_code_encode", self.code, *Text.encode(self.message))
 
 
 @dataclasses.dataclass
@@ -267,17 +266,17 @@ class DHCPv6IAAddress:
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> DHCPv6IAAddress:
         """Raises ``Malformed`` for data shorter than 24 bytes or an option cut short."""
-        structure, buffer = Library.default().type(f"{P}_DHCPv6IAAddress")(), Buffer()
-        Library.default().call(f"{P}_dhcpv6_ia_address_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
+        structure, buffer = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6IAAddress")(), Buffer()
+        Library.default().call("umilib_protocol_dhcp_v6_dhcpv6_ia_address_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
         options = DHCPv6Options.decode(Library.default().take(buffer))
         return cls(IPv6Address.from_structure(structure.address), structure.preferred, structure.valid, options)
 
     def encode(self) -> bytes:
-        structure = Library.default().type(f"{P}_DHCPv6IAAddress")()
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6IAAddress")()
         structure.address = self.address.to_structure()
         Fields.assign(structure, "preferred", self.preferred)
         Fields.assign(structure, "valid", self.valid)
-        return Library.default().output(f"{P}_dhcpv6_ia_address_encode", structure, *Bytes.readable(self.options.encode()))
+        return Library.default().output("umilib_protocol_dhcp_v6_dhcpv6_ia_address_encode", structure, *Bytes.readable(self.options.encode()))
 
 
 @dataclasses.dataclass
@@ -293,19 +292,19 @@ class DHCPv6IAPrefix:
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> DHCPv6IAPrefix:
         """Raises ``Malformed`` for data shorter than 25 bytes, a prefix longer than 128 bits or an option cut short."""
-        structure, buffer = Library.default().type(f"{P}_DHCPv6IAPrefix")(), Buffer()
-        Library.default().call(f"{P}_dhcpv6_ia_prefix_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
+        structure, buffer = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6IAPrefix")(), Buffer()
+        Library.default().call("umilib_protocol_dhcp_v6_dhcpv6_ia_prefix_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
         options = DHCPv6Options.decode(Library.default().take(buffer))
         return cls(structure.preferred, structure.valid, structure.length, IPv6Address.from_structure(structure.prefix), options)
 
     def encode(self) -> bytes:
         """Raises ``Malformed`` for a prefix longer than 128 bits."""
-        structure = Library.default().type(f"{P}_DHCPv6IAPrefix")()
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6IAPrefix")()
         Fields.assign(structure, "preferred", self.preferred)
         Fields.assign(structure, "valid", self.valid)
         Fields.assign(structure, "length", self.length)
         structure.prefix = self.prefix.to_structure()
-        return Library.default().output(f"{P}_dhcpv6_ia_prefix_encode", structure, *Bytes.readable(self.options.encode()))
+        return Library.default().output("umilib_protocol_dhcp_v6_dhcpv6_ia_prefix_encode", structure, *Bytes.readable(self.options.encode()))
 
 
 @dataclasses.dataclass
@@ -328,16 +327,16 @@ class DHCPv6IA:
     @classmethod
     def decode(cls, kind: int, data: bytes | bytearray | memoryview) -> DHCPv6IA:
         """The IA of the option ``kind`` of ``data``; raises ``Malformed`` for data shorter than 12 bytes or an option cut short."""
-        structure, buffer = Library.default().type(f"{P}_DHCPv6IA")(), Buffer()
-        Library.default().call(f"{P}_dhcpv6_ia_decode", kind, *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
+        structure, buffer = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6IA")(), Buffer()
+        Library.default().call("umilib_protocol_dhcp_v6_dhcpv6_ia_decode", kind, *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
         options = DHCPv6Options.decode(Library.default().take(buffer))
         return cls(DHCPv6OptionCode(structure.kind), structure.iaid, structure.t1, structure.t2, options)
 
     def encode(self) -> DHCPv6Option:
-        structure = Library.default().type(f"{P}_DHCPv6IA")()
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6IA")()
         for name in ("kind", "iaid", "t1", "t2"):
             Fields.assign(structure, name, getattr(self, name))
-        data = Library.default().output(f"{P}_dhcpv6_ia_encode", structure, *Bytes.readable(self.options.encode()))
+        data = Library.default().output("umilib_protocol_dhcp_v6_dhcpv6_ia_encode", structure, *Bytes.readable(self.options.encode()))
         return DHCPv6Option(DHCPv6OptionCode(self.kind), data)
 
     def addresses(self) -> list[DHCPv6IAAddress]:
@@ -372,16 +371,16 @@ class DHCPv6Message:
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> DHCPv6Message:
         """Raises ``Malformed`` for one shorter than 4 bytes, of a relay agent's type, or with an option cut short."""
-        structure, buffer = Library.default().type(f"{P}_DHCPv6Message")(), Buffer()
-        Library.default().call(f"{P}_dhcpv6_message_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
+        structure, buffer = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6Message")(), Buffer()
+        Library.default().call("umilib_protocol_dhcp_v6_dhcpv6_message_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
         return cls(DHCPv6MessageType(structure.kind), structure.transaction, DHCPv6Options.decode(Library.default().take(buffer)))
 
     def encode(self) -> bytes:
         """Raises ``Malformed`` for a relay agent's type or a transaction ID of more than 24 bits."""
-        structure = Library.default().type(f"{P}_DHCPv6Message")()
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6Message")()
         Fields.assign(structure, "kind", self.kind)
         Fields.assign(structure, "transaction", self.transaction)
-        return Library.default().output(f"{P}_dhcpv6_message_encode", structure, *Bytes.readable(self.options.encode()))
+        return Library.default().output("umilib_protocol_dhcp_v6_dhcpv6_message_encode", structure, *Bytes.readable(self.options.encode()))
 
 
 @dataclasses.dataclass
@@ -401,8 +400,8 @@ class DHCPv6RelayMessage:
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> DHCPv6RelayMessage:
         """Raises ``Malformed`` for one shorter than 34 bytes, of a type of no relay agent, or with an option cut short."""
-        structure, buffer = Library.default().type(f"{P}_DHCPv6RelayMessage")(), Buffer()
-        Library.default().call(f"{P}_dhcpv6_relay_message_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
+        structure, buffer = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6RelayMessage")(), Buffer()
+        Library.default().call("umilib_protocol_dhcp_v6_dhcpv6_relay_message_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
         options = DHCPv6Options.decode(Library.default().take(buffer))
         return cls(
             DHCPv6MessageType(structure.kind), structure.hops, IPv6Address.from_structure(structure.link),
@@ -411,12 +410,12 @@ class DHCPv6RelayMessage:
 
     def encode(self) -> bytes:
         """Raises ``Malformed`` for a type of no relay agent."""
-        structure = Library.default().type(f"{P}_DHCPv6RelayMessage")()
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6RelayMessage")()
         Fields.assign(structure, "kind", self.kind)
         Fields.assign(structure, "hops", self.hops)
         structure.link = self.link.to_structure()
         structure.peer = self.peer.to_structure()
-        return Library.default().output(f"{P}_dhcpv6_relay_message_encode", ctypes.byref(structure), *Bytes.readable(self.options.encode()))
+        return Library.default().output("umilib_protocol_dhcp_v6_dhcpv6_relay_message_encode", ctypes.byref(structure), *Bytes.readable(self.options.encode()))
 
     def relayed(self) -> bytes | None:
         """The message relayed (the Relay Message option, §21.10)."""
@@ -443,7 +442,7 @@ class DHCPv6ClientConfig:
         return cls(duid, iaid)
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DHCPv6ClientConfig")()
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6ClientConfig")()
         Fields.assign(structure, "iaid", self.iaid)
         structure.addresses = self.addresses
         structure.prefix = self.prefix
@@ -532,13 +531,13 @@ class DHCPv6Client:
         """The object of umilib behind a client. The client holds it rather than being it: the
         ``release`` of a :class:`Handle` is its lock's, and the client's is the protocol's."""
 
-        FREE = f"{P}_dhcpv6_client_free"
+        FREE = "umilib_protocol_dhcp_v6_dhcpv6_client_free"
 
     def __init__(self, config: DHCPv6ClientConfig, now: int) -> None:
         requested = Words.array(ctypes.c_uint16, list(config.requested), len(config.requested)) if config.requested else None
         self.object = DHCPv6Client.Object(
             Handle.create(
-                f"{P}_dhcpv6_client_new", ctypes.byref(config.to_structure()), *Bytes.readable(config.duid.encode()), requested,
+                "umilib_protocol_dhcp_v6_dhcpv6_client_new", ctypes.byref(config.to_structure()), *Bytes.readable(config.duid.encode()), requested,
                 len(config.requested), now,
             )  # fmt: skip
         )
@@ -565,25 +564,25 @@ class DHCPv6Client:
     def start(self, now: int, random: Any) -> None:
         """Starts: Solicit for addresses or prefixes, or, asking for neither, Information-request (§18.2.6);
         the first after a random delay of up to a second."""
-        self.library.call(f"{P}_dhcpv6_client_start", self.handle, now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_client_start", self.handle, now, *random.source())
 
     def receive(self, data: bytes, now: int, random: Any) -> None:
         """Takes a server's Advertise or Reply; ignored unless of the exchange's transaction, with the
         client's DUID and a server's (§16)."""
-        self.library.call(f"{P}_dhcpv6_client_receive", self.handle, *Bytes.readable(data), now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_client_receive", self.handle, *Bytes.readable(data), now, *random.source())
 
     def transmit(self) -> bytes | None:
         """The next message to send, to :attr:`DHCPv6Message.ALL_RELAY_AGENTS_AND_SERVERS`, port 547."""
-        return self.library.optional(f"{P}_dhcpv6_client_transmit", Buffer, self.handle)
+        return self.library.optional("umilib_protocol_dhcp_v6_dhcpv6_client_transmit", Buffer, self.handle)
 
     def poll_timeout(self) -> int | None:
         """When :meth:`expire` is next due, in nanoseconds."""
-        return self.library.optional(f"{P}_dhcpv6_client_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_dhcp_v6_dhcpv6_client_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int, random: Any) -> None:
         """Does what is due at ``now``: a delayed first message, a retransmission or the end of an exchange
         (§15), Renew at T1, Rebind at T2, the end of the lease, or a refresh of stateless configuration (§18.2.12)."""
-        self.library.call(f"{P}_dhcpv6_client_expire", self.handle, now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_client_expire", self.handle, now, *random.source())
 
     def outputs(self, name: str, ctype: Any) -> tuple[bool, Any, bytes, bytes, bytes]:
         """Calls ``name``, whose outputs are a flag, a structure of ``ctype`` and three buffers."""
@@ -596,7 +595,7 @@ class DHCPv6Client:
         return found.value, structure, ias, options, server
 
     def poll_event(self) -> DHCPv6ClientEvent | None:
-        found, structure, ias, options, server = self.outputs(f"{P}_dhcpv6_client_poll_event", Library.default().type(f"{P}_DHCPv6ClientEvent"))
+        found, structure, ias, options, server = self.outputs("umilib_protocol_dhcp_v6_dhcpv6_client_poll_event", Library.default().type("umilib_protocol_dhcp_v6_DHCPv6ClientEvent"))
         if not found:
             return None
         kind = DHCPv6ClientEventKind(structure.kind)
@@ -608,26 +607,26 @@ class DHCPv6Client:
 
     @property
     def state(self) -> DHCPv6ClientState:
-        return DHCPv6ClientState(self.library.value(f"{P}_dhcpv6_client_state", ctypes.c_uint8, self.handle))
+        return DHCPv6ClientState(self.library.value("umilib_protocol_dhcp_v6_dhcpv6_client_state", ctypes.c_uint8, self.handle))
 
     @property
     def lease(self) -> DHCPv6Lease | None:
-        found, structure, ias, options, server = self.outputs(f"{P}_dhcpv6_client_lease", Library.default().type(f"{P}_DHCPv6Lease"))
+        found, structure, ias, options, server = self.outputs("umilib_protocol_dhcp_v6_dhcpv6_client_lease", Library.default().type("umilib_protocol_dhcp_v6_DHCPv6Lease"))
         return DHCPv6Lease.from_structure(structure, ias, options, server) if found else None
 
     def release(self, now: int, random: Any) -> None:
         """Releases the lease (§18.2.7); the client stops. Raises ``State`` without a lease."""
-        self.library.call(f"{P}_dhcpv6_client_release", self.handle, now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_client_release", self.handle, now, *random.source())
 
     def decline(self, addresses: list[IPv6Address], now: int, random: Any) -> None:
         """Declines ``addresses`` of the lease, which DAD found in use (§18.2.8). Raises ``State`` without a
         lease or without addresses."""
         array = (Library.default().type("umilib_protocol_ip_IPv6Address") * max(len(addresses), 1))(*[address.to_structure() for address in addresses])
-        self.library.call(f"{P}_dhcpv6_client_decline", self.handle, array, len(addresses), now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_client_decline", self.handle, array, len(addresses), now, *random.source())
 
     def confirm(self, now: int, random: Any) -> None:
         """Confirms the lease after the link may have changed (§18.2.3). Raises ``State`` without a lease."""
-        self.library.call(f"{P}_dhcpv6_client_confirm", self.handle, now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_client_confirm", self.handle, now, *random.source())
 
 
 @dataclasses.dataclass(frozen=True)
@@ -636,7 +635,10 @@ class DHCPv6ServerConfig:
     it delegates from with its length and the length of each delegated prefix (IA_PD), the lifetimes it
     gives in seconds (0xFFFFFFFF for infinity), T1 and T2 (0: half and four fifths of the preferred
     lifetime, RFC 9915 §21.4), the preference of its Advertise messages (§21.8), whether it answers a
-    Solicit with Rapid Commit with a Reply (§18.3.1), and the options it gives, each to a client that asks."""
+    Solicit with Rapid Commit with a Reply (§18.3.1), the options it gives, each to a client that asks, how
+    long a declined address or prefix is not leased (§18.3.8; ``None`` for ever), the most IAs of a message
+    given addresses or prefixes (the others are answered NoAddrsAvail or NoPrefixAvail, §18.3.9), and the
+    most bindings kept, declined ones and ended ones not yet forgotten among them."""
 
     duid: DHCPDUID
     addresses: tuple[IPv6Address, IPv6Address] | None
@@ -648,19 +650,23 @@ class DHCPv6ServerConfig:
     preference: int
     rapid_commit: bool
     options: DHCPv6Options
+    decline_time: datetime.timedelta | None
+    maximum_ias: int
+    maximum_bindings: int
 
     @classmethod
     def new(cls, duid: DHCPDUID) -> DHCPv6ServerConfig:
         """A server of ``duid`` leasing nothing yet, of the defaults of umilib, giving no options."""
-        structure = Library.default().type(f"{P}_DHCPv6ServerConfig")()
-        Library.default().call(f"{P}_dhcpv6_server_config_new", ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6ServerConfig")()
+        Library.default().call("umilib_protocol_dhcp_v6_dhcpv6_server_config_new", ctypes.byref(structure))
         return cls(
             duid, None, None, structure.preferred, structure.valid, structure.t1, structure.t2, structure.preference,
-            bool(structure.rapid_commit), DHCPv6Options(),
+            bool(structure.rapid_commit), DHCPv6Options(), DHCPTime.from_milliseconds(structure.decline_time),
+            structure.maximum_ias, structure.maximum_bindings,
         )  # fmt: skip
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DHCPv6ServerConfig")()
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6ServerConfig")()
         if self.addresses is not None:
             structure.addresses = True
             structure.first, structure.last = (address.to_structure() for address in self.addresses)
@@ -669,9 +675,10 @@ class DHCPv6ServerConfig:
             structure.prefix = self.prefixes[0].to_structure()
             Fields.assign(structure, "prefix_length", self.prefixes[1])
             Fields.assign(structure, "delegated_length", self.prefixes[2])
-        for name in ("preferred", "valid", "t1", "t2", "preference"):
+        for name in ("preferred", "valid", "t1", "t2", "preference", "maximum_ias", "maximum_bindings"):
             Fields.assign(structure, name, getattr(self, name))
         structure.rapid_commit = self.rapid_commit
+        structure.decline_time = DHCPTime.to_milliseconds(self.decline_time)
         return structure
 
 
@@ -689,7 +696,7 @@ class DHCPv6Binding:
     declined: bool
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DHCPv6Binding")()
+        structure = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6Binding")()
         structure.address = self.address.to_structure()
         for name, value in (
             ("iaid", self.iaid), ("kind", int(self.kind)), ("length", self.length or 0), ("has_length", self.length is not None),
@@ -710,14 +717,14 @@ class DHCPv6Binding:
 class DHCPv6Server(Handle):
     """A DHCPv6 server (RFC 9915 §18.3) without I/O: it answers each client message, relayed or not, with
     the reply of its rules. Raises ``Config`` for a pool whose first address is after its last, or prefixes
-    longer than their delegated length."""
+    of bits set past their length, longer than their delegated length, or more than 32 bits shorter."""
 
-    FREE = f"{P}_dhcpv6_server_free"
+    FREE = "umilib_protocol_dhcp_v6_dhcpv6_server_free"
 
     def __init__(self, config: DHCPv6ServerConfig) -> None:
         super().__init__(
             Handle.create(
-                f"{P}_dhcpv6_server_new", ctypes.byref(config.to_structure()), *Bytes.readable(config.duid.encode()),
+                "umilib_protocol_dhcp_v6_dhcpv6_server_new", ctypes.byref(config.to_structure()), *Bytes.readable(config.duid.encode()),
                 *Bytes.readable(config.options.encode()),
             )  # fmt: skip
         )
@@ -725,26 +732,26 @@ class DHCPv6Server(Handle):
     def receive(self, data: bytes, now: int) -> bytes | None:
         """The reply to ``data`` at ``now``: of a client's message, or of a Relay-forward, whose relayed
         message is answered inside a Relay-reply of the same addresses and Interface-Id (§19.3)."""
-        return self.library.optional(f"{P}_dhcpv6_server_receive", Buffer, self.handle, *Bytes.readable(data), now)
+        return self.library.optional("umilib_protocol_dhcp_v6_dhcpv6_server_receive", Buffer, self.handle, *Bytes.readable(data), now)
 
     def expire(self, now: int) -> None:
         """Forgets the bindings expired at ``now``."""
-        self.library.call(f"{P}_dhcpv6_server_expire", self.handle, now)
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_server_expire", self.handle, now)
 
     @property
     def bindings(self) -> list[DHCPv6Binding]:
         """Every binding, in the order of addresses: the server's state, for its caller to keep."""
-        count = self.library.value(f"{P}_dhcpv6_server_bindings_count", ctypes.c_size_t, self.handle)
+        count = self.library.value("umilib_protocol_dhcp_v6_dhcpv6_server_bindings_count", ctypes.c_size_t, self.handle)
         bindings = []
         for index in range(count):
-            structure, buffer = Library.default().type(f"{P}_DHCPv6Binding")(), Buffer()
-            self.library.call(f"{P}_dhcpv6_server_binding_entry", self.handle, index, ctypes.byref(structure), ctypes.byref(buffer))
+            structure, buffer = Library.default().type("umilib_protocol_dhcp_v6_DHCPv6Binding")(), Buffer()
+            self.library.call("umilib_protocol_dhcp_v6_dhcpv6_server_binding_entry", self.handle, index, ctypes.byref(structure), ctypes.byref(buffer))
             bindings.append(DHCPv6Binding.from_structure(structure, self.library.take(buffer)))
         return bindings
 
     def set_binding(self, binding: DHCPv6Binding) -> None:
         """Sets the binding of its address (and prefix length): one kept elsewhere, given back."""
-        self.library.call(f"{P}_dhcpv6_server_set_binding", self.handle, binding.to_structure(), *Bytes.readable(binding.client))
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_server_set_binding", self.handle, binding.to_structure(), *Bytes.readable(binding.client))
 
     def remove_binding(self, address: IPv6Address, length: int | None = None) -> None:
-        self.library.call(f"{P}_dhcpv6_server_remove_binding", self.handle, address.to_structure(), length or 0, length is not None)
+        self.library.call("umilib_protocol_dhcp_v6_dhcpv6_server_remove_binding", self.handle, address.to_structure(), length or 0, length is not None)

@@ -9,7 +9,7 @@ use umilib::crypto::{CryptoError, KeyAgreement};
 use umilib::hash::sha::v2::SHA256;
 use umilib::math::ec::{AffinePoint, MontgomeryCurve, PrimeField, WeierstrassCurve};
 
-use crate::{Json, Record, Vectors, Wycheproof};
+use crate::{JSON, Record, Vectors, Wycheproof};
 
 /// The shared secret of `private` and `public`, or the error of the first
 /// step that refuses them.
@@ -123,7 +123,7 @@ fn check_cavp<C: WeierstrassCurve>(curve: &str) {
 
 /// A Wycheproof test of a key agreement: valid results must be computed,
 /// invalid ones refused, and acceptable ones, if computed, right.
-fn check_wycheproof_test<K: KeyAgreement>(test: &Json, public: &[u8], label: &str) {
+fn check_wycheproof_test<K: KeyAgreement>(test: &JSON, public: &[u8], label: &str) {
     let private = private_bytes(test.field("private").as_str(), K::PRIVATE_KEY_SIZE);
     let result = agree::<K>(&private, public);
     match test.field("result").as_str() {

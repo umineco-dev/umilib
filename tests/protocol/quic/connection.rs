@@ -8,7 +8,8 @@ use std::time::Duration;
 use umilib::protocol::ip::{IPAddress, IPEndpoint, IPv4Address};
 use umilib::protocol::quic::{
     QUICAcceptance, QUICCloseReason, QUICConfig, QUICConnection, QUICConnectionID, QUICConnectionState, QUICECN,
-    QUICEvent, QUICHeader, QUICIssuedID, QUICPacket, QUICPeerConnectionIDs, QUICStreamID,
+    QUICError, QUICErrorCode, QUICEvent, QUICHeader, QUICIssuedID, QUICPacket, QUICPeerConnectionIDs,
+    QUICReceiveBuffer, QUICStreamID,
 };
 use umilib::protocol::tls::{TLSClientConfig, TLSServerConfig};
 use umilib::runtime::Instant;
@@ -571,4 +572,28 @@ fn a_reset_after_all_data_arrived() {
     assert!(!Network::events(network.server()).contains(&QUICEvent::StreamReset { stream, error: 3 }));
     let (data, fin) = Network::read_all(network.server(), stream);
     assert_eq!((data.as_slice(), fin), (&b"all of it"[..], true));
+}
+
+#[test]
+fn data_in_too_many_pieces_closes_the_connection() {
+    // Pieces that follow one another are held together, whatever their order of arrival.
+    let mut buffer = QUICReceiveBuffer::new();
+    for offset in 1..200 {
+        buffer.insert(offset, &[offset as u8], false).unwrap();
+    }
+    assert_eq!(buffer.fragments(), 1);
+    buffer.insert(0, &[0], false).unwrap();
+    let expected: Vec<u8> = (0..200).map(|offset| offset as u8).collect();
+    assert_eq!(buffer.read_all(), expected);
+    // A peer that fills its credit with pieces of one byte, each apart from the others, is
+    // refused past `maximum_receive_fragments`.
+    let config = QUICConfig { maximum_receive_fragments: 8, ..QUICConfig::default() };
+    let mut network = Network::new(config);
+    network.run();
+    let stream = network.client.open_stream(true).unwrap();
+    for piece in 0..8 {
+        network.server().receive_stream(stream, 1 + 2 * piece, &[1], false).unwrap();
+    }
+    let error = network.server().receive_stream(stream, 17, &[1], false).unwrap_err();
+    assert!(matches!(error, QUICError::Transport(error) if error.code == QUICErrorCode::INTERNAL_ERROR), "{error:?}");
 }

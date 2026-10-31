@@ -23,7 +23,7 @@ pub const OTPS: umilib::platform::fuzz::FuzzFunction<fn(&[u8])> =
             Err(OTPError::Digits) => return assert!(!(6..=10).contains(&digits)),
             Err(error) => panic!("{error:?}"),
         };
-        let code = hotp.generate(counter);
+        let code = hotp.generate(counter).expect("the digits were checked");
         let digest = HMAC::<SHA1>::mac(key, &counter.to_be_bytes());
         let offset = (digest[19] & 0x0F) as usize;
         let binary =
@@ -34,7 +34,7 @@ pub const OTPS: umilib::platform::fuzz::FuzzFunction<fn(&[u8])> =
         assert_eq!(hotp.verify(text.as_bytes(), counter, 0), Some(counter));
         // A window that contains the counter finds it, or an earlier counter of the same password.
         let found = hotp.verify(text.as_bytes(), counter.saturating_sub(2), 2).expect("the counter is in the window");
-        assert!(found <= counter && hotp.generate(found) == code);
+        assert!(found <= counter && hotp.generate(found) == Ok(code));
     });
 
 /// Algorithm identifiers, public keys, PKCS #8 keys and encrypted keys
@@ -236,10 +236,12 @@ pub const STATUSES: umilib::platform::fuzz::FuzzFunction<fn(&[u8])> =
             }
             #[cfg(umilib_feature = "auth-cert-path")]
             {
-                use umilib::auth::cert::path::{PathConfig, RevocationSource, RevocationStatus};
+                use umilib::auth::cert::path::{PathBudget, PathConfig, RevocationSource, RevocationStatus};
                 let config = PathConfig::new(OCSPFixtures::time());
                 let target = OCSPFixtures::good();
-                let status = basic.status(&target, &issuer.tbs_certificate().subject, &issuer_key, &config);
+                let mut budget = PathBudget::new(&config);
+                let subject = &issuer.tbs_certificate().subject;
+                let status = basic.status(&target, subject, &issuer_key, &config, &mut budget);
                 let named = basic
                     .tbs_response_data()
                     .responses

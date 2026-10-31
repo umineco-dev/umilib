@@ -23,8 +23,6 @@ from umilib.crypto import Primitive, Specialization
 from umilib.ffi import Buffer, Bytes, FFIError, Handle, Library, Text
 from umilib.hash import CryptographicDigest
 
-P = "umilib_auth_sasl_scram_scram"
-
 
 class SCRAMError(FFIError):
     """A failed SCRAM exchange: a server error of RFC 5802 section 7 (``InvalidEncoding``, ``InvalidProof``,
@@ -52,7 +50,7 @@ class SCRAMServerError(enum.IntEnum):
 
     def registered_name(self) -> str:
         """The value of ``e=``, as ``invalid-proof``."""
-        return Library.default().output(f"{P}_server_error_name", int(self)).decode()
+        return Library.default().output("umilib_auth_sasl_scram_scram_server_error_name", int(self)).decode()
 
 
 class SCRAMNonce:
@@ -61,7 +59,7 @@ class SCRAMNonce:
     @staticmethod
     def random(random: Any) -> str:
         """A nonce of 24 random bytes from the generator ``random``, in base64."""
-        return Library.default().output(f"{P}_nonce_random", *random.source()).decode()
+        return Library.default().output("umilib_auth_sasl_scram_scram_nonce_random", *random.source()).decode()
 
 
 class SCRAMHashClass:
@@ -79,7 +77,7 @@ class SCRAMHashClass:
 class SCRAMCredentials(Primitive):
     """What a server keeps for a user: the salt, the iteration count, StoredKey and ServerKey."""
 
-    PREFIX = f"{P}_credentials"
+    PREFIX = "umilib_auth_sasl_scram_scram_credentials"
     HASH: ClassVar[type[CryptographicDigest] | None] = None
 
     def __class_getitem__(cls, hash: Any) -> Any:
@@ -87,27 +85,27 @@ class SCRAMCredentials(Primitive):
 
     def __init__(self, password: str, salt: bytes | bytearray | memoryview, iterations: int) -> None:
         name, length = Text.encode(Specialization.require(self.HASH, "SCRAMCredentials").C_TYPE)
-        super().__init__(Handle.create(f"{P}_credentials_new", name, length, *Text.encode(password), *Bytes.readable(salt), iterations))
+        super().__init__(Handle.create("umilib_auth_sasl_scram_scram_credentials_new", name, length, *Text.encode(password), *Bytes.readable(salt), iterations))
 
     @classmethod
     def from_parts(cls, salt: bytes, iterations: int, stored_key: bytes, server_key: bytes) -> Any:
         """The credentials of their stored parts; ``Format`` for keys of another size than the hash output."""
         name, length = Text.encode(Specialization.require(cls.HASH, "SCRAMCredentials").C_TYPE)
-        pointer = Handle.create(f"{P}_credentials_from_parts", name, length, *Bytes.readable(salt), iterations, *Bytes.readable(stored_key), *Bytes.readable(server_key))
+        pointer = Handle.create("umilib_auth_sasl_scram_scram_credentials_from_parts", name, length, *Bytes.readable(salt), iterations, *Bytes.readable(stored_key), *Bytes.readable(server_key))
         return cls.from_pointer(pointer)
 
     def parts(self) -> tuple[bytes, int, bytes, bytearray]:
         """The salt, the iteration count, StoredKey and ServerKey."""
         salt, stored, server = Buffer(), Buffer(), Buffer()
         iterations = ctypes.c_uint32()
-        self.library.call(f"{P}_credentials_parts", self.handle, ctypes.byref(salt), ctypes.byref(iterations), ctypes.byref(stored), ctypes.byref(server))
+        self.library.call("umilib_auth_sasl_scram_scram_credentials_parts", self.handle, ctypes.byref(salt), ctypes.byref(iterations), ctypes.byref(stored), ctypes.byref(server))
         return self.library.take(salt), iterations.value, self.library.take(stored), self.library.take_secret(server)
 
 
 class SCRAMClient(Primitive):
     """The client of SCRAM over ``SCRAMClient[H]``, without I/O."""
 
-    PREFIX = f"{P}_client"
+    PREFIX = "umilib_auth_sasl_scram_scram_client"
     HASH: ClassVar[type[CryptographicDigest] | None] = None
 
     def __class_getitem__(cls, hash: Any) -> Any:
@@ -117,47 +115,47 @@ class SCRAMClient(Primitive):
         """The client of ``username`` and ``password`` with the client nonce ``nonce`` (see
         :meth:`SCRAMNonce.random`), without channel binding."""
         name, length = Text.encode(Specialization.require(self.HASH, "SCRAMClient").C_TYPE)
-        super().__init__(Handle.create(f"{P}_client_new", name, length, *Text.encode(username), *Text.encode(password), *Text.encode(nonce)))
+        super().__init__(Handle.create("umilib_auth_sasl_scram_scram_client_new", name, length, *Text.encode(username), *Text.encode(password), *Text.encode(nonce)))
 
     @classmethod
     def from_salted_password(cls, username: str, salt: bytes, iterations: int, salted_password: bytes | bytearray, nonce: str) -> Any:
         """The client of a SaltedPassword kept from an earlier exchange with ``salt`` and ``iterations``."""
         name, length = Text.encode(Specialization.require(cls.HASH, "SCRAMClient").C_TYPE)
         pointer = Handle.create(
-            f"{P}_client_from_salted_password", name, length, *Text.encode(username), *Bytes.readable(salt), iterations, *Bytes.readable(salted_password), *Text.encode(nonce)
+            "umilib_auth_sasl_scram_scram_client_from_salted_password", name, length, *Text.encode(username), *Bytes.readable(salt), iterations, *Bytes.readable(salted_password), *Text.encode(nonce)
         )
         return cls.from_pointer(pointer)
 
     def set_authzid(self, authzid: str | None) -> None:
-        self.library.call(f"{P}_client_set_authzid", self.handle, *Text.encode(authzid))
+        self.library.call("umilib_auth_sasl_scram_scram_client_set_authzid", self.handle, *Text.encode(authzid))
 
     def set_channel_binding(self, binding: GS2ChannelBinding, name: str | None = None, data: bytes = b"") -> None:
         """The flag ``binding`` (with the type ``name`` and its ``data`` for ``Required``)."""
-        self.library.call(f"{P}_client_set_channel_binding", self.handle, int(binding), *Text.encode(name), *Bytes.readable(data))
+        self.library.call("umilib_auth_sasl_scram_scram_client_set_channel_binding", self.handle, int(binding), *Text.encode(name), *Bytes.readable(data))
 
     def set_iterations(self, minimum: int, maximum: int) -> None:
         """The iteration counts the client accepts (4096 to 1 000 000 by default)."""
-        self.library.call(f"{P}_client_set_iterations", self.handle, minimum, maximum)
+        self.library.call("umilib_auth_sasl_scram_scram_client_set_iterations", self.handle, minimum, maximum)
 
     def mechanism(self) -> SASLMechanism:
-        return SASLMechanism(self.library.value(f"{P}_client_mechanism", ctypes.c_uint8, self.handle))
+        return SASLMechanism(self.library.value("umilib_auth_sasl_scram_scram_client_mechanism", ctypes.c_uint8, self.handle))
 
     def client_first(self) -> bytes:
-        return self.library.output(f"{P}_client_client_first", self.handle)
+        return self.library.output("umilib_auth_sasl_scram_scram_client_client_first", self.handle)
 
     def receive_server_first(self, message: bytes | bytearray | memoryview) -> bytes:
         """The client-final-message for the server-first-message ``message``."""
-        return self.library.output(f"{P}_client_receive_server_first", self.handle, *Bytes.readable(message))
+        return self.library.output("umilib_auth_sasl_scram_scram_client_receive_server_first", self.handle, *Bytes.readable(message))
 
     def receive_server_final(self, message: bytes | bytearray | memoryview) -> None:
         """Returns if the server proved it knows the key; raises :class:`SCRAMError` otherwise."""
-        self.library.call(f"{P}_client_receive_server_final", self.handle, *Bytes.readable(message))
+        self.library.call("umilib_auth_sasl_scram_scram_client_receive_server_final", self.handle, *Bytes.readable(message))
 
     def salted_secret(self) -> tuple[bytes, int, bytearray] | None:
         """The salt, the iteration count and the SaltedPassword to keep, once the exchange succeeded."""
         has, salt, salted = ctypes.c_bool(), Buffer(), Buffer()
         iterations = ctypes.c_uint32()
-        self.library.call(f"{P}_client_salted_secret", self.handle, ctypes.byref(has), ctypes.byref(salt), ctypes.byref(iterations), ctypes.byref(salted))
+        self.library.call("umilib_auth_sasl_scram_scram_client_salted_secret", self.handle, ctypes.byref(has), ctypes.byref(salt), ctypes.byref(iterations), ctypes.byref(salted))
         salt_bytes, salted_bytes = self.library.take(salt), self.library.take_secret(salted)
         return (salt_bytes, iterations.value, salted_bytes) if has.value else None
 
@@ -165,7 +163,7 @@ class SCRAMClient(Primitive):
 class SCRAMServer(Primitive):
     """The server of SCRAM over ``SCRAMServer[H]``, without I/O; ``plus`` for the ``-PLUS`` mechanism."""
 
-    PREFIX = f"{P}_server"
+    PREFIX = "umilib_auth_sasl_scram_scram_server"
     HASH: ClassVar[type[CryptographicDigest] | None] = None
 
     def __class_getitem__(cls, hash: Any) -> Any:
@@ -173,37 +171,37 @@ class SCRAMServer(Primitive):
 
     def __init__(self, plus: bool = False) -> None:
         name, length = Text.encode(Specialization.require(self.HASH, "SCRAMServer").C_TYPE)
-        super().__init__(Handle.create(f"{P}_server_new", name, length, plus))
+        super().__init__(Handle.create("umilib_auth_sasl_scram_scram_server_new", name, length, plus))
 
     def add_channel_binding(self, name: str, data: bytes | bytearray | memoryview) -> None:
         """A channel binding type the server supports, with its data for this channel."""
-        self.library.call(f"{P}_server_add_channel_binding", self.handle, *Text.encode(name), *Bytes.readable(data))
+        self.library.call("umilib_auth_sasl_scram_scram_server_add_channel_binding", self.handle, *Text.encode(name), *Bytes.readable(data))
 
     def receive_client_first(self, message: bytes | bytearray | memoryview) -> None:
-        self.library.call(f"{P}_server_receive_client_first", self.handle, *Bytes.readable(message))
+        self.library.call("umilib_auth_sasl_scram_scram_server_receive_client_first", self.handle, *Bytes.readable(message))
 
     @property
     def username(self) -> str | None:
         """The username to look up (prepared with SASLprep), once the client-first-message is read."""
-        data = self.library.optional(f"{P}_server_username", Buffer, self.handle)
+        data = self.library.optional("umilib_auth_sasl_scram_scram_server_username", Buffer, self.handle)
         return None if data is None else data.decode()
 
     @property
     def authzid(self) -> str | None:
-        data = self.library.optional(f"{P}_server_authzid", Buffer, self.handle)
+        data = self.library.optional("umilib_auth_sasl_scram_scram_server_authzid", Buffer, self.handle)
         return None if data is None else data.decode()
 
     def server_first(self, credentials: SCRAMCredentials, nonce: str) -> bytes:
         """The server-first-message for ``credentials`` with the server's part of the nonce ``nonce``."""
-        return self.library.output(f"{P}_server_server_first", self.handle, credentials, *Text.encode(nonce))
+        return self.library.output("umilib_auth_sasl_scram_scram_server_server_first", self.handle, credentials, *Text.encode(nonce))
 
     def receive_client_final(self, message: bytes | bytearray | memoryview) -> bytes:
         """The server-final-message, if the client proved it knows the password."""
-        return self.library.output(f"{P}_server_receive_client_final", self.handle, *Bytes.readable(message))
+        return self.library.output("umilib_auth_sasl_scram_scram_server_receive_client_final", self.handle, *Bytes.readable(message))
 
     def reject(self, error: SCRAMServerError) -> bytes:
         """Ends the exchange with ``error``: the server-final-message that reports it."""
-        return self.library.output(f"{P}_server_reject", self.handle, int(error))
+        return self.library.output("umilib_auth_sasl_scram_scram_server_reject", self.handle, int(error))
 
 
 __all__ = ["SCRAMClient", "SCRAMCredentials", "SCRAMError", "SCRAMNonce", "SCRAMServer", "SCRAMServerError"]

@@ -41,6 +41,7 @@ typedef struct umilib_protocol_quic_QUICLimits {
     size_t maximum_crypto_buffer;
     size_t maximum_send_buffer;
     size_t maximum_datagrams;
+    size_t maximum_receive_fragments;
 } umilib_protocol_quic_QUICLimits;
 
 /**

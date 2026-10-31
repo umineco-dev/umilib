@@ -6,7 +6,7 @@ use umilib::protocol::jwt::{Base64URL, JOSEHeader, JWK, JWS, JWSAlgorithm, JWSCo
 
 use super::jwk::MLDSAExamples;
 use super::{jwk, path, random};
-use crate::{Json, RFC, Wycheproof};
+use crate::{JSON, RFC, Wycheproof};
 
 /// Every algorithm but `none`.
 fn every_algorithm() -> JWSConfig {
@@ -19,19 +19,19 @@ fn every_algorithm() -> JWSConfig {
 /// the key, reads back to its text, and a deterministic signature is
 /// reproduced from the signing input.
 fn check_cookbook(name: &str) {
-    let example = Json::read(&path(name));
+    let example = JSON::read(&path(name));
     let input = example.field("input");
     let keys: Vec<JWK> = match input.field("key") {
-        Json::Array(keys) => keys.iter().map(jwk).collect(),
+        JSON::Array(keys) => keys.iter().map(jwk).collect(),
         key => vec![jwk(key)],
     };
-    let signings: Vec<&Json> = match example.field("signing") {
-        Json::Array(signings) => signings.iter().collect(),
+    let signings: Vec<&JSON> = match example.field("signing") {
+        JSON::Array(signings) => signings.iter().collect(),
         signing => vec![signing],
     };
     let payload = input.field("payload").as_str().as_bytes().to_vec();
     let config = every_algorithm();
-    let reproducible = !matches!(example.get("reproducible"), Some(Json::Bool(false)));
+    let reproducible = !matches!(example.get("reproducible"), Some(JSON::Bool(false)));
     for (signing, key) in signings.iter().zip(&keys) {
         let algorithm = if let Some(protected) = signing.get("protected") {
             JWSAlgorithm::from_name(protected.field("alg").as_str())
@@ -84,7 +84,7 @@ fn check_cookbook(name: &str) {
             JWS::from_json(written.as_bytes())
         };
         assert_eq!(read.unwrap(), jws, "{name} {member}");
-        assert_eq!(super::sorted(&Json::from_text(&written)), super::sorted(serialization), "{name} {member}");
+        assert_eq!(super::sorted(&JSON::from_text(&written)), super::sorted(serialization), "{name} {member}");
     }
 }
 
@@ -107,7 +107,7 @@ fn the_jose_cookbook() {
 
 #[test]
 fn rfc_8037_appendix_a() {
-    let key = jwk(&Json::from_text(&RFC::block_from(&path("rfc8037.txt"), r#"{"kty":"OKP","crv":"Ed25519","#)));
+    let key = jwk(&JSON::from_text(&RFC::block_from(&path("rfc8037.txt"), r#"{"kty":"OKP","crv":"Ed25519","#)));
     let compact =
         RFC::block(&path("rfc8037.txt"), "signing input, a dot, and base64url encoding of the signature):", None);
     let protected = JOSEHeader::decode(br#"{"alg":"EdDSA"}"#).unwrap();
@@ -132,7 +132,7 @@ fn rfc_8037_appendix_a() {
 
 #[test]
 fn rfc_7797_section_4() {
-    let key = jwk(&Json::from_text(&RFC::block(&path("rfc7797.txt"), "only):", Some("4.1."))));
+    let key = jwk(&JSON::from_text(&RFC::block(&path("rfc7797.txt"), "only):", Some("4.1."))));
     let config = JWSConfig::new(&[JWSAlgorithm::HS256]);
     let compact = RFC::block_from(&path("rfc7797.txt"), "eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19");
     let jws = JWS::from_compact_detached(&compact, b"$.02").unwrap();
@@ -200,7 +200,7 @@ fn wycheproof() {
         let id = test.field("tcId").as_usize();
         let token = test.field("jws");
         let verified = match token {
-            Json::String(compact) => JWS::from_compact(compact).and_then(|jws| jws.verify(&key, &config).map(|_| ())),
+            JSON::String(compact) => JWS::from_compact(compact).and_then(|jws| jws.verify(&key, &config).map(|_| ())),
             json => JWS::from_json(json.encode().as_bytes()).and_then(|jws| jws.verify(&key, &config).map(|_| ())),
         };
         assert_eq!(
@@ -243,13 +243,13 @@ fn verification_follows_rfc_8725() {
     unsecured.verify_unsecured().unwrap();
     assert!(jws.verify_unsecured().is_err());
     // §2.1, §3.2: a key of another type than the algorithm's (an RSA public key used as an HMAC secret) does not verify.
-    let rsa = jwk(&Json::read(&path("cookbook/jwk/3_3.rsa_public_key.json")));
+    let rsa = jwk(&JSON::read(&path("cookbook/jwk/3_3.rsa_public_key.json")));
     assert!(jws.verify(&rsa, &hs256).is_err());
     // RFC 7518 §3.2: an HMAC key shorter than the hash output.
     let short = JWK::symmetric(&[7; 31]);
     assert_eq!(JWSAlgorithm::HS256.sign(&short, b"x", &mut random()), Err(JWTError::KeyMismatch));
     // RFC 7518 §3.4: an ECDSA signature must be R || S of the curve's size, and of the algorithm's curve.
-    let p521 = jwk(&Json::read(&path("cookbook/jwk/3_2.ec_private_key.json")));
+    let p521 = jwk(&JSON::read(&path("cookbook/jwk/3_2.ec_private_key.json")));
     assert_eq!(JWSAlgorithm::ES256.sign(&p521, b"x", &mut random()), Err(JWTError::KeyMismatch));
     let signature = JWSAlgorithm::ES512.sign(&p521, b"x", &mut random()).unwrap();
     assert_eq!(signature.len(), 132);

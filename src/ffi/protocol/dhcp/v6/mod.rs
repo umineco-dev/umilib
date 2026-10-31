@@ -12,6 +12,7 @@
 
 use alloc::vec::Vec;
 use core::ffi::c_void;
+use core::time::Duration;
 
 use super::DHCPStatus;
 use crate::ffi::crypto::random::RandomSource;
@@ -265,7 +266,7 @@ impl FFIDHCPv6ClientState {
 /// The fields of a [`DHCPv6ServerConfig`] but its DUID and options: it
 /// leases the addresses from `first` to `last` if `addresses`, and delegates
 /// prefixes of `delegated_length` bits from `prefix` of `prefix_length` bits
-/// if `prefixes`.
+/// if `prefixes`; `decline_time` in milliseconds (`u64::MAX` for ever).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[repr(C)]
 pub struct FFIDHCPv6ServerConfig {
@@ -282,6 +283,9 @@ pub struct FFIDHCPv6ServerConfig {
     pub valid: u32,
     pub t1: u32,
     pub t2: u32,
+    pub decline_time: u64,
+    pub maximum_ias: usize,
+    pub maximum_bindings: usize,
 }
 
 impl FFIDHCPv6ServerConfig {
@@ -303,6 +307,9 @@ impl FFIDHCPv6ServerConfig {
             valid: config.valid,
             t1: config.t1,
             t2: config.t2,
+            decline_time: DHCPStatus::milliseconds(Some(config.decline_time)),
+            maximum_ias: config.maximum_ias,
+            maximum_bindings: config.maximum_bindings,
         }
     }
 
@@ -318,6 +325,9 @@ impl FFIDHCPv6ServerConfig {
             preference: self.preference,
             rapid_commit: self.rapid_commit,
             options,
+            decline_time: DHCPStatus::duration(self.decline_time).unwrap_or(Duration::MAX),
+            maximum_ias: self.maximum_ias,
+            maximum_bindings: self.maximum_bindings,
         }
     }
 }
@@ -979,7 +989,9 @@ pub const MODULE: Module = Module {
         Definition::Structure {
             name: "umilib_protocol_dhcp_v6_DHCPv6ServerConfig",
             documentation: " What a DHCPv6 server leases and delegates, but its DUID and options: lifetimes, T1 and T2\n \
-                            in seconds (0xFFFFFFFF for infinity; T1 and T2 of 0 let the client choose).",
+                            in seconds (0xFFFFFFFF for infinity; T1 and T2 of 0 let the client choose), how long a\n \
+                            declined address is not leased in milliseconds (UINT64_MAX for ever), the most IAs of a\n \
+                            message given addresses or prefixes, and the most bindings kept.",
             fields: &[
                 Parameter { name: "first", value: <IPv6Address as Value>::TYPE },
                 Parameter { name: "last", value: <IPv6Address as Value>::TYPE },
@@ -994,6 +1006,9 @@ pub const MODULE: Module = Module {
                 Parameter { name: "valid", value: <u32 as Value>::TYPE },
                 Parameter { name: "t1", value: <u32 as Value>::TYPE },
                 Parameter { name: "t2", value: <u32 as Value>::TYPE },
+                Parameter { name: "decline_time", value: <u64 as Value>::TYPE },
+                Parameter { name: "maximum_ias", value: <usize as Value>::TYPE },
+                Parameter { name: "maximum_bindings", value: <usize as Value>::TYPE },
             ],
         },
         Definition::Structure {

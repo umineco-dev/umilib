@@ -1194,7 +1194,18 @@ fn coap_rejections_through_the_c_abi() {
         Message::set_token(long, &[1; 9]);
         extended.receive(&Peer::client(), &Message::encode(long), 0, &random);
         Message::free(long);
-        assert_eq!(extended.events().iter().map(|event| event.kind).collect::<Vec<_>>(), [0]);
+        let events = extended.events();
+        assert_eq!(events.iter().map(|event| event.kind).collect::<Vec<_>>(), [0]);
+        // RFC 7967 §2: a request not answered; a Confirmable one is acknowledged by an empty ACK (§4.2).
+        Check::ok(umilib_protocol_coap_coap_endpoint_ignore(extended.endpoint, events[0].exchange));
+        let (kind, code, _) = Message::header_of(&extended.transmit().unwrap().1);
+        assert_eq!((kind, code), (ACK, EMPTY));
+        assert!(extended.transmit().is_none());
+        Check::fails(
+            umilib_protocol_coap_coap_endpoint_ignore(extended.endpoint, events[0].exchange),
+            "protocol.coap",
+            "State",
+        );
         // §5.3.2: a Confirmable response that matches no request is rejected.
         let client = Endpoint::default(&random);
         let stray = Message::make(CON, CONTENT, 14);

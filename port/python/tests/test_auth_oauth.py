@@ -271,6 +271,14 @@ def test_dpop_and_jwt_access_tokens():
         strict.check(DPoPProof.create(client_key, JWSAlgorithm.ES256, DPoPTarget("POST", "https://a/t"), 0, None, generator), DPoPTarget("POST", "https://a/t"), 0)
     assert error.value.response.code == "use_dpop_nonce"
     assert strict.nonce() == nonce
+    # How many nonces before the current one are taken is configured (§8.1 leaves it to the server).
+    assert DPoPConfig().previous_nonces == 1
+    current = DPoPVerifier(DPoPConfig(require_nonce=True, previous_nonces=0))
+    old = current.rotate_nonce(generator)
+    current.rotate_nonce(generator)
+    with pytest.raises(OAuthError) as error:
+        current.check(DPoPProof.create(client_key, JWSAlgorithm.ES256, DPoPTarget("POST", "https://a/t"), 0, old, generator), DPoPTarget("POST", "https://a/t"), 0)
+    assert error.value.response.code == "use_dpop_nonce"
     assert strict.check(DPoPProof.create(client_key, JWSAlgorithm.ES256, DPoPTarget("POST", "https://a/t"), 0, nonce, generator), DPoPTarget("POST", "https://a/t"), 0)
 
 

@@ -18,8 +18,6 @@ from umilib.ffi import Bytes, FFIError, Fields, Handle, Library, Nanoseconds
 from umilib.protocol.ethernet import EtherType, MACAddress
 from umilib.protocol.ip import IPv4Address
 
-P = "umilib_protocol_arp"
-
 
 class ARPError(FFIError):
     """An error of ARP: ``Length`` or ``Limit``."""
@@ -91,7 +89,7 @@ class ARPPacket:
         )
 
     def to_structure(self) -> Any:
-        return Library.default().type(f"{P}_ARPPacket")(
+        return Library.default().type("umilib_protocol_arp_ARPPacket")(
             int(self.hardware_type),
             int(self.protocol_type),
             int(self.operation),
@@ -108,28 +106,28 @@ class ARPPacket:
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> ARPPacket:
         """The packet at the start of ``data``; raises ``Length``."""
-        structure = Library.default().type(f"{P}_ARPPacket")()
-        Library.default().call(f"{P}_arp_packet_decode", *Bytes.readable(data), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_arp_ARPPacket")()
+        Library.default().call("umilib_protocol_arp_arp_packet_decode", *Bytes.readable(data), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     def encode(self) -> bytes:
-        return Library.default().output(f"{P}_arp_packet_encode", self.to_structure())
+        return Library.default().output("umilib_protocol_arp_arp_packet_encode", self.to_structure())
 
     @classmethod
     def ethernet_request(cls, sender_hardware: MACAddress, sender_protocol: IPv4Address, target: IPv4Address) -> ARPPacket:
         """A request on Ethernet for the hardware address of ``target`` (0.0.0.0 as the sender for a probe)."""
-        function = Library.default().function(f"{P}_arp_packet_ethernet_request")
+        function = Library.default().function("umilib_protocol_arp_arp_packet_ethernet_request")
         return cls.from_structure(function(sender_hardware.to_structure(), sender_protocol.to_structure(), target.to_structure()))
 
     def reply(self, hardware: MACAddress) -> ARPPacket:
         """The reply to this request from ``hardware``, the hardware address of its target."""
-        return ARPPacket.from_structure(Library.default().function(f"{P}_arp_packet_reply")(self.to_structure(), hardware.to_structure()))
+        return ARPPacket.from_structure(Library.default().function("umilib_protocol_arp_arp_packet_reply")(self.to_structure(), hardware.to_structure()))
 
     def is_probe(self) -> bool:
-        return bool(Library.default().function(f"{P}_arp_packet_is_probe")(self.to_structure()))
+        return bool(Library.default().function("umilib_protocol_arp_arp_packet_is_probe")(self.to_structure()))
 
     def is_announcement(self) -> bool:
-        return bool(Library.default().function(f"{P}_arp_packet_is_announcement")(self.to_structure()))
+        return bool(Library.default().function("umilib_protocol_arp_arp_packet_is_announcement")(self.to_structure()))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -145,7 +143,7 @@ class ARPConfig:
     maximum_queued: int = 1
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_ARPConfig")()
+        structure = Library.default().type("umilib_protocol_arp_ARPConfig")()
         values = {
             "hardware_type": self.hardware_type,
             "protocol_type": self.protocol_type,
@@ -172,37 +170,37 @@ class ARPReception(Handle):
     """What :meth:`ARPCache.receive` makes of a packet: the reply to send, the packets kept for the
     sender's address, now resolved, and whether the packet claims a local address from elsewhere."""
 
-    FREE = f"{P}_arp_reception_free"
+    FREE = "umilib_protocol_arp_arp_reception_free"
 
     @property
     def reply(self) -> ARPPacket | None:
         found = ctypes.c_bool()
-        reply = self.library.type(f"{P}_ARPPacket")()
-        self.library.call(f"{P}_arp_reception_reply", self.handle, ctypes.byref(found), ctypes.byref(reply))
+        reply = self.library.type("umilib_protocol_arp_ARPPacket")()
+        self.library.call("umilib_protocol_arp_arp_reception_reply", self.handle, ctypes.byref(found), ctypes.byref(reply))
         return ARPPacket.from_structure(reply) if found.value else None
 
     @property
     def resolved(self) -> list[bytes]:
-        count = self.library.value(f"{P}_arp_reception_resolved_count", ctypes.c_size_t, self.handle)
-        return [self.library.output(f"{P}_arp_reception_resolved_get", self.handle, index) for index in range(count)]
+        count = self.library.value("umilib_protocol_arp_arp_reception_resolved_count", ctypes.c_size_t, self.handle)
+        return [self.library.output("umilib_protocol_arp_arp_reception_resolved_get", self.handle, index) for index in range(count)]
 
     @property
     def conflict(self) -> bool:
-        return self.library.value(f"{P}_arp_reception_conflict", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_arp_arp_reception_conflict", ctypes.c_bool, self.handle)
 
 
 class ARPEvent(Handle):
     """What :meth:`ARPCache.poll` reports: a request to send again (``kind`` :attr:`REQUEST`) or an
     address that did not answer (:attr:`UNREACHABLE`), with the packets dropped for it."""
 
-    FREE = f"{P}_arp_event_free"
+    FREE = "umilib_protocol_arp_arp_event_free"
     REQUEST: ClassVar[int] = 1
     UNREACHABLE: ClassVar[int] = 2
 
     def kind_and_address(self) -> tuple[int, IPv4Address]:
         kind = ctypes.c_uint8()
         address = self.library.type("umilib_protocol_ip_IPv4Address")()
-        self.library.call(f"{P}_arp_event_address", self.handle, ctypes.byref(kind), ctypes.byref(address))
+        self.library.call("umilib_protocol_arp_arp_event_address", self.handle, ctypes.byref(kind), ctypes.byref(address))
         return kind.value, IPv4Address.from_structure(address)
 
     @property
@@ -215,17 +213,17 @@ class ARPEvent(Handle):
 
     @property
     def packets(self) -> list[bytes]:
-        count = self.library.value(f"{P}_arp_event_packet_count", ctypes.c_size_t, self.handle)
-        return [self.library.output(f"{P}_arp_event_packet_get", self.handle, index) for index in range(count)]
+        count = self.library.value("umilib_protocol_arp_arp_event_packet_count", ctypes.c_size_t, self.handle)
+        return [self.library.output("umilib_protocol_arp_arp_event_packet_get", self.handle, index) for index in range(count)]
 
 
 class ARPCache(Handle):
     """The translation table of ARP from IPv4 to MAC addresses, without I/O."""
 
-    FREE = f"{P}_arp_cache_free"
+    FREE = "umilib_protocol_arp_arp_cache_free"
 
     def __init__(self, config: ARPConfig = ARPConfig()) -> None:
-        super().__init__(Handle.create(f"{P}_arp_cache_new", config.to_structure()))
+        super().__init__(Handle.create("umilib_protocol_arp_arp_cache_new", config.to_structure()))
         self.config = config
 
     def resolve(self, address: IPv4Address, packet: bytes | None, now: int) -> tuple[ARPResolution, MACAddress | None]:
@@ -234,21 +232,21 @@ class ARPCache(Handle):
         kind = ctypes.c_uint8()
         hardware = self.library.type("umilib_protocol_ethernet_MACAddress")()
         data, length = (None, 0) if packet is None else (bytes(packet), len(packet))
-        self.library.call(f"{P}_arp_cache_resolve", self.handle, address.to_structure(), data, length, now, ctypes.byref(kind), ctypes.byref(hardware))
+        self.library.call("umilib_protocol_arp_arp_cache_resolve", self.handle, address.to_structure(), data, length, now, ctypes.byref(kind), ctypes.byref(hardware))
         resolution = ARPResolution(kind.value)
         return resolution, MACAddress.from_structure(hardware) if resolution == ARPResolution.RESOLVED else None
 
     def lookup(self, address: IPv4Address, now: int) -> MACAddress | None:
         found = ctypes.c_bool()
         hardware = self.library.type("umilib_protocol_ethernet_MACAddress")()
-        self.library.call(f"{P}_arp_cache_lookup", self.handle, address.to_structure(), now, ctypes.byref(found), ctypes.byref(hardware))
+        self.library.call("umilib_protocol_arp_arp_cache_lookup", self.handle, address.to_structure(), now, ctypes.byref(found), ctypes.byref(hardware))
         return MACAddress.from_structure(hardware) if found.value else None
 
     def insert_static(self, address: IPv4Address, hardware: MACAddress) -> None:
-        self.library.call(f"{P}_arp_cache_insert_static", self.handle, address.to_structure(), hardware.to_structure())
+        self.library.call("umilib_protocol_arp_arp_cache_insert_static", self.handle, address.to_structure(), hardware.to_structure())
 
     def remove(self, address: IPv4Address) -> bool:
-        return self.library.value(f"{P}_arp_cache_remove", ctypes.c_bool, self.handle, address.to_structure())
+        return self.library.value("umilib_protocol_arp_arp_cache_remove", ctypes.c_bool, self.handle, address.to_structure())
 
     def receive(self, packet: ARPPacket, hardware: MACAddress, local: list[IPv4Address], now: int) -> ARPReception:
         """Processes a packet received at ``now`` on an interface of ``hardware`` and the protocol
@@ -256,20 +254,20 @@ class ARPCache(Handle):
         addresses = (self.library.type("umilib_protocol_ip_IPv4Address") * max(len(local), 1))(*[address.to_structure() for address in local])
         pointer = ctypes.c_void_p()
         self.library.call(
-            f"{P}_arp_cache_receive", self.handle, packet.to_structure(), hardware.to_structure(), addresses, len(local), now, ctypes.byref(pointer)
+            "umilib_protocol_arp_arp_cache_receive", self.handle, packet.to_structure(), hardware.to_structure(), addresses, len(local), now, ctypes.byref(pointer)
         )
         return ARPReception(pointer.value)
 
     def poll_timeout(self) -> int | None:
         """The earliest time at which :meth:`poll` has something to do."""
-        return self.library.optional(f"{P}_arp_cache_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_arp_arp_cache_poll_timeout", ctypes.c_uint64, self.handle)
 
     def poll(self, now: int) -> ARPEvent | None:
         """Advances the cache to ``now``: forgets expired addresses and returns the next request to
         send again or the next address that did not answer."""
         found = ctypes.c_bool()
         pointer = ctypes.c_void_p()
-        self.library.call(f"{P}_arp_cache_poll", self.handle, now, ctypes.byref(found), ctypes.byref(pointer))
+        self.library.call("umilib_protocol_arp_arp_cache_poll", self.handle, now, ctypes.byref(found), ctypes.byref(pointer))
         if not found.value:
             return None
         return ARPEvent(pointer.value)

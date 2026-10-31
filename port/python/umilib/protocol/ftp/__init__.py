@@ -20,7 +20,6 @@ from typing import Any, ClassVar
 
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Nanoseconds, Text
 
-P = "umilib_protocol_ftp"
 
 __all__ = [
     "FTPClient",
@@ -66,20 +65,20 @@ class FTPReply:
     def decode(cls, wire: bytes) -> FTPReply:
         """The reply of its lines on the wire, each with its CRLF."""
         code, lines = ctypes.c_uint16(), Buffer()
-        Library.default().call(f"{P}_ftp_reply_decode", *Bytes.readable(wire), ctypes.byref(code), ctypes.byref(lines))
+        Library.default().call("umilib_protocol_ftp_ftp_reply_decode", *Bytes.readable(wire), ctypes.byref(code), ctypes.byref(lines))
         return cls(code.value, Library.default().take(lines).split(b"\n"))
 
     def encode(self) -> bytes:
-        return Library.default().output(f"{P}_ftp_reply_encode", self.code, *Bytes.readable(b"\n".join(self.lines)))
+        return Library.default().output("umilib_protocol_ftp_ftp_reply_encode", self.code, *Bytes.readable(b"\n".join(self.lines)))
 
     @classmethod
     def with_pathname(cls, pathname: str, text: str) -> FTPReply:
         """The reply to PWD or MKD of ``pathname`` (RFC 959 Appendix II): ``257 "name" text``."""
-        return cls.decode(Library.default().output(f"{P}_ftp_reply_with_pathname", *Text.encode(pathname), *Text.encode(text)))
+        return cls.decode(Library.default().output("umilib_protocol_ftp_ftp_reply_with_pathname", *Text.encode(pathname), *Text.encode(text)))
 
     def pathname(self) -> str | None:
         """The pathname of a reply to PWD or MKD, its doubled quotes undone."""
-        name = Library.default().optional(f"{P}_ftp_reply_pathname", Buffer, *Bytes.readable(self.encode()))
+        name = Library.default().optional("umilib_protocol_ftp_ftp_reply_pathname", Buffer, *Bytes.readable(self.encode()))
         return None if name is None else name.decode("utf-8")
 
     def severity(self) -> int:
@@ -112,7 +111,7 @@ class FTPCommand:
     def parse(cls, line: bytes | str) -> FTPCommand:
         data = line.encode("utf-8") if isinstance(line, str) else line
         transfers, out = ctypes.c_bool(), Buffer()
-        Library.default().call(f"{P}_ftp_command_normalize", *Bytes.readable(data), ctypes.byref(transfers), ctypes.byref(out))
+        Library.default().call("umilib_protocol_ftp_ftp_command_normalize", *Bytes.readable(data), ctypes.byref(transfers), ctypes.byref(out))
         return cls(Library.default().take(out).decode("utf-8"), transfers.value)
 
     @property
@@ -144,7 +143,7 @@ class FTPFeatures:
 
     @classmethod
     def from_reply(cls, reply: FTPReply) -> FTPFeatures:
-        text = Library.default().output(f"{P}_ftp_features_decode", *Bytes.readable(reply.encode())).decode("utf-8")
+        text = Library.default().output("umilib_protocol_ftp_ftp_features_decode", *Bytes.readable(reply.encode())).decode("utf-8")
         return cls([FTPFeature(*(line.split(" ", 1) + [""])[:2]) for line in text.split("\n") if line])
 
     def get(self, name: str) -> FTPFeature | None:
@@ -162,7 +161,7 @@ class FTPDataAddress:
     host: str | None
     port: int
 
-    C_TYPE: ClassVar[str] = f"{P}_FTPDataAddress"
+    C_TYPE: ClassVar[str] = "umilib_protocol_ftp_FTPDataAddress"
 
     def to_structure(self) -> Any:
         structure = Library.default().type(self.C_TYPE)()
@@ -180,32 +179,32 @@ class FTPDataAddress:
 
     @classmethod
     def parse_port(cls, text: str) -> FTPDataAddress:
-        return cls.from_structure(Library.default().value(f"{P}_ftp_data_address_parse_port", Library.default().type(cls.C_TYPE), *Text.encode(text)))
+        return cls.from_structure(Library.default().value("umilib_protocol_ftp_ftp_data_address_parse_port", Library.default().type(cls.C_TYPE), *Text.encode(text)))
 
     def format_port(self) -> str:
-        return Library.default().output(f"{P}_ftp_data_address_format_port", self.to_structure()).decode("ascii")
+        return Library.default().output("umilib_protocol_ftp_ftp_data_address_format_port", self.to_structure()).decode("ascii")
 
     @classmethod
     def parse_eprt(cls, text: str) -> FTPDataAddress:
         """The address of EPRT; raises ``State`` for a network protocol not supported (522)."""
-        return cls.from_structure(Library.default().value(f"{P}_ftp_data_address_parse_eprt", Library.default().type(cls.C_TYPE), *Text.encode(text)))
+        return cls.from_structure(Library.default().value("umilib_protocol_ftp_ftp_data_address_parse_eprt", Library.default().type(cls.C_TYPE), *Text.encode(text)))
 
     def format_eprt(self) -> str:
-        return Library.default().output(f"{P}_ftp_data_address_format_eprt", self.to_structure()).decode("ascii")
+        return Library.default().output("umilib_protocol_ftp_ftp_data_address_format_eprt", self.to_structure()).decode("ascii")
 
     @classmethod
     def from_pasv(cls, reply: FTPReply) -> FTPDataAddress:
-        return cls.from_structure(Library.default().value(f"{P}_ftp_data_address_from_pasv", Library.default().type(cls.C_TYPE), *Bytes.readable(reply.encode())))
+        return cls.from_structure(Library.default().value("umilib_protocol_ftp_ftp_data_address_from_pasv", Library.default().type(cls.C_TYPE), *Bytes.readable(reply.encode())))
 
     def pasv_reply(self) -> FTPReply:
-        return FTPReply.decode(Library.default().output(f"{P}_ftp_data_address_pasv_reply", self.to_structure()))
+        return FTPReply.decode(Library.default().output("umilib_protocol_ftp_ftp_data_address_pasv_reply", self.to_structure()))
 
     @classmethod
     def from_epsv(cls, reply: FTPReply) -> FTPDataAddress:
-        return cls.from_structure(Library.default().value(f"{P}_ftp_data_address_from_epsv", Library.default().type(cls.C_TYPE), *Bytes.readable(reply.encode())))
+        return cls.from_structure(Library.default().value("umilib_protocol_ftp_ftp_data_address_from_epsv", Library.default().type(cls.C_TYPE), *Bytes.readable(reply.encode())))
 
     def epsv_reply(self) -> FTPReply:
-        return FTPReply.decode(Library.default().output(f"{P}_ftp_data_address_epsv_reply", self.to_structure()))
+        return FTPReply.decode(Library.default().output("umilib_protocol_ftp_ftp_data_address_epsv_reply", self.to_structure()))
 
 
 @dataclasses.dataclass(frozen=True, order=True)
@@ -218,11 +217,11 @@ class FTPTime:
     @classmethod
     def parse(cls, text: str) -> FTPTime:
         seconds, nanoseconds = ctypes.c_int64(), ctypes.c_uint32()
-        Library.default().call(f"{P}_ftp_time_parse", *Text.encode(text), ctypes.byref(seconds), ctypes.byref(nanoseconds))
+        Library.default().call("umilib_protocol_ftp_ftp_time_parse", *Text.encode(text), ctypes.byref(seconds), ctypes.byref(nanoseconds))
         return cls(seconds.value, nanoseconds.value)
 
     def __str__(self) -> str:
-        return Library.default().output(f"{P}_ftp_time_format", self.seconds, self.nanoseconds).decode("ascii")
+        return Library.default().output("umilib_protocol_ftp_ftp_time_format", self.seconds, self.nanoseconds).decode("ascii")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -234,7 +233,7 @@ class FTPFacts:
 
     @classmethod
     def parse(cls, line: str) -> FTPFacts:
-        text = Library.default().output(f"{P}_ftp_facts_normalize", *Text.encode(line)).decode("utf-8")
+        text = Library.default().output("umilib_protocol_ftp_ftp_facts_normalize", *Text.encode(line)).decode("utf-8")
         facts, pathname = text.split(" ", 1)
         pairs = tuple(tuple(fact.split("=", 1)) for fact in facts.split(";") if fact)
         return cls(pairs, pathname)  # type: ignore[arg-type]
@@ -269,13 +268,13 @@ class FTPConfig:
     reply_timeout: datetime.timedelta
     idle_timeout: datetime.timedelta
 
-    C_TYPE: ClassVar[str] = f"{P}_FTPConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_ftp_FTPConfig"
     DURATIONS: ClassVar[tuple[str, ...]] = ("reply_timeout", "idle_timeout")
 
     @classmethod
     def default(cls) -> FTPConfig:
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_ftp_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_ftp_ftp_config_default", ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -314,14 +313,14 @@ class FTPServerConfig:
     features: list[str]
     commands: list[str]
 
-    C_TYPE: ClassVar[str] = f"{P}_FTPServerConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_ftp_FTPServerConfig"
     BESIDE: ClassVar[tuple[str, ...]] = ("system", "mlst_facts", "features", "commands")
 
     @classmethod
     def default(cls) -> FTPServerConfig:
         """The defaults of the library: a UNIX system, the facts type, size, modify, perm and unique."""
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_ftp_server_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_ftp_ftp_server_config_default", ctypes.byref(structure))
         values = {field.name: getattr(structure, field.name) for field in dataclasses.fields(cls) if field.name not in cls.BESIDE}
         facts = ["type*", "size*", "modify*", "perm", "unique"]
         return cls(system="UNIX Type: L8", mlst_facts=facts, features=[], commands=[], **values)
@@ -380,7 +379,7 @@ class FTPClientEvent:
         library = Library.default()
         found, kind, error, command, reply = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_void_p(), Buffer(), Buffer()
         library.call(
-            f"{P}_ftp_client_poll_event", client.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
+            "umilib_protocol_ftp_ftp_client_poll_event", client.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
             ctypes.byref(reply), ctypes.byref(error),
         )  # fmt: skip
         line, wire = library.take(command), library.take(reply)
@@ -406,7 +405,7 @@ class FTPServerEvent:
         library = Library.default()
         found, kind, error, command, reply = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_void_p(), Buffer(), Buffer()
         library.call(
-            f"{P}_ftp_server_poll_event", server.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
+            "umilib_protocol_ftp_ftp_server_poll_event", server.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
             ctypes.byref(reply), ctypes.byref(error),
         )  # fmt: skip
         line, _ = library.take(command), library.take(reply)
@@ -419,37 +418,37 @@ class FTPClient(Handle):
     """An FTP client of the control connection (RFC 959): commands sent one at a time (§5.4), but
     ABOR, STAT and QUIT during a transfer; the data connections are the caller's."""
 
-    FREE = f"{P}_ftp_client_free"
+    FREE = "umilib_protocol_ftp_ftp_client_free"
 
     @classmethod
     def new(cls, config: FTPConfig | None, secure: bool, now: int) -> FTPClient:
         """A client of a new control connection, ``secure`` if it is TLS from its start."""
-        return cls(Handle.create(f"{P}_ftp_client_new", (config or FTPConfig.default()).to_structure(), secure, now))
+        return cls(Handle.create("umilib_protocol_ftp_ftp_client_new", (config or FTPConfig.default()).to_structure(), secure, now))
 
     def is_open(self) -> bool:
-        return self.library.value(f"{P}_ftp_client_is_open", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_ftp_ftp_client_is_open", ctypes.c_bool, self.handle)
 
     def has_feature(self, name: str) -> bool:
-        return self.library.value(f"{P}_ftp_client_has_feature", ctypes.c_bool, self.handle, *Text.encode(name))
+        return self.library.value("umilib_protocol_ftp_ftp_client_has_feature", ctypes.c_bool, self.handle, *Text.encode(name))
 
     def receive(self, data: bytes, now: int) -> None:
-        self.library.call(f"{P}_ftp_client_receive", self.handle, *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_ftp_ftp_client_receive", self.handle, *Bytes.readable(data), now)
 
     def send(self, command: FTPCommand | str, now: int) -> None:
         """Queues ``command``; raises ``State`` for one the state or the features do not allow."""
-        self.library.call(f"{P}_ftp_client_send", self.handle, *Bytes.readable(str(command).encode("utf-8")), now)
+        self.library.call("umilib_protocol_ftp_ftp_client_send", self.handle, *Bytes.readable(str(command).encode("utf-8")), now)
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_ftp_client_transmit", self.handle)
+        return self.library.output("umilib_protocol_ftp_ftp_client_transmit", self.handle)
 
     def poll_event(self) -> FTPClientEvent | None:
         return FTPClientEvent.poll(self)
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_ftp_client_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_ftp_ftp_client_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_ftp_client_expire", self.handle, now)
+        self.library.call("umilib_protocol_ftp_ftp_client_expire", self.handle, now)
 
 
 class FTPServer(Handle):
@@ -457,7 +456,7 @@ class FTPServer(Handle):
     MODE, STRU, the commands of FTPS, those out of sequence, before login, of a data address refused
     (RFC 2577) or of a feature not offered itself, and tells the caller each other command."""
 
-    FREE = f"{P}_ftp_server_free"
+    FREE = "umilib_protocol_ftp_ftp_server_free"
 
     @classmethod
     def new(cls, config: FTPConfig | None, server: FTPServerConfig | None, peer: str, secure: bool) -> FTPServer:
@@ -465,13 +464,13 @@ class FTPServer(Handle):
         server = server or FTPServerConfig.default()
         facts, features, commands = Text.array(server.mlst_facts), Text.array(server.features), Text.array(server.commands)
         return cls(Handle.create(
-            f"{P}_ftp_server_new", (config or FTPConfig.default()).to_structure(), server.to_structure(),
+            "umilib_protocol_ftp_ftp_server_new", (config or FTPConfig.default()).to_structure(), server.to_structure(),
             *Text.encode(server.system), *facts[:2], *features[:2], *commands[:2], *Bytes.readable(ipaddress.ip_address(peer).packed),
             secure,
         ))  # fmt: skip
 
     def is_open(self) -> bool:
-        return self.library.value(f"{P}_ftp_server_is_open", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_ftp_ftp_server_is_open", ctypes.c_bool, self.handle)
 
     def session(self) -> FTPSession:
         """What the session set: the login, TYPE, MODE, STRU, PROT and a REST marker."""
@@ -479,7 +478,7 @@ class FTPServer(Handle):
         logged_in, mode, structure, protection, has_restart = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_uint8(), ctypes.c_uint8(), ctypes.c_bool()
         representation, restart = Buffer(), Buffer()
         library.call(
-            f"{P}_ftp_server_session", self.handle, ctypes.byref(logged_in), ctypes.byref(representation), ctypes.byref(mode),
+            "umilib_protocol_ftp_ftp_server_session", self.handle, ctypes.byref(logged_in), ctypes.byref(representation), ctypes.byref(mode),
             ctypes.byref(structure), ctypes.byref(protection), ctypes.byref(has_restart), ctypes.byref(restart),
         )  # fmt: skip
         return FTPSession(
@@ -489,36 +488,36 @@ class FTPServer(Handle):
 
     def features(self) -> FTPFeatures:
         """The features the server lists now in its reply to FEAT."""
-        return FTPFeatures.from_reply(FTPReply.decode(self.library.output(f"{P}_ftp_server_features", self.handle)))
+        return FTPFeatures.from_reply(FTPReply.decode(self.library.output("umilib_protocol_ftp_ftp_server_features", self.handle)))
 
     def greet(self, reply: FTPReply, now: int) -> None:
         """Sends the greeting: 220, or 421 (RFC 959 §5.4)."""
-        self.library.call(f"{P}_ftp_server_greet", self.handle, *Bytes.readable(reply.encode()), now)
+        self.library.call("umilib_protocol_ftp_ftp_server_greet", self.handle, *Bytes.readable(reply.encode()), now)
 
     def wants_receive(self) -> bool:
         """Whether the server takes more input now: stop reading the connection while it is false,
         so that a peer that pipelines cannot make it hold more than ``maximum_buffered``."""
-        return self.library.value(f"{P}_ftp_server_wants_receive", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_ftp_ftp_server_wants_receive", ctypes.c_bool, self.handle)
 
     def receive(self, data: bytes, now: int) -> None:
-        self.library.call(f"{P}_ftp_server_receive", self.handle, *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_ftp_ftp_server_receive", self.handle, *Bytes.readable(data), now)
 
     def reply(self, reply: FTPReply, now: int) -> None:
         """Answers the command told: a transfer with a preliminary reply (1xx) and then its final one."""
-        self.library.call(f"{P}_ftp_server_reply", self.handle, *Bytes.readable(reply.encode()), now)
+        self.library.call("umilib_protocol_ftp_ftp_server_reply", self.handle, *Bytes.readable(reply.encode()), now)
 
     def shutdown(self, text: str) -> None:
-        """Closes the connection with 421."""
-        self.library.call(f"{P}_ftp_server_shutdown", self.handle, *Text.encode(text))
+        """Closes the connection with 421 (RFC 959 §4.2); raises ``Syntax`` for a line break in ``text``."""
+        self.library.call("umilib_protocol_ftp_ftp_server_shutdown", self.handle, *Text.encode(text))
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_ftp_server_transmit", self.handle)
+        return self.library.output("umilib_protocol_ftp_ftp_server_transmit", self.handle)
 
     def poll_event(self) -> FTPServerEvent | None:
         return FTPServerEvent.poll(self)
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_ftp_server_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_ftp_ftp_server_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_ftp_server_expire", self.handle, now)
+        self.library.call("umilib_protocol_ftp_ftp_server_expire", self.handle, now)

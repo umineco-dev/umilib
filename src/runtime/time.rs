@@ -1,7 +1,6 @@
-use alloc::collections::{BTreeMap, BinaryHeap};
+use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use core::cmp::Reverse;
 use core::future::Future;
 use core::ops::{Add, Sub};
 use core::pin::Pin;
@@ -81,7 +80,9 @@ impl TimerKey {
 /// [`TimerQueue::fire`] to wake the timers that expired.
 #[derive(Debug, Default)]
 pub struct TimerQueue {
-    deadlines: BinaryHeap<Reverse<(Instant, TimerKey)>>,
+    /// The timers waiting, in order of deadline; exactly those of `timers`,
+    /// so that removing a timer frees it at once.
+    deadlines: BTreeSet<(Instant, TimerKey)>,
     timers: BTreeMap<TimerKey, (Instant, Option<Waker>)>,
     next_key: u64,
 }
@@ -95,27 +96,40 @@ impl TimerQueue {
     pub fn insert(&mut self, deadline: Instant, waker: Option<Waker>) -> TimerKey {
         let key = TimerKey(self.next_key);
         self.next_key += 1;
-        self.deadlines.push(Reverse((deadline, key)));
+        self.deadlines.insert((deadline, key));
         self.timers.insert(key, (deadline, waker));
         key
     }
 
     /// Replaces the waker of the timer `key`; false if it is not there (expired or removed).
     pub fn update(&mut self, key: TimerKey, waker: &Waker) -> bool {
-        match self.timers.get_mut(&key) {
-            Some((_, slot)) => {
-                if !slot.as_ref().is_some_and(|current| current.will_wake(waker)) {
-                    *slot = Some(waker.clone());
-                }
-                true
-            }
-            None => false,
+        self.swap_waker(key, waker).is_some()
+    }
+
+    /// Replaces the waker of the timer `key` and returns the one it had, or
+    /// `None` if the timer is not there. Dropping a waker can drop its task,
+    /// and with it a future that uses this queue, so a caller that holds the
+    /// queue under a lock drops what this returns after releasing it.
+    pub fn swap_waker(&mut self, key: TimerKey, waker: &Waker) -> Option<Option<Waker>> {
+        let (_, slot) = self.timers.get_mut(&key)?;
+        if slot.as_ref().is_some_and(|current| current.will_wake(waker)) {
+            return Some(None);
         }
+        Some(slot.replace(waker.clone()))
     }
 
     /// Removes the timer `key`; whether it was there.
     pub fn remove(&mut self, key: TimerKey) -> bool {
-        self.timers.remove(&key).is_some()
+        self.take(key).is_some()
+    }
+
+    /// Removes the timer `key` and returns its waker, or `None` if it is not
+    /// there; as for [`TimerQueue::swap_waker`], a caller that holds the queue
+    /// under a lock drops the waker after releasing it.
+    pub fn take(&mut self, key: TimerKey) -> Option<Option<Waker>> {
+        let (deadline, waker) = self.timers.remove(&key)?;
+        self.deadlines.remove(&(deadline, key));
+        Some(waker)
     }
 
     /// Whether the timer `key` is waiting (neither expired nor removed).
@@ -133,15 +147,8 @@ impl TimerQueue {
     }
 
     /// The earliest deadline of the timers waiting.
-    pub fn next_deadline(&mut self) -> Option<Instant> {
-        while let Some(Reverse((deadline, key))) = self.deadlines.peek().copied() {
-            if self.timers.get(&key).is_some_and(|(stored, _)| *stored == deadline) {
-                return Some(deadline);
-            }
-            // Removed timers leave their deadline in the heap until it comes up.
-            self.deadlines.pop();
-        }
-        None
+    pub fn next_deadline(&self) -> Option<Instant> {
+        self.deadlines.first().map(|(deadline, _)| *deadline)
     }
 
     /// Removes the timers whose deadline is `now` or earlier and wakes
@@ -159,11 +166,11 @@ impl TimerQueue {
     /// queue); returns how many expired.
     pub fn expire(&mut self, now: Instant, wakers: &mut Vec<Waker>) -> usize {
         let mut expired = 0;
-        while let Some(Reverse((deadline, key))) = self.deadlines.peek().copied() {
+        while let Some(&(deadline, key)) = self.deadlines.first() {
             if deadline > now {
                 break;
             }
-            self.deadlines.pop();
+            self.deadlines.pop_first();
             if let Some((_, waker)) = self.timers.remove(&key) {
                 expired += 1;
                 wakers.extend(waker);
@@ -270,15 +277,17 @@ impl Future for Sleep {
     fn poll(mut self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<()> {
         if self.timer.now() >= self.deadline {
             if let Some(key) = self.key.take() {
-                self.timer.queue.lock().remove(key);
+                // The waker is dropped once the queue is released.
+                let _waker = self.timer.queue.lock().take(key);
             }
             return Poll::Ready(());
         }
         let deadline = self.deadline;
-        if let Some(key) = self.key
-            && self.timer.queue.lock().update(key, context.waker())
-        {
-            return Poll::Pending;
+        if let Some(key) = self.key {
+            let replaced = self.timer.queue.lock().swap_waker(key, context.waker());
+            if replaced.is_some() {
+                return Poll::Pending;
+            }
         }
         let key = self.timer.insert(deadline, Some(context.waker().clone()));
         self.key = Some(key);
@@ -289,7 +298,8 @@ impl Future for Sleep {
 impl Drop for Sleep {
     fn drop(&mut self) {
         if let Some(key) = self.key.take() {
-            self.timer.queue.lock().remove(key);
+            // The waker is dropped once the queue is released.
+            let _waker = self.timer.queue.lock().take(key);
         }
     }
 }

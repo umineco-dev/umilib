@@ -16,7 +16,9 @@ pub struct MailReader<'a> {
 }
 
 impl<'a> MailReader<'a> {
-    /// The deepest nesting of comments read.
+    /// The deepest nesting of comments read. A constant, not of `MailConfig`: comments are read
+    /// with a counter, so their depth costs nothing, and what a field costs is bounded by
+    /// `MailConfig::maximum_field_length`.
     pub const MAXIMUM_COMMENT_DEPTH: usize = 64;
 
     pub fn new(text: &'a [u8], utf8: bool) -> MailReader<'a> {

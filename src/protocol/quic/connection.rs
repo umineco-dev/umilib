@@ -1460,7 +1460,7 @@ impl QUICConnection {
                 }
             }
             QUICFrame::PathChallenge { data } => {
-                if self.pending.path_responses.len() < 4 {
+                if self.pending.path_responses.len() < self.config.maximum_path_responses {
                     let response = QUICPathResponse { data, destination: self.remote, limit: usize::MAX };
                     self.pending.path_responses.push_back(response);
                 }
@@ -1682,6 +1682,9 @@ impl QUICConnection {
             return Err(QUICError::transport(QUICErrorCode::CRYPTO_BUFFER_EXCEEDED, "too much CRYPTO data"));
         }
         crypto.insert(offset, data, false)?;
+        if crypto.fragments() > self.config.maximum_receive_fragments {
+            return Err(QUICError::transport(QUICErrorCode::CRYPTO_BUFFER_EXCEEDED, "CRYPTO data in too many pieces"));
+        }
         self.feed_tls()
     }
 
@@ -1716,6 +1719,11 @@ impl QUICConnection {
         let Some(receive) = &mut found.receive else { return Ok(()) };
         let new = receive.receive(offset, data, fin)?;
         self.receive_credit.receive(new)?;
+        // No error code of RFC 9000 §20.1 is about load; INTERNAL_ERROR is the
+        // one for an end that cannot go on with the connection.
+        if receive.buffer.fragments() > self.config.maximum_receive_fragments {
+            return Err(QUICError::transport(QUICErrorCode::INTERNAL_ERROR, "stream data in too many pieces"));
+        }
         // What arrives for a reader that stopped is dropped, and counts as read (RFC 9000 §3.5).
         if receive.stop.is_some() {
             let taken = receive.absorb();

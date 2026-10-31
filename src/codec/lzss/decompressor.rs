@@ -55,6 +55,12 @@ impl LZSSDecompressor {
     }
 }
 
+impl Default for LZSSDecompressor {
+    fn default() -> LZSSDecompressor {
+        LZSSDecompressor::new(LZSSConfig::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Decompressor for LZSSDecompressor {
     fn decompress(&mut self, input: &[u8], output: &mut [u8]) -> Result<Progress, CompressionError> {
         let mut rest = input;

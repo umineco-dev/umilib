@@ -22,7 +22,6 @@ from umilib.protocol.dhcp import DHCPTime
 from umilib.protocol.ethernet import MACAddress
 from umilib.protocol.ip import IPv4Address
 
-P = "umilib_protocol_dhcp_v4"
 
 __all__ = [
     "DHCPv4Binding",
@@ -128,7 +127,7 @@ class DHCPv4Route:
     router: IPv4Address
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DHCPv4Route")()
+        structure = Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Route")()
         structure.destination = self.destination.to_structure()
         Fields.assign(structure, "prefix", self.prefix)
         structure.router = self.router.to_structure()
@@ -163,7 +162,7 @@ class DHCPv4Options:
     def decode_area(self, area: bytes | bytearray | memoryview) -> None:
         """Adds the options of ``area`` (RFC 2132 §2): PAD alone, END ends it, any other a code, a length
         and the data. Raises ``Malformed`` for an option cut short."""
-        normalized = Library.default().output(f"{P}_dhcpv4_options_decode", *Bytes.readable(area))
+        normalized = Library.default().output("umilib_protocol_dhcp_v4_dhcpv4_options_decode", *Bytes.readable(area))
         index = 0
         while normalized[index] != DHCPv4OptionCode.END:
             length = normalized[index + 1]
@@ -190,7 +189,7 @@ class DHCPv4Options:
                 part = data[start : start + 255]
                 area += bytes([code, len(part)]) + part
         area.append(DHCPv4OptionCode.END)
-        return Library.default().output(f"{P}_dhcpv4_options_decode", *Bytes.readable(bytes(area)))
+        return Library.default().output("umilib_protocol_dhcp_v4_dhcpv4_options_decode", *Bytes.readable(bytes(area)))
 
     def get(self, code: int) -> bytes | None:
         return next((data for found, data in self.entries if found == code), None)
@@ -256,15 +255,15 @@ class DHCPv4Options:
         short or of a prefix longer than 32. A client given this option ignores the Router option."""
         area = self.encode()
         capacity = len(area) // 5 + 1
-        routes = (Library.default().type(f"{P}_DHCPv4Route") * capacity)()
+        routes = (Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Route") * capacity)()
         count = ctypes.c_size_t()
-        Library.default().call(f"{P}_dhcpv4_options_routes", *Bytes.readable(area), routes, capacity, ctypes.byref(count))
+        Library.default().call("umilib_protocol_dhcp_v4_dhcpv4_options_routes", *Bytes.readable(area), routes, capacity, ctypes.byref(count))
         return [DHCPv4Route.from_structure(routes[index]) for index in range(count.value)]
 
     def set_routes(self, routes: list[DHCPv4Route]) -> None:
         """Sets the classless static route option; the bits of a destination beyond its prefix are not sent."""
-        array = (Library.default().type(f"{P}_DHCPv4Route") * max(len(routes), 1))(*[route.to_structure() for route in routes])
-        area = Library.default().output(f"{P}_dhcpv4_options_set_routes", *Bytes.readable(self.encode()), array, len(routes))
+        array = (Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Route") * max(len(routes), 1))(*[route.to_structure() for route in routes])
+        area = Library.default().output("umilib_protocol_dhcp_v4_dhcpv4_options_set_routes", *Bytes.readable(self.encode()), array, len(routes))
         self.set(DHCPv4OptionCode.CLASSLESS_STATIC_ROUTE, DHCPv4Options.decode(area).get(DHCPv4OptionCode.CLASSLESS_STATIC_ROUTE) or b"")
 
 
@@ -329,7 +328,7 @@ class DHCPv4Message:
 
     def to_structure(self) -> Any:
         """The C structure of the header; raises ``OverflowError`` or ``ValueError`` for a field that does not fit."""
-        structure = Library.default().type(f"{P}_DHCPv4Message")()
+        structure = Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Message")()
         for name in DHCPv4Message.FIELDS:
             Fields.assign(structure, name, getattr(self, name))
         for name in DHCPv4Message.ADDRESSES:
@@ -353,13 +352,13 @@ class DHCPv4Message:
         """The message of ``data``: options of the options field, then, as the overload option says, of
         ``file``, then of ``sname`` (RFC 2131 §4.1). Raises ``Malformed`` without the magic cookie (BOOTP,
         not DHCP), for one cut short, of another op, or with an option cut short."""
-        structure, buffer = Library.default().type(f"{P}_DHCPv4Message")(), Buffer()
-        Library.default().call(f"{P}_dhcpv4_message_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
+        structure, buffer = Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Message")(), Buffer()
+        Library.default().call("umilib_protocol_dhcp_v4_dhcpv4_message_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
         return cls.from_structure(structure, DHCPv4Options.decode(Library.default().take(buffer)))
 
     def encode(self) -> bytes:
         """The message, its options after the magic cookie and END, padded to at least 300 bytes (RFC 1542 §2.1)."""
-        return Library.default().output(f"{P}_dhcpv4_message_encode", ctypes.byref(self.to_structure()), *Bytes.readable(self.options.encode()))
+        return Library.default().output("umilib_protocol_dhcp_v4_dhcpv4_message_encode", ctypes.byref(self.to_structure()), *Bytes.readable(self.options.encode()))
 
     def message_type(self) -> DHCPv4MessageType | None:
         return self.options.message_type()
@@ -374,7 +373,7 @@ class DHCPv4Message:
     def client_key(self) -> bytes:
         """The key a server knows the client by: its client identifier, or its hardware type and address
         (RFC 2131 §4.2, RFC 4361 §6.1)."""
-        return Library.default().output(f"{P}_dhcpv4_message_client_key", ctypes.byref(self.to_structure()), *Bytes.readable(self.options.encode()))
+        return Library.default().output("umilib_protocol_dhcp_v4_dhcpv4_message_client_key", ctypes.byref(self.to_structure()), *Bytes.readable(self.options.encode()))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -398,7 +397,7 @@ class DHCPv4ClientConfig:
         return cls(hardware)
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DHCPv4ClientConfig")()
+        structure = Library.default().type("umilib_protocol_dhcp_v4_DHCPv4ClientConfig")()
         structure.hardware = self.hardware.to_structure()
         structure.broadcast = self.broadcast
         structure.ipv6_only = self.ipv6_only
@@ -485,13 +484,13 @@ class DHCPv4Client:
         """The object of umilib behind a client. The client holds it rather than being it: the
         ``release`` of a :class:`Handle` is its lock's, and the client's is the protocol's."""
 
-        FREE = f"{P}_dhcpv4_client_free"
+        FREE = "umilib_protocol_dhcp_v4_dhcpv4_client_free"
 
     def __init__(self, config: DHCPv4ClientConfig, now: int) -> None:
         parameters = bytes(config.parameters)
         self.object = DHCPv4Client.Object(
             Handle.create(
-                f"{P}_dhcpv4_client_new", ctypes.byref(config.to_structure()), *DHCPv4Client.optional(config.client_identifier),
+                "umilib_protocol_dhcp_v4_dhcpv4_client_new", ctypes.byref(config.to_structure()), *DHCPv4Client.optional(config.client_identifier),
                 *DHCPv4Client.optional(config.host_name), *Bytes.readable(parameters), now,
             )  # fmt: skip
         )
@@ -524,31 +523,31 @@ class DHCPv4Client:
         """Starts: with ``previous``, an address the client had, by asking for it again (INIT-REBOOT, RFC 2131
         §3.2); else by discovering servers. Raises ``Random`` if ``random`` fails."""
         address = None if previous is None else ctypes.byref(previous.to_structure())
-        self.library.call(f"{P}_dhcpv4_client_start", self.handle, address, now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_client_start", self.handle, address, now, *random.source())
 
     def receive(self, data: bytes, now: int, random: Any) -> None:
         """Takes a server's reply; ignored unless it is a reply to the client's exchange, of its hardware
         address and client identifier (RFC 6842 §3), of a type the state expects."""
-        self.library.call(f"{P}_dhcpv4_client_receive", self.handle, *Bytes.readable(data), now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_client_receive", self.handle, *Bytes.readable(data), now, *random.source())
 
     def transmit(self) -> DHCPv4Transmission | None:
         found, destination, buffer = ctypes.c_bool(), Library.default().type("umilib_protocol_ip_IPv4Address")(), Buffer()
-        self.library.call(f"{P}_dhcpv4_client_transmit", self.handle, ctypes.byref(found), ctypes.byref(destination), ctypes.byref(buffer))
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_client_transmit", self.handle, ctypes.byref(found), ctypes.byref(destination), ctypes.byref(buffer))
         data = self.library.take(buffer)
         return DHCPv4Transmission(IPv4Address.from_structure(destination), data) if found.value else None
 
     def poll_timeout(self) -> int | None:
         """When :meth:`expire` is next due, in nanoseconds."""
-        return self.library.optional(f"{P}_dhcpv4_client_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_dhcp_v4_dhcpv4_client_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int, random: Any) -> None:
         """Does what is due at ``now``: a retransmission, giving up an exchange, or the next step of the
         lease — RENEWING at T1, REBINDING at T2, and its end (RFC 2131 §4.4.5)."""
-        self.library.call(f"{P}_dhcpv4_client_expire", self.handle, now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_client_expire", self.handle, now, *random.source())
 
     def poll_event(self) -> DHCPv4ClientEvent | None:
-        found, structure, buffer = ctypes.c_bool(), Library.default().type(f"{P}_DHCPv4ClientEvent")(), Buffer()
-        self.library.call(f"{P}_dhcpv4_client_poll_event", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
+        found, structure, buffer = ctypes.c_bool(), Library.default().type("umilib_protocol_dhcp_v4_DHCPv4ClientEvent")(), Buffer()
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_client_poll_event", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
         options = self.library.take(buffer)
         if not found.value:
             return None
@@ -559,31 +558,31 @@ class DHCPv4Client:
 
     @property
     def state(self) -> DHCPv4ClientState:
-        return DHCPv4ClientState(self.library.value(f"{P}_dhcpv4_client_state", ctypes.c_uint8, self.handle))
+        return DHCPv4ClientState(self.library.value("umilib_protocol_dhcp_v4_dhcpv4_client_state", ctypes.c_uint8, self.handle))
 
     @property
     def lease(self) -> DHCPv4Lease | None:
-        found, structure, buffer = ctypes.c_bool(), Library.default().type(f"{P}_DHCPv4Lease")(), Buffer()
-        self.library.call(f"{P}_dhcpv4_client_lease", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
+        found, structure, buffer = ctypes.c_bool(), Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Lease")(), Buffer()
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_client_lease", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
         options = self.library.take(buffer)
         return DHCPv4Lease.from_structure(structure, options) if found.value else None
 
     def decline(self, now: int, random: Any) -> None:
         """Declines the address of the lease, which another host has (RFC 2131 §4.4.1): a DECLINE, then
         discovery again after ten seconds (§3.1.5). Raises ``State`` without a lease."""
-        self.library.call(f"{P}_dhcpv4_client_decline", self.handle, now, *random.source())
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_client_decline", self.handle, now, *random.source())
 
     def release(self, now: int) -> None:
         """Gives the address back (RFC 2131 §4.4.6): a RELEASE to the server; the client stops. Raises
         ``State`` without a lease."""
-        self.library.call(f"{P}_dhcpv4_client_release", self.handle, now)
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_client_release", self.handle, now)
 
     def inform(self, address: IPv4Address, now: int, random: Any) -> DHCPv4Transmission:
         """The DHCPINFORM of a client whose address ``address`` is configured otherwise (RFC 2131 §3.4), of
         an xid of its own: the client's exchange goes on, and the ACK, of that xid, is the caller's to read."""
         destination, buffer = Library.default().type("umilib_protocol_ip_IPv4Address")(), Buffer()
         self.library.call(
-            f"{P}_dhcpv4_client_inform", self.handle, address.to_structure(), now, *random.source(), ctypes.byref(destination),
+            "umilib_protocol_dhcp_v4_dhcpv4_client_inform", self.handle, address.to_structure(), now, *random.source(), ctypes.byref(destination),
             ctypes.byref(buffer),
         )  # fmt: skip
         return DHCPv4Transmission(IPv4Address.from_structure(destination), self.library.take(buffer))
@@ -611,9 +610,9 @@ class DHCPv4ServerConfig:
     def new(cls, address: IPv4Address, first: IPv4Address, last: IPv4Address) -> DHCPv4ServerConfig:
         """A server at ``address`` leasing ``first`` to ``last``, of the defaults of umilib, without
         reservations or options."""
-        structure = Library.default().type(f"{P}_DHCPv4ServerConfig")()
+        structure = Library.default().type("umilib_protocol_dhcp_v4_DHCPv4ServerConfig")()
         Library.default().call(
-            f"{P}_dhcpv4_server_config_new", address.to_structure(), first.to_structure(), last.to_structure(), ctypes.byref(structure)
+            "umilib_protocol_dhcp_v4_dhcpv4_server_config_new", address.to_structure(), first.to_structure(), last.to_structure(), ctypes.byref(structure)
         )
         return cls(
             address, first, last, (), DHCPTime.from_milliseconds(structure.lease), DHCPTime.from_milliseconds(structure.offer_time),
@@ -621,7 +620,7 @@ class DHCPv4ServerConfig:
         )  # fmt: skip
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DHCPv4ServerConfig")()
+        structure = Library.default().type("umilib_protocol_dhcp_v4_DHCPv4ServerConfig")()
         structure.address = self.address.to_structure()
         structure.first = self.first.to_structure()
         structure.last = self.last.to_structure()
@@ -667,7 +666,7 @@ class DHCPv4Server(Handle):
     """A DHCPv4 server (RFC 2131 §4.3) without I/O: it answers each client message with the reply of its
     rules, from the addresses of its pool. Raises ``Config`` for a pool whose first address is after its last."""
 
-    FREE = f"{P}_dhcpv4_server_free"
+    FREE = "umilib_protocol_dhcp_v4_dhcpv4_server_free"
 
     def __init__(self, config: DHCPv4ServerConfig) -> None:
         keys, lengths, count, _kept = Bytes.array([key for key, _ in config.reservations])
@@ -675,16 +674,16 @@ class DHCPv4Server(Handle):
         addresses = (address * max(count, 1))(*[reserved.to_structure() for _, reserved in config.reservations])
         super().__init__(
             Handle.create(
-                f"{P}_dhcpv4_server_new", ctypes.byref(config.to_structure()), keys, lengths, addresses, count,
+                "umilib_protocol_dhcp_v4_dhcpv4_server_new", ctypes.byref(config.to_structure()), keys, lengths, addresses, count,
                 *Bytes.readable(config.options.encode()),
             )  # fmt: skip
         )
 
     def receive(self, data: bytes, now: int) -> DHCPv4Reply | None:
         """The reply to the message ``data`` from a client at ``now``, if one is due."""
-        found, reply, buffer = ctypes.c_bool(), Library.default().type(f"{P}_DHCPv4Reply")(), Buffer()
+        found, reply, buffer = ctypes.c_bool(), Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Reply")(), Buffer()
         self.library.call(
-            f"{P}_dhcpv4_server_receive", self.handle, *Bytes.readable(data), now, ctypes.byref(found), ctypes.byref(reply),
+            "umilib_protocol_dhcp_v4_dhcpv4_server_receive", self.handle, *Bytes.readable(data), now, ctypes.byref(found), ctypes.byref(reply),
             ctypes.byref(buffer),
         )  # fmt: skip
         message = self.library.take(buffer)
@@ -695,12 +694,12 @@ class DHCPv4Server(Handle):
 
     def expire(self, now: int) -> None:
         """Forgets the bindings expired at ``now``, but the leases bound."""
-        self.library.call(f"{P}_dhcpv4_server_expire", self.handle, now)
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_server_expire", self.handle, now)
 
     def binding(self, address: IPv4Address) -> DHCPv4Binding | None:
         """What the server knows of ``address``."""
-        found, structure, buffer = ctypes.c_bool(), Library.default().type(f"{P}_DHCPv4Binding")(), Buffer()
-        self.library.call(f"{P}_dhcpv4_server_binding", self.handle, address.to_structure(), ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
+        found, structure, buffer = ctypes.c_bool(), Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Binding")(), Buffer()
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_server_binding", self.handle, address.to_structure(), ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
         client = self.library.take(buffer)
         if not found.value:
             return None
@@ -710,23 +709,23 @@ class DHCPv4Server(Handle):
     @property
     def bindings(self) -> dict[IPv4Address, DHCPv4Binding]:
         """Every binding, by address: the server's state, for its caller to keep."""
-        count = self.library.value(f"{P}_dhcpv4_server_bindings_count", ctypes.c_size_t, self.handle)
+        count = self.library.value("umilib_protocol_dhcp_v4_dhcpv4_server_bindings_count", ctypes.c_size_t, self.handle)
         bindings = {}
         for index in range(count):
             address = Library.default().type("umilib_protocol_ip_IPv4Address")()
-            structure, buffer = Library.default().type(f"{P}_DHCPv4Binding")(), Buffer()
-            self.library.call(f"{P}_dhcpv4_server_binding_entry", self.handle, index, ctypes.byref(address), ctypes.byref(structure), ctypes.byref(buffer))
+            structure, buffer = Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Binding")(), Buffer()
+            self.library.call("umilib_protocol_dhcp_v4_dhcpv4_server_binding_entry", self.handle, index, ctypes.byref(address), ctypes.byref(structure), ctypes.byref(buffer))
             expires = None if structure.expires == DHCPTime.INFINITY else structure.expires
             bindings[IPv4Address.from_structure(address)] = DHCPv4Binding(self.library.take(buffer), DHCPv4BindingState(structure.state), expires)
         return bindings
 
     def set_binding(self, address: IPv4Address, binding: DHCPv4Binding) -> None:
         """Sets the binding of ``address``: one kept elsewhere, given back."""
-        structure = Library.default().type(f"{P}_DHCPv4Binding")()
+        structure = Library.default().type("umilib_protocol_dhcp_v4_DHCPv4Binding")()
         Fields.assign(structure, "state", int(binding.state))
         Fields.assign(structure, "expires", DHCPTime.INFINITY if binding.expires is None else binding.expires)
-        self.library.call(f"{P}_dhcpv4_server_set_binding", self.handle, address.to_structure(), structure, *Bytes.readable(binding.client))
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_server_set_binding", self.handle, address.to_structure(), structure, *Bytes.readable(binding.client))
 
     def remove_binding(self, address: IPv4Address) -> None:
-        self.library.call(f"{P}_dhcpv4_server_remove_binding", self.handle, address.to_structure())
+        self.library.call("umilib_protocol_dhcp_v4_dhcpv4_server_remove_binding", self.handle, address.to_structure())
 

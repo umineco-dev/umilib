@@ -121,7 +121,8 @@ const umilib_ffi_Status* umilib_protocol_imap_v4_imap_date_time_parse(const uint
 
 /**
  * Writes the date-time of `seconds` since 1970 at the offset `offset` in minutes, with its
- * quotes, into `out`.
+ * quotes, into `out`; `InvalidArgument` for a date-time of a year outside 0000 to 9999 or a
+ * zone beyond 99 hours, which the syntax cannot write.
  */
 const umilib_ffi_Status* umilib_protocol_imap_v4_imap_date_time_format(int64_t seconds, int16_t offset, umilib_ffi_Buffer* out);
 

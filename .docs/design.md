@@ -54,7 +54,7 @@ from decisions made while building umilib.
 
 ## `unsafe`
 
-The crate denies `unsafe_code`; only `ffi`, `platform` and `secret` allow it.
+The crate denies `unsafe_code`; only `ffi`, `platform`, `runtime` and `secret` allow it.
 Every `unsafe` block has a `SAFETY:` comment, and Miri runs the tests of these
 modules in CI. Undocumented behaviour of a platform or compiler is never relied
 on (for example, Windows' undocumented `AFD_POLL` is not used).

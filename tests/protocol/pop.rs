@@ -270,6 +270,7 @@ fn rfc1939_commands_and_states() {
     early.greet(POP3Response::ok("ready"), T0).unwrap();
     early.receive(b"QUIT\r\n", T0);
     assert!(!early.is_open());
+    assert_eq!(early.state, POP3State::Authorization);
     assert!(!std::iter::from_fn(|| early.poll_event()).any(|event| matches!(event, POP3ServerEvent::Command(_))));
     // The client sends commands only in their state, PASS only after USER is accepted.
     let mut client = POP3Client::new(clear(), false, T0).unwrap();
@@ -279,6 +280,65 @@ fn rfc1939_commands_and_states() {
     client.send(POP3Command::User("mrose".into()), T0).unwrap();
     client.receive(b"-ERR sorry, no mailbox for frated here\r\n", T0).unwrap();
     assert!(client.send(POP3Command::Pass("x".into()), T0).is_err());
+}
+
+/// Shutting down: RFC 1939 has no response of its own for it; a server answers -ERR, with SYS/TEMP
+/// (RFC 3206 §4: a failure of the system, likely temporary) where response codes are announced
+/// (RFC 2449 §8), and closes without the UPDATE state (§6: only QUIT enters it). A multi-line
+/// response being sent is not ended with its period, which would make a part of it look whole:
+/// the connection is closed without a response, as §3 lets a server do. A status line is one line
+/// (§3): text of a line break is refused.
+#[test]
+fn shutdown_of_a_session() {
+    let greeted = |config: POP3ServerConfig| {
+        let mut server = POP3Server::new(POP3Config::default(), config, false).unwrap();
+        server.greet(POP3Response::ok("ready"), T0).unwrap();
+        server.transmit(&mut Vec::new());
+        server
+    };
+    let mut server = greeted(POP3ServerConfig::default());
+    for text in ["bye\r\n+OK", "bye\n+OK", "bye\r", "bye\0"] {
+        assert!(server.shutdown(text).is_err(), "{text:?}");
+        let mut out = Vec::new();
+        server.transmit(&mut out);
+        assert!(out.is_empty(), "{text:?}");
+        assert!(server.is_open());
+    }
+    server.shutdown("shutting down").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert_eq!(out, b"-ERR [SYS/TEMP] shutting down\r\n");
+    assert!(!server.is_open());
+    assert_eq!(server.state, POP3State::Authorization);
+    assert_eq!(server.poll_event(), Some(POP3ServerEvent::Closed { error: None }));
+    server.shutdown("again").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert!(out.is_empty());
+    // No code where response codes are not announced.
+    let mut server = greeted(POP3ServerConfig { response_codes: false, ..POP3ServerConfig::default() });
+    server.shutdown("shutting down").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert_eq!(out, b"-ERR shutting down\r\n");
+    // While a multi-line response is sent: closed without a response, and without its end.
+    let mut server = greeted(POP3ServerConfig { passwords_require_tls: false, ..POP3ServerConfig::default() });
+    server.receive(b"USER mrose\r\n", T0);
+    server.poll_event();
+    server.reply(POP3Response::ok(""), T0).unwrap();
+    server.receive(b"PASS secret\r\nRETR 1\r\n", T0);
+    server.poll_event();
+    server.reply(POP3Response::ok(""), T0).unwrap();
+    assert_eq!(server.poll_event(), Some(POP3ServerEvent::Command(POP3Command::Retr(1))));
+    server.reply(POP3Response::ok("120 octets"), T0).unwrap();
+    server.send_data(b"Subject: one\r\n\r\nfirst").unwrap();
+    server.transmit(&mut Vec::new());
+    server.shutdown("shutting down").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert!(out.is_empty(), "{}", String::from_utf8_lossy(&out));
+    assert!(!server.is_open());
+    assert_eq!(server.state, POP3State::Transaction);
 }
 
 #[test]
@@ -498,7 +558,7 @@ fn rfc6856_utf8_and_lang() {
     server.greet(POP3Response::ok("ready"), T0).unwrap();
     assert_eq!(server.capabilities().get("UTF8").unwrap().parameters, ["USER"]);
     server.receive(b"UTF8\r\n", T0);
-    assert_eq!(server.poll_event(), Some(POP3ServerEvent::Command(POP3Command::Utf8)));
+    assert_eq!(server.poll_event(), Some(POP3ServerEvent::Command(POP3Command::UTF8)));
     server.reply(POP3Response::ok("UTF8 enabled"), T0).unwrap();
     // §2.1: no STLS after UTF8.
     assert!(!server.capabilities().has("STLS"));
@@ -506,10 +566,10 @@ fn rfc6856_utf8_and_lang() {
     assert_eq!(server.poll_event(), Some(POP3ServerEvent::Command(POP3Command::User("\u{7528}\u{6237}".into()))));
     let mut client = POP3Client::new(POP3Config::default(), false, T0).unwrap();
     client.receive(b"+OK ready\r\n", T0).unwrap();
-    assert!(client.send(POP3Command::Utf8, T0).is_err(), "UTF8 not announced");
+    assert!(client.send(POP3Command::UTF8, T0).is_err(), "UTF8 not announced");
     client.send(POP3Command::Capa, T0).unwrap();
     client.receive(b"+OK\r\nUTF8\r\nSTLS\r\nLANG\r\n.\r\n", T0).unwrap();
-    client.send(POP3Command::Utf8, T0).unwrap();
+    client.send(POP3Command::UTF8, T0).unwrap();
     client.receive(b"+OK\r\n", T0).unwrap();
     assert!(client.send(POP3Command::Stls, T0).is_err(), "§2.1: no STLS after UTF8");
     client.send(POP3Command::Lang(None), T0).unwrap();

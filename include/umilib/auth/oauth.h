@@ -77,6 +77,7 @@ typedef struct umilib_auth_oauth_OAuthServerLimits {
     size_t maximum_devices;
     size_t maximum_assertions;
     size_t dpop_maximum_proofs;
+    size_t dpop_previous_nonces;
     size_t user_code_length;
     size_t maximum_parameters;
     size_t maximum_codes_per_client;
@@ -616,9 +617,10 @@ const umilib_ffi_Status* umilib_auth_oauth_oauth_server_rotate_dpop_nonce(umilib
  * ones; only DPoP-bound ones if `require_dpop`; DPoP proofs signed by one of the
  * `dpop_count` algorithms at `dpop_algorithms`, with an `iat` at most `dpop_maximum_age`
  * seconds old and `dpop_leeway` ahead, a nonce if `dpop_require_nonce`, and at most
- * `dpop_maximum_proofs` identifiers kept; `leeway` seconds of clock skew on `exp`.
+ * `dpop_maximum_proofs` identifiers kept, `dpop_previous_nonces` nonces before the current
+ * one taken; `leeway` seconds of clock skew on `exp`.
  */
-const umilib_ffi_Status* umilib_auth_oauth_oauth_resource_server_new(const uint8_t* resource, size_t resource_length, const uint8_t* realm, size_t realm_length, const uint8_t* resource_metadata, size_t resource_metadata_length, const uint8_t* issuer, size_t issuer_length, const umilib_protocol_jwt_JWKSet* keys, const uint8_t* algorithms, size_t algorithm_count, bool require_dpop, const uint8_t* dpop_algorithms, size_t dpop_count, int64_t dpop_maximum_age, int64_t dpop_leeway, bool dpop_require_nonce, size_t dpop_maximum_proofs, uint64_t leeway, umilib_auth_oauth_OAuthResourceServer** out);
+const umilib_ffi_Status* umilib_auth_oauth_oauth_resource_server_new(const uint8_t* resource, size_t resource_length, const uint8_t* realm, size_t realm_length, const uint8_t* resource_metadata, size_t resource_metadata_length, const uint8_t* issuer, size_t issuer_length, const umilib_protocol_jwt_JWKSet* keys, const uint8_t* algorithms, size_t algorithm_count, bool require_dpop, const uint8_t* dpop_algorithms, size_t dpop_count, int64_t dpop_maximum_age, int64_t dpop_leeway, bool dpop_require_nonce, size_t dpop_maximum_proofs, size_t dpop_previous_nonces, uint64_t leeway, umilib_auth_oauth_OAuthResourceServer** out);
 
 /**
  * Releases a resource server. Does nothing if `server` is null.
@@ -793,9 +795,10 @@ const umilib_ffi_Status* umilib_auth_oauth_dpop_proof_target(const uint8_t* uri,
 /**
  * Writes a verifier taking the `count` JWS algorithms at `algorithms`, with an `iat` at most
  * `maximum_age` seconds old and `leeway` seconds ahead, requiring a nonce if
- * `require_nonce`, and keeping at most `maximum_proofs` identifiers, into `out`.
+ * `require_nonce`, keeping at most `maximum_proofs` identifiers, and taking the
+ * `previous_nonces` nonces made before the current one, into `out`.
  */
-const umilib_ffi_Status* umilib_auth_oauth_dpop_verifier_new(const uint8_t* algorithms, size_t count, int64_t maximum_age, int64_t leeway, bool require_nonce, size_t maximum_proofs, umilib_auth_oauth_DPoPVerifier** out);
+const umilib_ffi_Status* umilib_auth_oauth_dpop_verifier_new(const uint8_t* algorithms, size_t count, int64_t maximum_age, int64_t leeway, bool require_nonce, size_t maximum_proofs, size_t previous_nonces, umilib_auth_oauth_DPoPVerifier** out);
 
 /**
  * Releases a verifier. Does nothing if `verifier` is null.

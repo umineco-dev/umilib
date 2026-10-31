@@ -1,13 +1,18 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use super::{ZstandardBitReader, ZstandardBitWriter};
-use crate::bytes::BitReader;
+use crate::bytes::{BitReader, BitWriter};
 use crate::codec::CompressionError;
 
 /// A normalized distribution of Finite State Entropy (RFC 8878 section
 /// 4.1.1): the probabilities of the symbols 0 to the last present one, on a
 /// scale of 2^accuracy_log, where -1 means "less than 1" (counted as 1).
+///
+/// The tables ([`FSEDecodingTable`](super::FSEDecodingTable),
+/// [`FSEEncodingTable`](super::FSEEncodingTable)) need a valid
+/// distribution, as [`FSEDistribution::new`], [`FSEDistribution::read`]
+/// and [`FSEDistribution::normalize`] make: the fields are public for
+/// constants such as the predefined distributions of Zstandard.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FSEDistribution {
     pub accuracy_log: u32,
@@ -17,18 +22,47 @@ pub struct FSEDistribution {
 impl FSEDistribution {
     /// The smallest accuracy log of a table description.
     pub const MINIMUM_LOG: u32 = 5;
+    /// The largest accuracy log: states of 16 bits, as in the FSE library
+    /// (its `FSE_MAX_TABLELOG`).
+    pub const MAXIMUM_LOG: u32 = 15;
+    /// The most symbols: symbols are bytes.
+    pub const MAXIMUM_SYMBOLS: usize = 256;
 
-    /// Reads a table description from the start of `bytes`: returns the
-    /// distribution and the bytes it took. Fails with `InvalidData` for an
-    /// accuracy log above `maximum_log`, more than `maximum_symbols`
-    /// symbols, a total above the scale, fewer than two present symbols or a
-    /// truncated description.
+    /// The distribution of `probabilities` on a scale of 2^`accuracy_log`;
+    /// fails with `InvalidParameter` unless the accuracy log is at most
+    /// [`FSEDistribution::MAXIMUM_LOG`], there are at most
+    /// [`FSEDistribution::MAXIMUM_SYMBOLS`] probabilities, each is -1 or
+    /// more, and they add up to the scale (-1 counting as 1).
+    pub fn new(accuracy_log: u32, probabilities: Vec<i16>) -> Result<FSEDistribution, CompressionError> {
+        if accuracy_log > FSEDistribution::MAXIMUM_LOG
+            || probabilities.len() > FSEDistribution::MAXIMUM_SYMBOLS
+            || probabilities.iter().any(|probability| *probability < -1)
+        {
+            return Err(CompressionError::InvalidParameter);
+        }
+        let total: i64 =
+            probabilities.iter().map(|probability| if *probability == -1 { 1 } else { *probability as i64 }).sum();
+        if total != 1 << accuracy_log {
+            return Err(CompressionError::InvalidParameter);
+        }
+        Ok(FSEDistribution { accuracy_log, probabilities })
+    }
+
+    /// Reads a table description (RFC 8878 section 4.1.1, the format of
+    /// `FSE_readNCount` of the FSE library) from the start of `bytes`:
+    /// returns the distribution and the bytes it took. Fails with
+    /// `InvalidData` for an accuracy log above `maximum_log` (or
+    /// [`FSEDistribution::MAXIMUM_LOG`]), more than `maximum_symbols` (or
+    /// [`FSEDistribution::MAXIMUM_SYMBOLS`]) symbols, a total above the
+    /// scale, fewer than two present symbols or a truncated description.
     pub fn read(
         bytes: &[u8],
         maximum_log: u32,
         maximum_symbols: usize,
     ) -> Result<(FSEDistribution, usize), CompressionError> {
         let invalid = |reason| CompressionError::InvalidData { reason };
+        let maximum_log = maximum_log.min(FSEDistribution::MAXIMUM_LOG);
+        let maximum_symbols = maximum_symbols.min(FSEDistribution::MAXIMUM_SYMBOLS);
         let mut reader = BitReader::new(bytes);
         let accuracy_log =
             reader.read(4).ok_or(invalid("truncated table description"))? as u32 + FSEDistribution::MINIMUM_LOG;
@@ -83,9 +117,15 @@ impl FSEDistribution {
         Ok((FSEDistribution { accuracy_log, probabilities }, used))
     }
 
-    /// Writes the table description (the reverse of [`FSEDistribution::read`]).
-    pub fn write(&self, out: &mut Vec<u8>) {
-        let mut writer = crate::bytes::BitWriter::new();
+    /// Writes the table description (the reverse of [`FSEDistribution::read`]);
+    /// fails with `InvalidParameter` for an accuracy log the description
+    /// cannot hold (below [`FSEDistribution::MINIMUM_LOG`] or above
+    /// [`FSEDistribution::MAXIMUM_LOG`]).
+    pub fn write(&self, out: &mut Vec<u8>) -> Result<(), CompressionError> {
+        if !(FSEDistribution::MINIMUM_LOG..=FSEDistribution::MAXIMUM_LOG).contains(&self.accuracy_log) {
+            return Err(CompressionError::InvalidParameter);
+        }
+        let mut writer = BitWriter::new();
         writer.write((self.accuracy_log - FSEDistribution::MINIMUM_LOG) as u64, 4);
         let mut remaining = 1i32 << self.accuracy_log;
         let mut index = 0;
@@ -119,13 +159,25 @@ impl FSEDistribution {
             }
         }
         out.extend_from_slice(&writer.finish());
+        Ok(())
     }
 
-    /// The distribution of `counts` (2 or more present symbols) on a scale of 2^accuracy_log:
-    /// every present symbol gets at least 1, the rest in proportion.
-    pub fn normalize(counts: &[u32], accuracy_log: u32) -> FSEDistribution {
+    /// The distribution of `counts` on a scale of 2^accuracy_log: every
+    /// present symbol gets at least 1, the rest in proportion. Fails with
+    /// `InvalidParameter` for fewer than 2 present symbols, more than the
+    /// scale, a last present symbol above [`FSEDistribution::MAXIMUM_SYMBOLS`]
+    /// or an accuracy log above [`FSEDistribution::MAXIMUM_LOG`].
+    pub fn normalize(counts: &[u32], accuracy_log: u32) -> Result<FSEDistribution, CompressionError> {
         let last = counts.iter().rposition(|count| *count > 0).map_or(0, |last| last + 1);
         let counts = &counts[..last];
+        let present = counts.iter().filter(|count| **count > 0).count();
+        if accuracy_log > FSEDistribution::MAXIMUM_LOG
+            || counts.len() > FSEDistribution::MAXIMUM_SYMBOLS
+            || present < 2
+            || present > 1 << accuracy_log
+        {
+            return Err(CompressionError::InvalidParameter);
+        }
         let total: u64 = counts.iter().map(|count| *count as u64).sum();
         let scale = 1i64 << accuracy_log;
         let mut probabilities: Vec<i16> = counts
@@ -149,7 +201,7 @@ impl FSEDistribution {
             probabilities[largest] += step as i16;
             difference -= step;
         }
-        FSEDistribution { accuracy_log, probabilities }
+        Ok(FSEDistribution { accuracy_log, probabilities })
     }
 
     /// The table positions of the symbols, as both tables spread them:
@@ -177,136 +229,5 @@ impl FSEDistribution {
             }
         }
         symbols
-    }
-}
-
-/// An entry of an [`FSEDecodingTable`]: the symbol of a state, and the
-/// bits to read and the baseline to add for the next state.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct FSEDecodingEntry {
-    pub symbol: u8,
-    pub bits: u8,
-    pub baseline: u16,
-}
-
-/// The decoding table of a distribution (section 4.1.1).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FSEDecodingTable {
-    pub accuracy_log: u32,
-    pub entries: Vec<FSEDecodingEntry>,
-}
-
-impl FSEDecodingTable {
-    pub fn new(distribution: &FSEDistribution) -> FSEDecodingTable {
-        let size = 1usize << distribution.accuracy_log;
-        let symbols = distribution.spread();
-        let mut next: Vec<u32> = distribution
-            .probabilities
-            .iter()
-            .map(|probability| if *probability == -1 { 1 } else { *probability as u32 })
-            .collect();
-        let mut entries = vec![FSEDecodingEntry::default(); size];
-        for (state, symbol) in symbols.iter().enumerate() {
-            let symbol = *symbol as usize;
-            let probability = distribution.probabilities[symbol];
-            if probability == -1 {
-                entries[state] =
-                    FSEDecodingEntry { symbol: symbol as u8, bits: distribution.accuracy_log as u8, baseline: 0 };
-                continue;
-            }
-            // The states of a symbol in order take the values probability .. 2 × probability - 1.
-            let value = next[symbol];
-            next[symbol] += 1;
-            let bits = distribution.accuracy_log - (31 - value.leading_zeros());
-            let baseline = (value << bits) as usize - size;
-            entries[state] = FSEDecodingEntry { symbol: symbol as u8, bits: bits as u8, baseline: baseline as u16 };
-        }
-        FSEDecodingTable { accuracy_log: distribution.accuracy_log, entries }
-    }
-
-    /// The table of a single symbol (RLE mode): every state decodes it, with no bits.
-    pub fn single(symbol: u8) -> FSEDecodingTable {
-        FSEDecodingTable { accuracy_log: 0, entries: vec![FSEDecodingEntry { symbol, bits: 0, baseline: 0 }] }
-    }
-
-    /// The initial state, read from `reader`.
-    pub fn initial_state(&self, reader: &mut ZstandardBitReader<'_>) -> usize {
-        reader.read(self.accuracy_log) as usize
-    }
-
-    /// The next state after `state`.
-    pub fn next_state(&self, state: usize, reader: &mut ZstandardBitReader<'_>) -> usize {
-        let entry = self.entries[state];
-        entry.baseline as usize + reader.read(entry.bits as u32) as usize
-    }
-}
-
-/// The encoding table of a distribution, the reverse of its
-/// [`FSEDecodingTable`]: for each symbol, the transform of a state into the
-/// bits written and the next state.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FSEEncodingTable {
-    pub accuracy_log: u32,
-    /// The states (plus the table size) in the order of their symbols.
-    states: Vec<u16>,
-    /// Per symbol: (delta of the bits, delta to find the state).
-    transforms: Vec<(i32, i32)>,
-}
-
-impl FSEEncodingTable {
-    pub fn new(distribution: &FSEDistribution) -> FSEEncodingTable {
-        let size = 1usize << distribution.accuracy_log;
-        let symbols = distribution.spread();
-        let counts: Vec<u32> = distribution
-            .probabilities
-            .iter()
-            .map(|probability| if *probability == -1 { 1 } else { *probability as u32 })
-            .collect();
-        let mut cumulative = vec![0u32; counts.len() + 1];
-        for (symbol, count) in counts.iter().enumerate() {
-            cumulative[symbol + 1] = cumulative[symbol] + count;
-        }
-        let mut states = vec![0u16; size];
-        let mut next = cumulative.clone();
-        for (position, symbol) in symbols.iter().enumerate() {
-            states[next[*symbol as usize] as usize] = (size + position) as u16;
-            next[*symbol as usize] += 1;
-        }
-        let log = distribution.accuracy_log as i32;
-        let transforms = counts
-            .iter()
-            .enumerate()
-            .map(|(symbol, count)| match count {
-                0 => (0, 0),
-                1 => ((log << 16) - (1 << log), cumulative[symbol] as i32 - 1),
-                count => {
-                    let bits_out = log - (31 - (count - 1).leading_zeros() as i32);
-                    let minimum_state = (*count as i32) << bits_out;
-                    ((bits_out << 16) - minimum_state, cumulative[symbol] as i32 - *count as i32)
-                }
-            })
-            .collect();
-        FSEEncodingTable { accuracy_log: distribution.accuracy_log, states, transforms }
-    }
-
-    /// The first state, for the symbol decoded last.
-    pub fn initial_state(&self, symbol: usize) -> u32 {
-        let (delta_bits, delta_state) = self.transforms[symbol];
-        let bits_out = ((delta_bits + (1 << 15)) >> 16) as u32;
-        let value = ((bits_out as i32) << 16) - delta_bits;
-        self.states[((value >> bits_out) + delta_state) as usize] as u32
-    }
-
-    /// Writes the bits that lead from `symbol` to `state` and returns the state before it.
-    pub fn encode(&self, state: u32, symbol: usize, writer: &mut ZstandardBitWriter) -> u32 {
-        let (delta_bits, delta_state) = self.transforms[symbol];
-        let bits_out = ((state as i32 + delta_bits) >> 16) as u32;
-        writer.write(state, bits_out);
-        self.states[((state >> bits_out) as i32 + delta_state) as usize] as u32
-    }
-
-    /// Writes the final state (the initial state of the decoder).
-    pub fn flush(&self, state: u32, writer: &mut ZstandardBitWriter) {
-        writer.write(state, self.accuracy_log);
     }
 }

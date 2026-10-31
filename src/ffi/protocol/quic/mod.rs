@@ -106,6 +106,7 @@ pub struct FFIQUICLimits {
     pub maximum_crypto_buffer: usize,
     pub maximum_send_buffer: usize,
     pub maximum_datagrams: usize,
+    pub maximum_receive_fragments: usize,
 }
 
 impl FFIQUICLimits {
@@ -134,6 +135,7 @@ impl FFIQUICLimits {
             maximum_crypto_buffer: config.maximum_crypto_buffer,
             maximum_send_buffer: config.maximum_send_buffer,
             maximum_datagrams: config.maximum_datagrams,
+            maximum_receive_fragments: config.maximum_receive_fragments,
         }
     }
 
@@ -161,6 +163,7 @@ impl FFIQUICLimits {
         config.maximum_crypto_buffer = self.maximum_crypto_buffer;
         config.maximum_send_buffer = self.maximum_send_buffer;
         config.maximum_datagrams = self.maximum_datagrams;
+        config.maximum_receive_fragments = self.maximum_receive_fragments;
     }
 }
 
@@ -673,6 +676,7 @@ pub const MODULE: Module = Module {
                 Parameter { name: "maximum_crypto_buffer", value: <usize as Value>::TYPE },
                 Parameter { name: "maximum_send_buffer", value: <usize as Value>::TYPE },
                 Parameter { name: "maximum_datagrams", value: <usize as Value>::TYPE },
+                Parameter { name: "maximum_receive_fragments", value: <usize as Value>::TYPE },
             ],
         },
         Definition::Structure {

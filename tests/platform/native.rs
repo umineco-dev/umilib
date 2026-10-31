@@ -197,6 +197,33 @@ mod unix {
     }
 
     #[test]
+    fn pollers_return_at_most_their_maximum_of_events() {
+        assert_eq!(Poller::with_maximum_events(0).unwrap_err().kind(), std::io::ErrorKind::InvalidInput);
+        assert_eq!(Poller::new().unwrap().maximum_events(), Poller::DEFAULT_MAXIMUM_EVENTS);
+        let poller = Poller::with_maximum_events(1).unwrap();
+        assert_eq!(poller.maximum_events(), 1);
+        // Two events are ready: a listener with a connection (level-triggered) and a notification.
+        let listener = Socket::for_address(&localhost(0), SocketKind::Stream).unwrap();
+        listener.bind(&localhost(0)).unwrap();
+        listener.listen(8).unwrap();
+        let address = listener.local_address().unwrap();
+        poller.add(listener.as_raw_fd(), 7, Interest::READABLE, PollMode::Level).unwrap();
+        let client = Socket::for_address(&address, SocketKind::Stream).unwrap();
+        client.connect(&address).unwrap();
+        poller.notify().unwrap();
+        // Each wait returns one; both come within a few (an interrupted wait returns none).
+        let mut tokens = std::collections::BTreeSet::new();
+        let mut events = Vec::new();
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
+        while tokens.len() < 2 && std::time::Instant::now() < deadline {
+            let count = poller.wait(&mut events, Some(Duration::from_secs(1))).unwrap();
+            assert!(count <= 1 && events.len() == count, "{events:?}");
+            tokens.extend(events.iter().map(|event| event.token));
+        }
+        assert_eq!(tokens, [7, PollEvent::NOTIFY].into_iter().collect());
+    }
+
+    #[test]
     #[cfg_attr(miri, ignore = "Miri's epoll still reports a listener readable after its connection is accepted")]
     fn pollers_report_readiness_and_notifications() {
         // A wait interrupted by a signal returns no events (the children of

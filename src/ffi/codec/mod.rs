@@ -22,6 +22,8 @@ pub mod brotli;
 pub mod deflate;
 #[cfg(umilib_feature = "codec-filter")]
 pub mod filter;
+#[cfg(umilib_feature = "codec-fse")]
+pub mod fse;
 #[cfg(umilib_feature = "codec-gzip")]
 pub mod gzip;
 #[cfg(umilib_feature = "codec-hpack")]
@@ -91,6 +93,8 @@ pub const MODULE: Module = Module {
         deflate::MODULE,
         #[cfg(umilib_feature = "codec-filter")]
         filter::MODULE,
+        #[cfg(umilib_feature = "codec-fse")]
+        fse::MODULE,
         #[cfg(umilib_feature = "codec-gzip")]
         gzip::MODULE,
         #[cfg(umilib_feature = "codec-hpack")]

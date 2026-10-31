@@ -63,6 +63,12 @@ impl LZ77Compressor {
     }
 }
 
+impl Default for LZ77Compressor {
+    fn default() -> LZ77Compressor {
+        LZ77Compressor::new(LZ77Config::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for LZ77Compressor {
     fn compress(&mut self, input: &[u8], output: &mut [u8], flush: Flush) -> Result<Progress, CompressionError> {
         let (mut consumed, mut produced) = (0, 0);

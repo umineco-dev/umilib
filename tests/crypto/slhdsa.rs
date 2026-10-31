@@ -13,7 +13,7 @@ use umilib::crypto::{CryptoError, PreHash, SignatureScheme};
 use umilib::hash::sha::v2::{SHA224, SHA256, SHA384, SHA512, SHA512_224, SHA512_256};
 use umilib::hash::sha::v3::{SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE128, SHAKE256};
 
-use crate::Json;
+use crate::JSON;
 
 /// Calls `$check::<P>($arguments)` for the parameter set named `$name`.
 macro_rules! with_parameters {
@@ -69,7 +69,7 @@ fn verifying_key<P: SLHDSAParameters>(key: &<SLHDSA<P> as SignatureScheme>::Veri
     out
 }
 
-fn check_key_gen<P: SLHDSAParameters>(test: &Json) {
+fn check_key_gen<P: SLHDSAParameters>(test: &JSON) {
     let key =
         SLHDSA::<P>::key_gen_internal(&test.bytes("skSeed"), &test.bytes("skPrf"), &test.bytes("pkSeed")).unwrap();
     assert_eq!(signing_key::<P>(&key), test.bytes("sk"));
@@ -79,7 +79,7 @@ fn check_key_gen<P: SLHDSAParameters>(test: &Json) {
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]
 fn slhdsa_acvp_key_generation() {
-    let vectors = Json::read("crypto/slhdsa/acvp-keygen.json");
+    let vectors = JSON::read("crypto/slhdsa/acvp-keygen.json");
     let mut count = 0;
     for group in vectors.field("testGroups").items() {
         for test in group.field("tests").items() {
@@ -109,11 +109,11 @@ fn verify_pre_hash<P: SLHDSAParameters, H: PreHash>(
     SLHDSA::<P>::verify_pre_hash::<H>(key, message, context, signature)
 }
 
-fn check_signature_generation<P: SLHDSAParameters>(group: &Json, test: &Json) {
+fn check_signature_generation<P: SLHDSAParameters>(group: &JSON, test: &JSON) {
     let key = SLHDSA::<P>::signing_key_from_bytes(&test.bytes("sk")).unwrap();
     assert_eq!(verifying_key::<P>(&SLHDSA::<P>::verifying_key(&key)), test.bytes("pk"));
     let additional = match group.field("deterministic") {
-        Json::Bool(true) => None,
+        JSON::Bool(true) => None,
         _ => Some(test.bytes("additionalRandomness")),
     };
     let additional = additional.as_deref();
@@ -141,7 +141,7 @@ fn check_signature_generation<P: SLHDSAParameters>(group: &Json, test: &Json) {
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]
 fn slhdsa_acvp_signature_generation() {
-    let vectors = Json::read("crypto/slhdsa/acvp-siggen-subset.json");
+    let vectors = JSON::read("crypto/slhdsa/acvp-siggen-subset.json");
     let mut count = 0;
     for group in vectors.field("testGroups").items() {
         for test in group.field("tests").items() {
@@ -152,7 +152,7 @@ fn slhdsa_acvp_signature_generation() {
     assert_eq!(count, 72);
 }
 
-fn check_signature_verification<P: SLHDSAParameters>(group: &Json, test: &Json) {
+fn check_signature_verification<P: SLHDSAParameters>(group: &JSON, test: &JSON) {
     let key = SLHDSA::<P>::verifying_key_from_bytes(&test.bytes("pk")).unwrap();
     let (message, signature) = (test.bytes("message"), test.bytes("signature"));
     let result = match (group.field("signatureInterface").as_str(), group.field("preHash").as_str()) {
@@ -163,7 +163,7 @@ fn check_signature_verification<P: SLHDSAParameters>(group: &Json, test: &Json) 
             with_pre_hash!(test.field("hashAlg").as_str(), verify_pre_hash::<P>(&key, &message, &context, &signature))
         }
     };
-    let passed = matches!(test.field("testPassed"), Json::Bool(true));
+    let passed = matches!(test.field("testPassed"), JSON::Bool(true));
     assert_eq!(result.is_ok(), passed, "tcId {:?}", test.field("tcId"));
     if !passed {
         assert_eq!(result, Err(CryptoError::InvalidSignature));
@@ -173,7 +173,7 @@ fn check_signature_verification<P: SLHDSAParameters>(group: &Json, test: &Json) 
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]
 fn slhdsa_acvp_signature_verification() {
-    let vectors = Json::read("crypto/slhdsa/acvp-sigver-subset.json");
+    let vectors = JSON::read("crypto/slhdsa/acvp-sigver-subset.json");
     let mut count = 0;
     for group in vectors.field("testGroups").items() {
         for test in group.field("tests").items() {

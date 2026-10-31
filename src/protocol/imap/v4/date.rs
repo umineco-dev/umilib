@@ -25,6 +25,17 @@ impl IMAPDateTime {
         IMAPDateTime { seconds, offset }
     }
 
+    /// Whether `date-time` (§9) can write it: a local date of the years 0000
+    /// to 9999 (`date-year` is 4DIGIT) and a zone of at most 99 hours and 59
+    /// minutes (`zone` is 4DIGIT). Its Display writes others all the same,
+    /// in a form no reader takes.
+    pub fn is_valid(&self) -> bool {
+        let zone = self.offset.unsigned_abs() / 60 <= 99;
+        let local = self.seconds.checked_add(i64::from(self.offset) * 60);
+        let year = local.and_then(|local| Date::from_days(local.div_euclid(86_400))).map(Date::year);
+        zone && year.is_some_and(|year| (0..=9999).contains(&year))
+    }
+
     /// A month name of three letters, in any case (§9 `date-month`); 1 to 12.
     pub fn month(reader: &mut IMAPReader<'_>) -> Result<u8, IMAPError> {
         let name = reader.data.get(reader.position..reader.position + 3).ok_or(reader.error("not a month"))?;
@@ -84,7 +95,9 @@ impl IMAPDateTime {
 
     /// The date-time in its local time: its date.
     pub fn date(&self) -> IMAPDate {
-        let local = self.seconds + i64::from(self.offset) * 60;
+        // Saturating, as MailDate: a date-time the application made far out of any calendar is
+        // read without overflow.
+        let local = self.seconds.saturating_add(i64::from(self.offset) * 60);
         let date = Date::from_days(local.div_euclid(86_400)).expect("every day of i64 seconds is of a date");
         IMAPDate { year: date.year(), month: date.month(), day: date.day() }
     }
@@ -93,7 +106,9 @@ impl IMAPDateTime {
 impl fmt::Display for IMAPDateTime {
     /// The date-time as §9 writes it, its quotes included.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let local = self.seconds + i64::from(self.offset) * 60;
+        // Saturating, as MailDate: a date-time the application made far out of any calendar is
+        // written without overflow.
+        let local = self.seconds.saturating_add(i64::from(self.offset) * 60);
         // Every day of i64 seconds is of a date (`Date::MIN_YEAR`).
         let date = Date::from_days(local.div_euclid(86_400)).ok_or(fmt::Error)?;
         let time = local.rem_euclid(86_400);

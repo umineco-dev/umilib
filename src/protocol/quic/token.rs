@@ -39,9 +39,10 @@ pub struct QUICTokenKey {
 impl QUICTokenKey {
     /// The first byte of each token, so that tokens of other formats are told apart.
     pub const FORMAT: u8 = 1;
-    /// How long a Retry token stays valid: 10 seconds by default use.
+    /// The default of `QUICEndpointConfig::retry_token_lifetime`, in seconds:
+    /// long enough for one round trip, short enough to limit replay.
     pub const RETRY_LIFETIME: u64 = 10;
-    /// How long a NEW_TOKEN token stays valid: one day.
+    /// The default of `QUICEndpointConfig::new_token_lifetime`, in seconds: one day.
     pub const NEW_TOKEN_LIFETIME: u64 = 86_400;
 
     pub fn new(key: &[u8; 32]) -> Result<QUICTokenKey, QUICError> {

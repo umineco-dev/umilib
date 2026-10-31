@@ -125,6 +125,7 @@ pub struct FFICoAPConfig {
     pub ack_delay: u64,
     pub maximum_token: usize,
     pub maximum_seen: usize,
+    pub maximum_incoming: usize,
 }
 
 impl FFICoAPConfig {
@@ -139,6 +140,7 @@ impl FFICoAPConfig {
             ack_delay: config.ack_delay.as_millis() as u64,
             maximum_token: config.maximum_token,
             maximum_seen: config.maximum_seen,
+            maximum_incoming: config.maximum_incoming,
         }
     }
 
@@ -153,6 +155,7 @@ impl FFICoAPConfig {
             ack_delay: Duration::from_millis(self.ack_delay),
             maximum_token: self.maximum_token,
             maximum_seen: self.maximum_seen,
+            maximum_incoming: self.maximum_incoming,
         }
     }
 }
@@ -847,6 +850,16 @@ crate::ffi_functions! {
         })())
     }
 
+    /// Does not answer the request `exchange` (RFC 7967, or a multicast request, RFC 7252 §8.2): it is
+    /// forgotten, and a Confirmable request not yet acknowledged is acknowledged by an empty ACK.
+    /// Fails with State for an exchange not awaiting its answer.
+    pub unsafe extern "C" fn umilib_protocol_coap_coap_endpoint_ignore(endpoint: *mut CoAPEndpoint, exchange: u64) -> *const Status {
+        Status::from_result((|| {
+            // SAFETY: the caller passes a valid handle.
+            unsafe { Pointer::reference_mut(endpoint) }?.ignore(exchange).map_err(|error| error.to_status())
+        })())
+    }
+
     /// Sends the notification `message` (a response with Observe, of the observer's token) of an
     /// observation to `peer` at `now` (RFC 7641 §4.2); writes its handle, to learn of a RST or a
     /// timeout, which end the observation (§3.6, §4.5), into `out`. Fails with State for a message
@@ -1387,6 +1400,7 @@ pub const MODULE: Module = Module {
                 Parameter { name: "ack_delay", value: <u64 as Value>::TYPE },
                 Parameter { name: "maximum_token", value: <usize as Value>::TYPE },
                 Parameter { name: "maximum_seen", value: <usize as Value>::TYPE },
+                Parameter { name: "maximum_incoming", value: <usize as Value>::TYPE },
             ],
         },
         Definition::Structure {

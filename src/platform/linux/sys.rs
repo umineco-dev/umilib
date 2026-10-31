@@ -25,6 +25,23 @@ unsafe extern "C" {
     pub fn ioctl(descriptor: c_int, request: c_int, ...) -> c_int;
 }
 
+// The flags below (`O_CLOEXEC`, `O_NONBLOCK`) and `ENOSYS` are the values of
+// the kernel's generic headers, which these architectures use; MIPS, SPARC,
+// Alpha and PA-RISC define their own and are refused (as in `unix::sys`).
+#[cfg(not(any(
+    target_arch = "x86",
+    target_arch = "x86_64",
+    target_arch = "arm",
+    target_arch = "aarch64",
+    target_arch = "riscv32",
+    target_arch = "riscv64",
+    target_arch = "loongarch64",
+    target_arch = "powerpc",
+    target_arch = "powerpc64",
+    target_arch = "s390x"
+)))]
+compile_error!("the flags of Linux are verified only for the architectures of the generic headers");
+
 /// The constants of the declarations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Linux;

@@ -11,12 +11,12 @@ use umilib::math::lattice::{MLKEMRing, Polynomial};
 
 use super::Generator;
 use crate::Check;
-use crate::vectors::Json;
+use crate::vectors::JSON;
 
 /// The first test of the first group of `path` whose `parameterSet` is `name` and whose group fields
 /// `filter` accepts.
-fn first(path: &str, name: &str, filter: impl Fn(&Json) -> bool) -> Json {
-    let vectors = Json::read(path);
+fn first(path: &str, name: &str, filter: impl Fn(&JSON) -> bool) -> JSON {
+    let vectors = JSON::read(path);
     let group = vectors
         .field("testGroups")
         .items()
@@ -170,7 +170,7 @@ fn mldsa_through_the_c_abi() {
         assert_eq!(sk, test.bytes("sk"));
         // The deterministic pure signature with a context (ACVP sigGen, external interface).
         let test = first("crypto/mldsa/acvp-siggen-subset.json", "ML-DSA-44", |group| {
-            matches!(group.field("deterministic"), Json::Bool(true))
+            matches!(group.field("deterministic"), JSON::Bool(true))
                 && group.field("signatureInterface").as_str() == "external"
                 && group.field("preHash").as_str() == "pure"
         });
@@ -314,7 +314,7 @@ fn slhdsa_through_the_c_abi() {
         ));
         assert_eq!(sk, test.bytes("sk"));
         let test = first("crypto/slhdsa/acvp-siggen-subset.json", "SLH-DSA-SHAKE-128f", |group| {
-            matches!(group.field("deterministic"), Json::Bool(true))
+            matches!(group.field("deterministic"), JSON::Bool(true))
                 && group.field("signatureInterface").as_str() == "external"
                 && group.field("preHash").as_str() == "pure"
         });

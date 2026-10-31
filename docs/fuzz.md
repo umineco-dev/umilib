@@ -14,7 +14,10 @@ your own code too.
   for a duration only. A target name must be a valid directory name (letters,
   digits, `-`, `_`, `.`, not starting with `.`). `FuzzReport::saved` lists the
   files failing inputs were saved to; a failure that could not be saved is
-  still in `FuzzReport::failures`.
+  still in `FuzzReport::failures`. Some generated inputs are kept in memory
+  as material for later mutations: about one in `sample_interval` (64; 0
+  keeps none) while fewer than `maximum_corpus_inputs` (1024) inputs are in
+  memory, those loaded from the corpus included.
 - `LibFuzzer` runs a target under LLVM libFuzzer, which uses code coverage to
   find new inputs. It is compiled only with the `umilib_libfuzzer` cfg.
 

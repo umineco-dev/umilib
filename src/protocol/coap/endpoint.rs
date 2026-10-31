@@ -29,6 +29,10 @@ pub struct CoAPConfig {
     /// The most messages remembered to find duplicates (§4.5); when full,
     /// the one remembered for the shortest time left goes.
     pub maximum_seen: usize,
+    /// The most requests received and not yet answered or ignored; when
+    /// full, a Confirmable request is answered 5.03 and a Non-confirmable
+    /// one is ignored.
+    pub maximum_incoming: usize,
 }
 
 impl Default for CoAPConfig {
@@ -43,6 +47,7 @@ impl Default for CoAPConfig {
             ack_delay: Duration::from_secs(1),
             maximum_token: 8,
             maximum_seen: 8192,
+            maximum_incoming: 1024,
         }
     }
 }
@@ -50,7 +55,9 @@ impl Default for CoAPConfig {
 /// What an endpoint tells.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum CoAPEvent {
-    /// A request from `peer`, to answer with [`CoAPEndpoint::respond`].
+    /// A request from `peer`, to answer with [`CoAPEndpoint::respond`] or
+    /// not with [`CoAPEndpoint::ignore`], within EXCHANGE_LIFETIME
+    /// (Confirmable) or NON_LIFETIME (Non-confirmable).
     Request { exchange: u64, peer: IPEndpoint, message: CoAPMessage },
     /// A response to the request `request`, or a notification of its observation (RFC 7641 §3.2).
     Response { request: u64, message: CoAPMessage },
@@ -106,7 +113,10 @@ pub struct CoAPSeen {
     pub reply: Option<Vec<u8>>,
 }
 
-/// A request received and not yet answered.
+/// A request received and not yet answered: until `deadline` the server
+/// may piggyback its response (§5.2.2), until `expires` it may answer at
+/// all, after which its client no longer waits (EXCHANGE_LIFETIME or
+/// NON_LIFETIME, §4.8.2).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct CoAPIncoming {
     pub peer: IPEndpoint,
@@ -115,6 +125,7 @@ pub struct CoAPIncoming {
     pub confirmable: bool,
     pub acknowledged: bool,
     pub deadline: Instant,
+    pub expires: Instant,
 }
 
 /// A CoAP endpoint over UDP (RFC 7252), client and server, Sans-I/O: the
@@ -373,7 +384,8 @@ impl CoAPEndpoint {
     /// message-format error) by an endpoint of tokens of 8 bytes, answered
     /// 4.00 by one of extended tokens (RFC 8974 §2.2.2, §2.3); of a critical
     /// option it cannot process, answered 4.02 if Confirmable, else rejected
-    /// (§5.4.1); else told.
+    /// (§5.4.1); beyond `maximum_incoming` requests not yet answered,
+    /// answered 5.03 if Confirmable, else ignored; else told.
     pub fn request_received<R: Random>(
         &mut self,
         peer: IPEndpoint,
@@ -391,8 +403,13 @@ impl CoAPEndpoint {
             self.reject(peer, &message);
             return;
         }
+        let full = self.incoming.len() >= self.config.maximum_incoming;
+        if full && !confirmable {
+            return;
+        }
         let exchange = self.next;
         self.next += 1;
+        let lifetime = if confirmable { self.config.exchange_lifetime } else { self.config.non_lifetime };
         self.incoming.insert(
             exchange,
             CoAPIncoming {
@@ -402,11 +419,17 @@ impl CoAPEndpoint {
                 confirmable,
                 acknowledged: false,
                 deadline: now.saturating_add(self.config.ack_delay),
+                expires: now.saturating_add(lifetime),
             },
         );
-        let refusal = match message.token.len() > self.config.maximum_token {
-            true => Some(CoAPCode::BAD_REQUEST),
-            false => message.options.check().err().map(|_| CoAPCode::BAD_OPTION),
+        // A refusal of a Confirmable request is piggybacked: its exchange
+        // ends at once, so that it never stays beyond the limit.
+        let refusal = if full {
+            Some(CoAPCode::SERVICE_UNAVAILABLE)
+        } else if message.token.len() > self.config.maximum_token {
+            Some(CoAPCode::BAD_REQUEST)
+        } else {
+            message.options.check().err().map(|_| CoAPCode::BAD_OPTION)
         };
         if let Some(code) = refusal {
             let response = CoAPMessage::new(CoAPType::Acknowledgement, code, 0);
@@ -519,6 +542,29 @@ impl CoAPEndpoint {
         self.send_message(incoming.peer, response, false, false, now, random).map(|_| ())
     }
 
+    /// Does not answer the request `exchange` (RFC 7967, or a multicast
+    /// request, §8.2): it is forgotten, and a Confirmable request not yet
+    /// acknowledged is acknowledged by an empty ACK, so that its client
+    /// stops sending it (§4.2).
+    pub fn ignore(&mut self, exchange: u64) -> Result<(), CoAPError> {
+        let incoming = self.incoming.remove(&exchange).ok_or(CoAPError::State)?;
+        if incoming.confirmable && !incoming.acknowledged {
+            self.acknowledge(incoming.peer, incoming.id);
+        }
+        Ok(())
+    }
+
+    /// Sends an empty ACK of the message `id` of `peer`, remembered as its reply.
+    pub fn acknowledge(&mut self, peer: IPEndpoint, id: u16) {
+        let ack = CoAPMessage::empty(CoAPType::Acknowledgement, id);
+        if let Ok(bytes) = ack.encode() {
+            if let Some(CoAPSeen { reply, .. }) = self.seen.get_mut(&(peer, id)) {
+                *reply = Some(bytes.clone());
+            }
+            self.transmissions.push_back(CoAPTransmission { peer, message: bytes });
+        }
+    }
+
     /// Sends the notification `message` of an observation to `peer` (RFC
     /// 7641 §4.2), of the observer's token, Confirmable or not; its handle,
     /// to learn of a RST or a timeout, which end the observation (§3.6, §4.5).
@@ -546,18 +592,18 @@ impl CoAPEndpoint {
 
     pub fn poll_timeout(&self) -> Option<Instant> {
         let outgoing = self.outgoing.values().filter(|sent| sent.deadline != Instant::MAX).map(|sent| sent.deadline);
-        let incoming = self
-            .incoming
-            .values()
-            .filter(|exchange| exchange.confirmable && !exchange.acknowledged)
-            .map(|exchange| exchange.deadline);
+        let incoming = self.incoming.values().map(|exchange| match exchange.confirmable && !exchange.acknowledged {
+            true => exchange.deadline.min(exchange.expires),
+            false => exchange.expires,
+        });
         let seen = self.seen.values().map(|seen| seen.until);
         outgoing.chain(incoming).chain(seen).min()
     }
 
     /// What is due at `now`: retransmissions, doubling the timeout up to
     /// MAX_RETRANSMIT (§4.2); the end of what is not answered; the empty ACK
-    /// of a request the application has not yet answered (§5.2.2).
+    /// of a request the application has not yet answered (§5.2.2); the end
+    /// of the requests whose clients no longer wait for their response.
     pub fn expire(&mut self, now: Instant) {
         let due: Vec<u64> =
             self.outgoing.iter().filter(|(_, sent)| sent.deadline <= now).map(|(handle, _)| *handle).collect();
@@ -588,15 +634,10 @@ impl CoAPEndpoint {
         for exchange in late {
             let Some(incoming) = self.incoming.get_mut(&exchange) else { continue };
             incoming.acknowledged = true;
-            let ack = CoAPMessage::empty(CoAPType::Acknowledgement, incoming.id);
             let (peer, id) = (incoming.peer, incoming.id);
-            if let Ok(bytes) = ack.encode() {
-                if let Some(CoAPSeen { reply, .. }) = self.seen.get_mut(&(peer, id)) {
-                    *reply = Some(bytes.clone());
-                }
-                self.transmissions.push_back(CoAPTransmission { peer, message: bytes });
-            }
+            self.acknowledge(peer, id);
         }
+        self.incoming.retain(|_, exchange| now < exchange.expires);
         self.seen.retain(|_, seen| now < seen.until);
         self.release_waiting(now);
     }

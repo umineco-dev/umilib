@@ -18,8 +18,6 @@ from typing import Any, ClassVar
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Nanoseconds
 from umilib.protocol.ip import IPProtocol, IPv6Address
 
-P = "umilib_protocol_ip_v6"
-
 
 class IPv6Error(FFIError):
     """An error of an IPv6 packet: ``Version``, ``Length``, ``ExtensionHeader``, ``Option``,
@@ -52,8 +50,8 @@ class IPv6Header:
     @classmethod
     def new(cls, source: IPv6Address, destination: IPv6Address, next_header: int, payload_length: int) -> IPv6Header:
         """The header of a packet of ``payload_length`` bytes starting with ``next_header``; raises ``Length``."""
-        structure = Library.default().type(f"{P}_IPv6Header")()
-        Library.default().call(f"{P}_ipv6_header_new", source.to_structure(), destination.to_structure(), int(next_header), payload_length, ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_ip_v6_IPv6Header")()
+        Library.default().call("umilib_protocol_ip_v6_ipv6_header_new", source.to_structure(), destination.to_structure(), int(next_header), payload_length, ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -70,7 +68,7 @@ class IPv6Header:
         )
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_IPv6Header")()
+        structure = Library.default().type("umilib_protocol_ip_v6_IPv6Header")()
         for name in ("payload_length", "dscp", "ecn", "flow_label", "hop_limit"):
             Fields.assign(structure, name, getattr(self, name))
         Fields.assign(structure, "next_header", int(self.next_header))
@@ -82,14 +80,14 @@ class IPv6Header:
     def decode(cls, data: bytes | bytearray | memoryview) -> tuple[IPv6Header, bytes]:
         """The header at the start of ``data`` and the payload it covers; raises ``Version`` or ``Length``."""
         data = bytes(data)
-        structure = Library.default().type(f"{P}_IPv6Header")()
+        structure = Library.default().type("umilib_protocol_ip_v6_IPv6Header")()
         offset, length = ctypes.c_size_t(), ctypes.c_size_t()
-        Library.default().call(f"{P}_ipv6_header_decode", data, len(data), ctypes.byref(structure), ctypes.byref(offset), ctypes.byref(length))
+        Library.default().call("umilib_protocol_ip_v6_ipv6_header_decode", data, len(data), ctypes.byref(structure), ctypes.byref(offset), ctypes.byref(length))
         return cls.from_structure(structure), data[offset.value : offset.value + length.value]
 
     def encode(self) -> bytes:
         """The 40 bytes of the header."""
-        return Library.default().output(f"{P}_ipv6_header_encode", ctypes.byref(self.to_structure()))
+        return Library.default().output("umilib_protocol_ip_v6_ipv6_header_encode", ctypes.byref(self.to_structure()))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -103,12 +101,12 @@ class IPv6ExtensionHeader:
     @staticmethod
     def is_extension(kind: int) -> bool:
         """Whether ``kind`` names an extension header that a chain continues after (RFC 7045, ESP excepted)."""
-        return bool(Library.default().function(f"{P}_ipv6_extension_header_is_extension")(int(kind)))
+        return bool(Library.default().function("umilib_protocol_ip_v6_ipv6_extension_header_is_extension")(int(kind)))
 
     @staticmethod
     def length(kind: int, data: bytes | bytearray | memoryview) -> int:
         """The length of the extension header of ``kind`` that ``data`` starts with; raises ``Length``."""
-        return Library.default().value(f"{P}_ipv6_extension_header_length", ctypes.c_size_t, int(kind), *Bytes.readable(data))
+        return Library.default().value("umilib_protocol_ip_v6_ipv6_extension_header_length", ctypes.c_size_t, int(kind), *Bytes.readable(data))
 
 
 class IPv6ExtensionHeaders:
@@ -127,7 +125,7 @@ class IPv6ExtensionHeaders:
         kind, offset = ctypes.c_uint8(int(self.next_header)), ctypes.c_size_t(self.offset)
         found, length = ctypes.c_bool(), ctypes.c_size_t()
         Library.default().call(
-            f"{P}_ipv6_extension_headers_next", ctypes.byref(kind), self.payload, len(self.payload), ctypes.byref(offset),
+            "umilib_protocol_ip_v6_ipv6_extension_headers_next", ctypes.byref(kind), self.payload, len(self.payload), ctypes.byref(offset),
             ctypes.byref(found), ctypes.byref(length),
         )  # fmt: skip
         if not found.value:
@@ -142,7 +140,7 @@ class IPv6ExtensionHeaders:
         """The upper layer of ``payload`` and the offset of its data."""
         protocol, offset = ctypes.c_uint8(), ctypes.c_size_t()
         Library.default().call(
-            f"{P}_ipv6_extension_headers_upper_layer", int(next_header), *Bytes.readable(payload), ctypes.byref(protocol), ctypes.byref(offset)
+            "umilib_protocol_ip_v6_ipv6_extension_headers_upper_layer", int(next_header), *Bytes.readable(payload), ctypes.byref(protocol), ctypes.byref(offset)
         )
         return IPProtocol(protocol.value), offset.value
 
@@ -165,10 +163,10 @@ class IPv6OptionKind(int):
     def action(self) -> int:
         """What a node that does not recognize the option does: 0 skips it, 1 discards the packet,
         2 also sends an ICMP Parameter Problem, 3 does so if the destination is not multicast."""
-        return Library.default().function(f"{P}_ipv6_option_kind_action")(int(self))
+        return Library.default().function("umilib_protocol_ip_v6_ipv6_option_kind_action")(int(self))
 
     def may_change(self) -> bool:
-        return bool(Library.default().function(f"{P}_ipv6_option_kind_may_change")(int(self)))
+        return bool(Library.default().function("umilib_protocol_ip_v6_ipv6_option_kind_may_change")(int(self)))
 
     def __repr__(self) -> str:
         return f"IPv6OptionKind({int(self)})"
@@ -193,12 +191,12 @@ class IPv6Option:
     @staticmethod
     def encode(kind: int, data: bytes = b"") -> bytes:
         """The bytes of an option of ``kind`` with ``data``; raises ``Option``."""
-        return Library.default().output(f"{P}_ipv6_option_encode", int(kind), *Bytes.readable(data))
+        return Library.default().output("umilib_protocol_ip_v6_ipv6_option_encode", int(kind), *Bytes.readable(data))
 
     @staticmethod
     def encode_padding(length: int) -> bytes:
         """``length`` bytes of padding: Pad1 for one, PadN otherwise."""
-        return Library.default().output(f"{P}_ipv6_option_encode_padding", length)
+        return Library.default().output("umilib_protocol_ip_v6_ipv6_option_encode_padding", length)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -212,7 +210,7 @@ class IPv6OptionsHeader:
     def decode(cls, data: bytes | bytearray | memoryview) -> IPv6OptionsHeader:
         """The header that ``data`` is; raises ``Length`` or ``Option``."""
         data = bytes(data)
-        next_header = Library.default().value(f"{P}_ipv6_options_header_decode", ctypes.c_uint8, data, len(data))
+        next_header = Library.default().value("umilib_protocol_ip_v6_ipv6_options_header_decode", ctypes.c_uint8, data, len(data))
         return cls(IPProtocol(next_header), data[2:])
 
     def __iter__(self) -> Iterator[IPv6Option]:
@@ -223,7 +221,7 @@ class IPv6OptionsHeader:
         while True:
             found, kind, offset, buffer = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_size_t(), Buffer()
             library.call(
-                f"{P}_ipv6_options_header_get", data, len(data), index, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(offset), ctypes.byref(buffer)
+                "umilib_protocol_ip_v6_ipv6_options_header_get", data, len(data), index, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(offset), ctypes.byref(buffer)
             )
             value = library.take(buffer)
             if not found.value:
@@ -241,7 +239,7 @@ class IPv6OptionsHeader:
 
     def encode(self) -> bytes:
         """The bytes of the header: its encoded options, padded to a multiple of 8 bytes; raises ``Length``."""
-        return Library.default().output(f"{P}_ipv6_options_header_encode", int(self.next_header), *Bytes.readable(self.options))
+        return Library.default().output("umilib_protocol_ip_v6_ipv6_options_header_encode", int(self.next_header), *Bytes.readable(self.options))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -259,7 +257,7 @@ class IPv6RoutingHeader:
         next_header, routing_type, segments_left, buffer = ctypes.c_uint8(), ctypes.c_uint8(), ctypes.c_uint8(), Buffer()
         library = Library.default()
         library.call(
-            f"{P}_ipv6_routing_header_decode", *Bytes.readable(data), ctypes.byref(next_header), ctypes.byref(routing_type),
+            "umilib_protocol_ip_v6_ipv6_routing_header_decode", *Bytes.readable(data), ctypes.byref(next_header), ctypes.byref(routing_type),
             ctypes.byref(segments_left), ctypes.byref(buffer),
         )  # fmt: skip
         return cls(IPProtocol(next_header.value), routing_type.value, segments_left.value, library.take(buffer))
@@ -267,7 +265,7 @@ class IPv6RoutingHeader:
     def encode(self) -> bytes:
         """The bytes of the header; the data must make it a multiple of 8 bytes."""
         return Library.default().output(
-            f"{P}_ipv6_routing_header_encode", int(self.next_header), self.routing_type, self.segments_left, *Bytes.readable(self.data)
+            "umilib_protocol_ip_v6_ipv6_routing_header_encode", int(self.next_header), self.routing_type, self.segments_left, *Bytes.readable(self.data)
         )
 
 
@@ -288,7 +286,7 @@ class IPv6FragmentHeader:
         return cls(IPProtocol(structure.next_header), structure.fragment_offset, bool(structure.more_fragments), structure.identification)
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_IPv6FragmentHeader")()
+        structure = Library.default().type("umilib_protocol_ip_v6_IPv6FragmentHeader")()
         for name, value in (("next_header", int(self.next_header)), ("fragment_offset", self.fragment_offset), ("identification", self.identification)):
             Fields.assign(structure, name, value)
         structure.more_fragments = self.more_fragments
@@ -296,33 +294,33 @@ class IPv6FragmentHeader:
 
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> IPv6FragmentHeader:
-        structure = Library.default().type(f"{P}_IPv6FragmentHeader")()
-        Library.default().call(f"{P}_ipv6_fragment_header_decode", *Bytes.readable(data), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_ip_v6_IPv6FragmentHeader")()
+        Library.default().call("umilib_protocol_ip_v6_ipv6_fragment_header_decode", *Bytes.readable(data), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     def encode(self) -> bytes:
-        return Library.default().output(f"{P}_ipv6_fragment_header_encode", self.to_structure())
+        return Library.default().output("umilib_protocol_ip_v6_ipv6_fragment_header_encode", self.to_structure())
 
     def is_atomic(self) -> bool:
         """Whether the fragment is a whole packet (RFC 6946)."""
-        return bool(Library.default().function(f"{P}_ipv6_fragment_header_is_atomic")(self.to_structure()))
+        return bool(Library.default().function("umilib_protocol_ip_v6_ipv6_fragment_header_is_atomic")(self.to_structure()))
 
 
 class IPv6Fragmenter(Handle):
     """The fragments of a packet that fit an MTU, made by its source (RFC 8200 §4.5): iterating gives
     the bytes of each packet. Raises ``Fragment``, ``HeaderChain`` or ``Length`` when made."""
 
-    FREE = f"{P}_ipv6_fragmenter_free"
+    FREE = "umilib_protocol_ip_v6_ipv6_fragmenter_free"
 
     def __init__(self, header: IPv6Header, payload: bytes | bytearray | memoryview, identification: int, mtu: int) -> None:
-        super().__init__(Handle.create(f"{P}_ipv6_fragmenter_new", ctypes.byref(header.to_structure()), *Bytes.readable(payload), identification, mtu))
+        super().__init__(Handle.create("umilib_protocol_ip_v6_ipv6_fragmenter_new", ctypes.byref(header.to_structure()), *Bytes.readable(payload), identification, mtu))
 
     def __iter__(self) -> Iterator[bytes]:
         return self
 
     def __next__(self) -> bytes:
         found, buffer = ctypes.c_bool(), Buffer()
-        self.library.call(f"{P}_ipv6_fragmenter_next", self.handle, ctypes.byref(found), ctypes.byref(buffer))
+        self.library.call("umilib_protocol_ip_v6_ipv6_fragmenter_next", self.handle, ctypes.byref(found), ctypes.byref(buffer))
         packet = self.library.take(buffer)
         if not found.value:
             raise StopIteration
@@ -340,7 +338,7 @@ class IPv6ReassemblyConfig:
     maximum_buffered: int = 4 << 20
 
     def to_structure(self) -> Any:
-        return Library.default().type(f"{P}_IPv6ReassemblyConfig")(
+        return Library.default().type("umilib_protocol_ip_v6_IPv6ReassemblyConfig")(
             Nanoseconds.from_timedelta(self.timeout), self.maximum_length, self.maximum_datagrams, self.maximum_buffered
         )
 
@@ -361,19 +359,19 @@ class IPv6ReassemblyKey:
 class IPv6Reassembly(Handle):
     """A packet given back by :meth:`IPv6Reassembler.expire` at its deadline."""
 
-    FREE = f"{P}_ipv6_reassembly_free"
+    FREE = "umilib_protocol_ip_v6_ipv6_reassembly_free"
 
     @property
     def abandoned(self) -> bool:
         """Whether its fragments overlapped (RFC 5722): it has no first fragment, and no ICMP message is sent."""
-        return self.library.value(f"{P}_ipv6_reassembly_abandoned", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_ip_v6_ipv6_reassembly_abandoned", ctypes.c_bool, self.handle)
 
     def first(self) -> tuple[bytes | None, bytes]:
         """The headers of the first fragment's packet up to its data (IPv6 header, per-fragment
         headers, Fragment header), if it arrived, and the data received: what an ICMPv6 Time
         Exceeded message quotes."""
         found, headers, data = ctypes.c_bool(), Buffer(), Buffer()
-        self.library.call(f"{P}_ipv6_reassembly_first", self.handle, ctypes.byref(found), ctypes.byref(headers), ctypes.byref(data))
+        self.library.call("umilib_protocol_ip_v6_ipv6_reassembly_first", self.handle, ctypes.byref(found), ctypes.byref(headers), ctypes.byref(data))
         first, received = self.library.take(headers), self.library.take(data)
         return (first if found.value else None), received
 
@@ -383,19 +381,19 @@ class IPv6Reassembler(Handle):
     whole packet; overlapping fragments discard their packet (RFC 5722); a packet not complete by
     its deadline is given back by :meth:`expire`."""
 
-    FREE = f"{P}_ipv6_reassembler_free"
+    FREE = "umilib_protocol_ip_v6_ipv6_reassembler_free"
 
     def __init__(self, config: IPv6ReassemblyConfig = IPv6ReassemblyConfig()) -> None:
-        super().__init__(Handle.create(f"{P}_ipv6_reassembler_new", config.to_structure()))
+        super().__init__(Handle.create("umilib_protocol_ip_v6_ipv6_reassembler_new", config.to_structure()))
         self.config = config
 
     def receive(self, header: IPv6Header, payload: bytes | bytearray | memoryview, now: int) -> tuple[IPv6Header, bytes] | None:
         """Adds a packet received at ``now``; returns the packet it completes, without a Fragment header."""
         complete = ctypes.c_bool()
-        structure = self.library.type(f"{P}_IPv6Header")()
+        structure = self.library.type("umilib_protocol_ip_v6_IPv6Header")()
         data = Buffer()
         self.library.call(
-            f"{P}_ipv6_reassembler_receive", self.handle, ctypes.byref(header.to_structure()), *Bytes.readable(payload), now,
+            "umilib_protocol_ip_v6_ipv6_reassembler_receive", self.handle, ctypes.byref(header.to_structure()), *Bytes.readable(payload), now,
             ctypes.byref(complete), ctypes.byref(structure), ctypes.byref(data),
         )  # fmt: skip
         reassembled = self.library.take(data)
@@ -403,14 +401,14 @@ class IPv6Reassembler(Handle):
 
     def poll_timeout(self) -> int | None:
         """The earliest deadline of the packets being reassembled."""
-        return self.library.optional(f"{P}_ipv6_reassembler_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_ip_v6_ipv6_reassembler_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> tuple[IPv6ReassemblyKey, IPv6Reassembly] | None:
         """Removes a packet whose deadline is at or before ``now`` and returns it."""
         found = ctypes.c_bool()
-        key = self.library.type(f"{P}_IPv6ReassemblyKey")()
+        key = self.library.type("umilib_protocol_ip_v6_IPv6ReassemblyKey")()
         pointer = ctypes.c_void_p()
-        self.library.call(f"{P}_ipv6_reassembler_expire", self.handle, now, ctypes.byref(found), ctypes.byref(key), ctypes.byref(pointer))
+        self.library.call("umilib_protocol_ip_v6_ipv6_reassembler_expire", self.handle, now, ctypes.byref(found), ctypes.byref(key), ctypes.byref(pointer))
         if not found.value:
             return None
         key = IPv6ReassemblyKey(IPv6Address.from_structure(key.source), IPv6Address.from_structure(key.destination), key.identification)

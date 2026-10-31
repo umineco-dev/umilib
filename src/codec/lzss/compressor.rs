@@ -106,6 +106,12 @@ impl LZSSCompressor {
     }
 }
 
+impl Default for LZSSCompressor {
+    fn default() -> LZSSCompressor {
+        LZSSCompressor::new(LZSSConfig::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for LZSSCompressor {
     /// The format cannot pad a byte in the middle of a stream (its padding
     /// is only allowed at the end), so [`Flush::Sync`] fails with `InvalidParameter`.

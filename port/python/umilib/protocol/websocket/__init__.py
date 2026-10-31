@@ -16,7 +16,6 @@ from typing import ClassVar
 
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Structures, Text
 
-P = "umilib_protocol_websocket"
 
 __all__ = [
     "WebSocketCloseCode",
@@ -89,7 +88,7 @@ class WebSocketEvent:
 
 @dataclasses.dataclass
 class WebSocketConfig:
-    C_TYPE: ClassVar[str] = f"{P}_WebSocketConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_websocket_WebSocketConfig"
 
     maximum_message_size: int = 16 << 20
     maximum_frame_size: int = 64 << 10
@@ -108,7 +107,7 @@ class WebSocketDeflateParameters:
     client_max_window_bits: int | None = None
 
     def to_structure(self) -> ctypes.Structure:
-        structure = Library.default().type(f"{P}_WebSocketDeflateParameters")()
+        structure = Library.default().type("umilib_protocol_websocket_WebSocketDeflateParameters")()
         Fields.assign(structure, "server_no_context_takeover", self.server_no_context_takeover)
         Fields.assign(structure, "client_no_context_takeover", self.client_no_context_takeover)
         Fields.assign(structure, "server_max_window_bits", self.server_max_window_bits or 0)
@@ -132,15 +131,15 @@ class WebSocketDeflateParameters:
 
     def accept(self) -> WebSocketDeflateParameters:
         """The parameters a server accepts for this offer."""
-        out = Library.default().type(f"{P}_WebSocketDeflateParameters")()
-        Library.default().call(f"{P}_websocket_deflate_parameters_accept", ctypes.byref(self.to_structure()), ctypes.byref(out))
+        out = Library.default().type("umilib_protocol_websocket_WebSocketDeflateParameters")()
+        Library.default().call("umilib_protocol_websocket_websocket_deflate_parameters_accept", ctypes.byref(self.to_structure()), ctypes.byref(out))
         return WebSocketDeflateParameters.from_structure(out)
 
 
 class WebSocketConnection(Handle):
     """A WebSocket connection of a client (whose frames are masked) or a server."""
 
-    FREE = f"{P}_websocket_connection_free"
+    FREE = "umilib_protocol_websocket_websocket_connection_free"
 
     def __init__(
         self,
@@ -152,49 +151,49 @@ class WebSocketConnection(Handle):
         """A connection with permessage-deflate of the agreed ``deflate``, if any."""
         super().__init__(
             Handle.create(
-                f"{P}_websocket_connection_new", role == WebSocketRole.SERVER, Structures.to_structure(config or WebSocketConfig()),
+                "umilib_protocol_websocket_websocket_connection_new", role == WebSocketRole.SERVER, Structures.to_structure(config or WebSocketConfig()),
                 WebSocketDeflateParameters.pointer(deflate), *Bytes.readable(seed or os.urandom(48)),
             )  # fmt: skip
         )
 
     def receive(self, data: bytes) -> None:
-        self.library.call(f"{P}_websocket_connection_receive", self.handle, *Bytes.readable(data))
+        self.library.call("umilib_protocol_websocket_websocket_connection_receive", self.handle, *Bytes.readable(data))
 
     def receive_close(self) -> None:
         """Takes the end of the transport."""
-        self.library.call(f"{P}_websocket_connection_receive_close", self.handle)
+        self.library.call("umilib_protocol_websocket_websocket_connection_receive_close", self.handle)
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_websocket_connection_transmit", self.handle)
+        return self.library.output("umilib_protocol_websocket_websocket_connection_transmit", self.handle)
 
     def wants_close(self) -> bool:
-        return self.library.value(f"{P}_websocket_connection_wants_close", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_websocket_websocket_connection_wants_close", ctypes.c_bool, self.handle)
 
     def wants_receive(self) -> bool:
         """Whether to read more from the transport: false while events wait up to their limit."""
-        return self.library.value(f"{P}_websocket_connection_wants_receive", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_websocket_websocket_connection_wants_receive", ctypes.c_bool, self.handle)
 
     @property
     def state(self) -> WebSocketState:
-        return WebSocketState(self.library.value(f"{P}_websocket_connection_state", ctypes.c_uint8, self.handle))
+        return WebSocketState(self.library.value("umilib_protocol_websocket_websocket_connection_state", ctypes.c_uint8, self.handle))
 
     def send_text(self, text: str) -> None:
-        self.library.call(f"{P}_websocket_connection_send_text", self.handle, *Text.encode(text))
+        self.library.call("umilib_protocol_websocket_websocket_connection_send_text", self.handle, *Text.encode(text))
 
     def send_binary(self, data: bytes) -> None:
-        self.library.call(f"{P}_websocket_connection_send_binary", self.handle, *Bytes.readable(data))
+        self.library.call("umilib_protocol_websocket_websocket_connection_send_binary", self.handle, *Bytes.readable(data))
 
     def send_ping(self, data: bytes = b"") -> None:
-        self.library.call(f"{P}_websocket_connection_send_ping", self.handle, *Bytes.readable(data))
+        self.library.call("umilib_protocol_websocket_websocket_connection_send_ping", self.handle, *Bytes.readable(data))
 
     def close(self, code: int = WebSocketCloseCode.NORMAL, reason: str = "") -> None:
-        """Starts the closing handshake (RFC 6455 §7.1.2)."""
-        self.library.call(f"{P}_websocket_connection_close", self.handle, int(code), *Text.encode(reason))
+        """Starts the closing handshake (RFC 6455 §7.1.2). :meth:`free` releases the object."""
+        self.library.call("umilib_protocol_websocket_websocket_connection_close", self.handle, int(code), *Text.encode(reason))
 
     def poll_event(self) -> WebSocketEvent | None:
         found = ctypes.c_bool()
-        structure = Library.default().type(f"{P}_WebSocketEvent")()
+        structure = Library.default().type("umilib_protocol_websocket_WebSocketEvent")()
         buffer = Buffer()
-        self.library.call(f"{P}_websocket_connection_poll_event", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
+        self.library.call("umilib_protocol_websocket_websocket_connection_poll_event", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
         data = self.library.take(buffer)
         return WebSocketEvent(WebSocketEventKind(structure.kind), data, structure.code) if found.value else None

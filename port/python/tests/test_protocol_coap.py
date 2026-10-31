@@ -541,6 +541,30 @@ def test_nstart_of_rfc_7252():
     assert pair.request().message.options.path() == ["b"]
 
 
+def test_requests_left_unanswered():
+    generator = random(b"unanswered")
+    # RFC 7967 §2: a request the server does not answer; a Confirmable one is acknowledged by an empty
+    # ACK, so that its client stops retransmitting it (RFC 7252 §4.2).
+    server = CoAPEndpoint.new(None, generator)
+    request = get("/a")
+    request.id, request.token = 30, b"\x01"
+    server.receive(CLIENT, request.encode(), 0, generator)
+    exchange = server.poll_event().exchange
+    server.ignore(exchange)
+    assert header(server.transmit().message) == (CoAPType.ACKNOWLEDGEMENT, CoAPCode.EMPTY, 30)
+    assert server.transmit() is None
+    with pytest.raises(CoAPError) as error:
+        server.ignore(exchange)
+    assert error.value.name == "State"
+    # Past `maximum_incoming` requests awaiting an answer, a Confirmable request is answered 5.03.
+    small = CoAPEndpoint.new(dataclasses.replace(CoAPConfig.default(), maximum_incoming=1), generator)
+    for id in (31, 32):
+        request.id, request.token = id, bytes([id])
+        small.receive(CLIENT, request.encode(), 0, generator)
+    assert [event.kind for event in Pair.events(small)] == [CoAPEventKind.REQUEST]
+    assert header(small.transmit().message) == (CoAPType.ACKNOWLEDGEMENT, CoAPCode.SERVICE_UNAVAILABLE, 32)
+
+
 def test_observations_of_rfc_7641():
     pair = Pair()
     generator = random(b"observations")

@@ -179,8 +179,9 @@ impl DNSServiceBinding {
         self.value(DNSServiceKey::ALPN).and_then(DNSServiceBinding::strings_of).unwrap_or_default()
     }
 
+    /// The port of "port"; `None` without one, or with a value not of 2 bytes (RFC 9460 §7.2).
     pub fn port(&self) -> Option<u16> {
-        self.value(DNSServiceKey::PORT).map(|value| u16::from_be_bytes([value[0], value[1]]))
+        self.value(DNSServiceKey::PORT).and_then(|value| value.try_into().ok()).map(u16::from_be_bytes)
     }
 
     pub fn ipv4_hints(&self) -> Vec<IPv4Address> {

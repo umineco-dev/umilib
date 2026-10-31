@@ -12,8 +12,6 @@ from typing import Any, ClassVar
 
 from umilib.ffi import Bytes, FFIError, Fields, Library, Text
 
-P = "umilib_protocol_ethernet"
-
 
 class EthernetError(FFIError):
     """An error of an Ethernet frame: ``Length``, ``Tag``, ``EtherType`` or ``Syntax``."""
@@ -43,12 +41,12 @@ class MACAddress:
     @classmethod
     def parse(cls, text: str) -> MACAddress:
         """Reads six hexadecimal pairs separated by colons or hyphens; raises ``Syntax``."""
-        structure = Library.default().type(f"{P}_MACAddress")()
-        Library.default().call(f"{P}_mac_address_parse", *Text.encode(text), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_ethernet_MACAddress")()
+        Library.default().call("umilib_protocol_ethernet_mac_address_parse", *Text.encode(text), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_MACAddress")()
+        structure = Library.default().type("umilib_protocol_ethernet_MACAddress")()
         ctypes.memmove(structure.octets, self.octets, MACAddress.LENGTH)
         return structure
 
@@ -57,7 +55,7 @@ class MACAddress:
         return cls(bytes(structure.octets))
 
     def call(self, method: str) -> Any:
-        return Library.default().function(f"{P}_mac_address_{method}")(self.to_structure())
+        return Library.default().function(f"umilib_protocol_ethernet_mac_address_{method}")(self.to_structure())
 
     def is_multicast(self) -> bool:
         """Whether the Individual/Group bit is set."""
@@ -76,7 +74,7 @@ class MACAddress:
     def modified_eui64(self) -> bytes:
         """The modified EUI-64 interface identifier (RFC 4291 appendix A, RFC 2464 §4)."""
         out = (ctypes.c_uint8 * 8)()
-        Library.default().call(f"{P}_mac_address_modified_eui64", self.to_structure(), out)
+        Library.default().call("umilib_protocol_ethernet_mac_address_modified_eui64", self.to_structure(), out)
         return bytes(out)
 
     @classmethod
@@ -84,8 +82,8 @@ class MACAddress:
         """The address an IPv4 multicast address maps to (RFC 1112 §6.4)."""
         if len(address) != 4:
             raise ValueError("an IPv4 address has 4 octets")
-        structure = Library.default().type(f"{P}_MACAddress")()
-        Library.default().call(f"{P}_mac_address_from_ipv4_multicast", bytes(address), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_ethernet_MACAddress")()
+        Library.default().call("umilib_protocol_ethernet_mac_address_from_ipv4_multicast", bytes(address), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -93,12 +91,12 @@ class MACAddress:
         """The address an IPv6 multicast address maps to (RFC 2464 §7)."""
         if len(address) != 16:
             raise ValueError("an IPv6 address has 16 octets")
-        structure = Library.default().type(f"{P}_MACAddress")()
-        Library.default().call(f"{P}_mac_address_from_ipv6_multicast", bytes(address), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_ethernet_MACAddress")()
+        Library.default().call("umilib_protocol_ethernet_mac_address_from_ipv6_multicast", bytes(address), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     def __str__(self) -> str:
-        return Library.default().output(f"{P}_mac_address_to_string", self.to_structure()).decode("utf-8")
+        return Library.default().output("umilib_protocol_ethernet_mac_address_to_string", self.to_structure()).decode("utf-8")
 
     def __repr__(self) -> str:
         return f"MACAddress('{self}')"
@@ -147,14 +145,14 @@ class EtherType(int):
         return super().__new__(cls, value)
 
     def is_length(self) -> bool:
-        return bool(Library.default().function(f"{P}_ether_type_is_length")(int(self)))
+        return bool(Library.default().function("umilib_protocol_ethernet_ether_type_is_length")(int(self)))
 
     def is_ether_type(self) -> bool:
-        return bool(Library.default().function(f"{P}_ether_type_is_ether_type")(int(self)))
+        return bool(Library.default().function("umilib_protocol_ethernet_ether_type_is_ether_type")(int(self)))
 
     def is_tag(self) -> bool:
         """Whether the EtherType is that of a VLAN tag."""
-        return bool(Library.default().function(f"{P}_ether_type_is_tag")(int(self)))
+        return bool(Library.default().function("umilib_protocol_ethernet_ether_type_is_tag")(int(self)))
 
     def __str__(self) -> str:
         return f"{int(self):#06x}"
@@ -187,13 +185,13 @@ class VLANTag:
     @classmethod
     def from_control(cls, protocol: int, control: int) -> VLANTag:
         """The tag of ``protocol`` with the tag control information ``control``."""
-        return cls.from_structure(Library.default().function(f"{P}_vlan_tag_from_control")(int(protocol), control))
+        return cls.from_structure(Library.default().function("umilib_protocol_ethernet_vlan_tag_from_control")(int(protocol), control))
 
     def control(self) -> int | None:
         """The tag control information; ``None`` if a field does not fit."""
         out = ctypes.c_uint16()
         try:
-            Library.default().call(f"{P}_vlan_tag_control", self.to_structure(), ctypes.byref(out))
+            Library.default().call("umilib_protocol_ethernet_vlan_tag_control", self.to_structure(), ctypes.byref(out))
         except EthernetError:
             return None
         return out.value
@@ -203,7 +201,7 @@ class VLANTag:
         return cls(EtherType(structure.protocol), structure.priority, bool(structure.drop_eligible), structure.identifier)
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_VLANTag")()
+        structure = Library.default().type("umilib_protocol_ethernet_VLANTag")()
         for name, value in (("protocol", int(self.protocol)), ("priority", self.priority), ("identifier", self.identifier)):
             Fields.assign(structure, name, value)
         structure.drop_eligible = self.drop_eligible
@@ -234,7 +232,7 @@ class EthernetHeader:
     def to_structure(self) -> Any:
         if len(self.tags) > EthernetHeader.MAXIMUM_TAGS:
             raise EthernetError("protocol.ethernet", "Tag", "the VLAN tags are invalid")
-        structure = Library.default().type(f"{P}_EthernetHeader")()
+        structure = Library.default().type("umilib_protocol_ethernet_EthernetHeader")()
         structure.destination = self.destination.to_structure()
         structure.source = self.source.to_structure()
         for index, tag in enumerate(self.tags):
@@ -248,14 +246,14 @@ class EthernetHeader:
         """The header at the start of ``data`` and the data after it (that of an IEEE 802.3 frame is
         its length); raises ``Length``, ``Tag`` or ``EtherType``."""
         data = bytes(data)
-        structure = Library.default().type(f"{P}_EthernetHeader")()
+        structure = Library.default().type("umilib_protocol_ethernet_EthernetHeader")()
         offset, length = ctypes.c_size_t(), ctypes.c_size_t()
-        Library.default().call(f"{P}_ethernet_header_decode", data, len(data), ctypes.byref(structure), ctypes.byref(offset), ctypes.byref(length))
+        Library.default().call("umilib_protocol_ethernet_ethernet_header_decode", data, len(data), ctypes.byref(structure), ctypes.byref(offset), ctypes.byref(length))
         return cls.from_structure(structure), data[offset.value : offset.value + length.value]
 
     def encode(self) -> bytes:
         """The bytes of the header; raises ``Tag`` or ``EtherType``."""
-        return Library.default().output(f"{P}_ethernet_header_encode", ctypes.byref(self.to_structure()))
+        return Library.default().output("umilib_protocol_ethernet_ethernet_header_encode", ctypes.byref(self.to_structure()))
 
 
 class EthernetFrame:
@@ -270,18 +268,18 @@ class EthernetFrame:
     def fcs(frame: bytes | bytearray | memoryview) -> bytes:
         """The frame check sequence of the header and the data, in the order it is sent."""
         out = (ctypes.c_uint8 * EthernetFrame.FCS_LENGTH)()
-        Library.default().call(f"{P}_ethernet_frame_fcs", *Bytes.readable(frame), out)
+        Library.default().call("umilib_protocol_ethernet_ethernet_frame_fcs", *Bytes.readable(frame), out)
         return bytes(out)
 
     @staticmethod
     def verify(frame: bytes | bytearray | memoryview) -> bool:
         """Whether ``frame`` ends with the right frame check sequence."""
-        return Library.default().value(f"{P}_ethernet_frame_verify", ctypes.c_bool, *Bytes.readable(frame))
+        return Library.default().value("umilib_protocol_ethernet_ethernet_frame_verify", ctypes.c_bool, *Bytes.readable(frame))
 
     @staticmethod
     def padding(length: int) -> int:
         """The zero bytes to append to a header and data of ``length`` bytes."""
-        return Library.default().function(f"{P}_ethernet_frame_padding")(length)
+        return Library.default().function("umilib_protocol_ethernet_ethernet_frame_padding")(length)
 
 
 __all__ = ["EtherType", "EthernetError", "EthernetFrame", "EthernetHeader", "MACAddress", "VLANTag"]

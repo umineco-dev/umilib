@@ -21,13 +21,11 @@ from umilib.hash import CryptographicDigest
 from umilib.math.pairing import PairingCurve
 from umilib.secret import Secret
 
-P = "umilib_crypto_ibs_ibs"
-
 
 class IBSMasterKey(Handle):
     """The master key of a private key generator, which keeps its scheme; zeroized when released."""
 
-    FREE = f"{P}_master_key_free"
+    FREE = "umilib_crypto_ibs_ibs_master_key_free"
 
     def __init__(self, scheme: type, pointer: int) -> None:
         super().__init__(pointer)
@@ -35,11 +33,11 @@ class IBSMasterKey(Handle):
 
     def public_key(self) -> bytes:
         """P_pub, the master public key."""
-        return self.library.output(f"{P}_master_key_public_key", self.handle)
+        return self.library.output("umilib_crypto_ibs_ibs_master_key_public_key", self.handle)
 
     def secret(self) -> bytearray:
         """s, big-endian of the bytes of r, a secret to zeroize."""
-        return self.library.output_secret(f"{P}_master_key_secret", self.handle)
+        return self.library.output_secret("umilib_crypto_ibs_ibs_master_key_secret", self.handle)
 
     def __repr__(self) -> str:
         return f"IBSMasterKey({self.scheme.__name__}, ..)"
@@ -48,14 +46,14 @@ class IBSMasterKey(Handle):
 class IBSUserKey(Handle):
     """The key s H1(ID) of a user, which keeps its scheme; zeroized when released."""
 
-    FREE = f"{P}_user_key_free"
+    FREE = "umilib_crypto_ibs_ibs_user_key_free"
 
     def __init__(self, scheme: type, pointer: int) -> None:
         super().__init__(pointer)
         self.scheme = scheme
 
     def identity(self) -> bytes:
-        return self.library.output(f"{P}_user_key_identity", self.handle)
+        return self.library.output("umilib_crypto_ibs_ibs_user_key_identity", self.handle)
 
     def __repr__(self) -> str:
         return f"IBSUserKey({self.scheme.__name__}, {self.identity()!r}, ..)"
@@ -111,7 +109,7 @@ class IdentityBasedSignature:
         if master.scheme is not cls:
             raise TypeError(f"the master key is one of {master.scheme.__name__}")
         data, length = Bytes.readable(identity)
-        return IBSUserKey(cls, Handle.create(f"{P}_master_key_extract", master.handle, data, length))
+        return IBSUserKey(cls, Handle.create("umilib_crypto_ibs_ibs_master_key_extract", master.handle, data, length))
 
     @classmethod
     def sign(cls, key: IBSUserKey, message: bytes | bytearray | memoryview, random: Random) -> bytes:
@@ -120,7 +118,7 @@ class IdentityBasedSignature:
             raise TypeError(f"the key is one of {key.scheme.__name__}")
         data, length = Bytes.readable(message)
         handle, name, name_length = random.source()
-        return Library.default().output(f"{P}_user_key_sign", key.handle, data, length, handle, name, name_length)
+        return Library.default().output("umilib_crypto_ibs_ibs_user_key_sign", key.handle, data, length, handle, name, name_length)
 
     @classmethod
     def verify(

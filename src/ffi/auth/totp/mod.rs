@@ -89,7 +89,7 @@ macro_rules! otp_states {
                 }
             }
 
-            pub fn generate(&self, counter: u64) -> OTPCode {
+            pub fn generate(&self, counter: u64) -> Result<OTPCode, OTPError> {
                 match *self {
                     $(
                         #[cfg(umilib_feature = $feature)]
@@ -208,7 +208,8 @@ crate::ffi_functions! {
         Status::from_result((|| {
             // SAFETY: the caller passes a valid handle, a writable byte range and a writable pointer.
             let hotp = unsafe { Pointer::reference(hotp) }?;
-            unsafe { hotp.generate(counter).write_ascii(out, length, written) }
+            let code = hotp.generate(counter).map_err(|error| error.to_status())?;
+            unsafe { code.write_ascii(out, length, written) }
         })())
     }
 

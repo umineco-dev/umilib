@@ -46,6 +46,12 @@ impl ZlibCompressor {
     }
 }
 
+impl Default for ZlibCompressor {
+    fn default() -> ZlibCompressor {
+        ZlibCompressor::new(DeflateConfig::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for ZlibCompressor {
     fn compress(&mut self, input: &[u8], output: &mut [u8], flush: Flush) -> Result<Progress, CompressionError> {
         if !self.started {

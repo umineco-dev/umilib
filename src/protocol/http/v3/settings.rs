@@ -1,3 +1,4 @@
+use alloc::collections::BTreeSet;
 use alloc::vec::Vec;
 
 use crate::bytes::Reader;
@@ -30,15 +31,16 @@ impl H3Settings {
         let error = |reason| H3Error::connection(H3ErrorCode::SETTINGS_ERROR, reason);
         let mut reader = Reader::new(payload);
         let mut settings = H3Settings::default();
-        let mut seen = Vec::new();
+        // A set, not a list searched for each identifier: a payload of 64 KiB
+        // holds about 16,000 settings.
+        let mut seen = BTreeSet::new();
         while !reader.is_empty() {
             let cut = |_| H3Error::connection(H3ErrorCode::FRAME_ERROR, "SETTINGS cut short");
             let id = QUICVarint::read(&mut reader).map_err(cut)?;
             let value = QUICVarint::read(&mut reader).map_err(cut)?;
-            if seen.contains(&id) {
+            if !seen.insert(id) {
                 return Err(error("a setting repeated"));
             }
-            seen.push(id);
             match id {
                 0x02..=0x05 => return Err(error("a setting of HTTP/2")),
                 H3Settings::QPACK_MAX_TABLE_CAPACITY => settings.qpack_max_table_capacity = value,

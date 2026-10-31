@@ -85,7 +85,10 @@ caller's contract (documented in `docs/ffi.md`). Rules learned while building it
   byte fails with `InvalidArgument`, an identical pointer included, because
   two values in one place cannot both be the result. A function with two such
   outputs and no input checks them the same way (`Pointer::write_optional`
-  does it for its pair). `Pointer::range` makes a null pointer an empty range,
+  does it for its pair; `umilib_runtime_timer_queue_next_deadline` and the
+  optional getters of `platform.fuzz` wrote their flag before checking the
+  value pointer, or checked only for null, until a review found it, and now
+  call it). `Pointer::range` makes a null pointer an empty range,
   so that the conversion that follows still reports `NullPointer`.
 - Left out of those ranges: `*mut Buffer` and handle outputs (`*mut *mut T`),
   written last from owned values once the inputs are no longer read, so an
@@ -195,6 +198,27 @@ function with ctypes (all pointers as `c_void_p`, structures and callbacks
 from the manifest definitions). Each Python module registers its exception
 class for its domain with `Library.register_error`. `umilib.ffi.Handle` owns
 an opaque handle and frees it with the type's `FREE` function.
+
+Garbage collection (`__del__`) and the end of a `with` block call
+`Handle.free()`, never `close()`. `close()` releases the object as well, but
+types whose Rust `close` is an operation of a protocol (`TCPConnection`,
+`WebSocketConnection`, `TLSConnection`, the channel `Receiver`) override it
+with that operation, as in Rust. When `__del__` called `close()`, collecting
+such an object sent a FIN or started a WebSocket closing handshake and never
+freed it; the first fix overrode `__del__` and `__exit__` in `TLSConnection`
+alone, which every new type with a protocol `close` had to remember. Types
+that release differently (a `Secret` with views, a borrowed `Waker`, a
+`SliceWriter` that keeps an export of a `bytearray`) override `free()`.
+
+Every C function name is written out in full in the Python code (no module
+constant holding a prefix): the modules contain only classes, and a class
+attribute `PREFIX` already names the C type of a class (`Primitive` derives
+`FREE` and the sizes from it), so it cannot hold the prefix of a module too.
+The full names can also be found with `grep` from the manifest.
+
+When a callback is registered before the C call that takes it and the call
+fails, the binding removes the entry again: C never calls the drop callback
+of a task or route it did not take.
 
 Python mirrors every public Rust item with the same name. Logic always runs in
 Rust through the C ABI; Python implements only data containers (such as

@@ -493,6 +493,13 @@ fn smtp_timeouts_and_shutdowns_through_the_c_abi() {
             false,
             &mut server,
         ));
+        // RFC 5321 §4.2: text of a line break would be a reply of its own.
+        let injected = "bye\r\n250 OK";
+        Check::fails(
+            umilib_protocol_smtp_smtp_server_shutdown(server, injected.as_ptr(), injected.len()),
+            "protocol.smtp",
+            "Syntax",
+        );
         let text = "Service not available";
         Check::ok(umilib_protocol_smtp_smtp_server_shutdown(server, text.as_ptr(), text.len()));
         let mut out = Buffer::EMPTY;

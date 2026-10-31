@@ -51,6 +51,12 @@ impl CanonicalHuffmanCompressor {
     }
 }
 
+impl Default for CanonicalHuffmanCompressor {
+    fn default() -> CanonicalHuffmanCompressor {
+        CanonicalHuffmanCompressor::new(CanonicalHuffmanConfig::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for CanonicalHuffmanCompressor {
     fn compress(&mut self, input: &[u8], output: &mut [u8], flush: Flush) -> Result<Progress, CompressionError> {
         let (mut consumed, mut produced) = (0, 0);

@@ -63,7 +63,7 @@ impl DeflateLevel {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DeflateDecompressorConfig {
     /// The base-2 logarithm of the window kept (8 to 15): a match reaching
-    /// farther back fails with `InvalidData`. Streams of other compressors
+    /// farther back fails with `LimitExceeded`. Streams of other compressors
     /// may use the whole window of 32 KiB (15).
     pub window_bits: u32,
 }

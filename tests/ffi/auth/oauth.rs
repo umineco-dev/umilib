@@ -12,7 +12,7 @@ use umilib::ffi::auth::oauth::server::*;
 use umilib::ffi::auth::oauth::*;
 use umilib::ffi::crypto::random::hmac_drbg;
 
-use super::Check;
+use super::super::Check;
 
 fn take(buffer: &mut Buffer) -> String {
     let text = String::from_utf8(buffer.as_slice().to_vec()).unwrap();
@@ -463,6 +463,7 @@ fn oauth_resource_server_and_dpop_through_the_c_abi() {
             60,
             false,
             1024,
+            1,
             0,
             &mut server,
         ));

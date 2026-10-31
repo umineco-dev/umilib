@@ -7,8 +7,8 @@
 
 mod manifest;
 
-#[cfg(all(umilib_feature = "auth-oauth", umilib_feature = "hash-sha-v2"))]
-mod auth_oauth;
+#[cfg(umilib_feature = "auth")]
+mod auth;
 #[cfg(umilib_feature = "bytes")]
 mod bytes;
 #[cfg(umilib_feature = "calendar")]

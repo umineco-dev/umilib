@@ -109,7 +109,9 @@ How `protocol::http`, `codec::hpack`, `codec::qpack` and
   sent as 2^32 - 1. SETTINGS_NO_RFC7540_PRIORITIES is sent (RFC 9218 §2.1)
   and PRIORITY frames are read and ignored.
 - **Floods.** Each of the known floods has its own limit: resets per window
-  (rapid reset), acknowledgments owed for PING and SETTINGS, the size of a
+  (rapid reset; the streams this end resets because of a frame of the peer
+  count too, since they free a stream just the same: "MadeYouReset",
+  CVE-2025-8671), acknowledgments owed for PING and SETTINGS, the size of a
   field block across CONTINUATION frames. Each ends the connection with
   ENHANCE_YOUR_CALM.
 - **Closing.** `shutdown` sends GOAWAY with the last stream processed; the

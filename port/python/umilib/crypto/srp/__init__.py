@@ -16,8 +16,6 @@ from umilib.ffi import Bytes, Handle, Library, Marker, Text
 from umilib.hash import CryptographicDigest
 from umilib.secret import Secret
 
-P = "umilib_crypto_srp_srp"
-
 
 class SRPGroup(Marker, abstract=True):
     """A group of SRP: a safe prime N and a generator g, named by its C type name."""
@@ -87,14 +85,14 @@ class SRP:
         arguments: list[Any] = []
         for value in (salt, identity, password):
             arguments.extend(Bytes.readable(value))
-        return Library.default().output(f"{P}_verifier", *SRPSuite.names(cls), *arguments)
+        return Library.default().output("umilib_crypto_srp_srp_verifier", *SRPSuite.names(cls), *arguments)
 
 
 class SRPClient(Handle):
     """The client of SRP in the group and with the hash function of ``SRPClient[G, H]``: the secret
     exponent a and A = g^a % N (section 2.5.4); zeroized when released."""
 
-    FREE = f"{P}_client_free"
+    FREE = "umilib_crypto_srp_srp_client_free"
     PARAMETERS: ClassVar[tuple[Any, ...] | None] = None
 
     def __class_getitem__(cls, parameters: Any) -> Any:
@@ -107,7 +105,7 @@ class SRPClient(Handle):
         with source:
             with source.locked():
                 data, length = source.location()
-                pointer = Handle.create(f"{P}_client_new", *SRPSuite.names(type(self)), data, length)
+                pointer = Handle.create("umilib_crypto_srp_srp_client_new", *SRPSuite.names(type(self)), data, length)
         super().__init__(pointer)
 
     @classmethod
@@ -119,12 +117,12 @@ class SRPClient(Handle):
         """A client with a random exponent of 256 bits at least."""
         client = cls.__new__(cls)
         handle, name, length = random.source()
-        Handle.__init__(client, Handle.create(f"{P}_client_generate", *SRPSuite.names(cls), handle, name, length))
+        Handle.__init__(client, Handle.create("umilib_crypto_srp_srp_client_generate", *SRPSuite.names(cls), handle, name, length))
         return client
 
     def public_value(self) -> bytes:
         """A, as the client sends it (without leading zeros)."""
-        return self.library.output(f"{P}_client_public_value", self.handle)
+        return self.library.output("umilib_crypto_srp_srp_client_public_value", self.handle)
 
     def premaster_secret(
         self,
@@ -138,7 +136,7 @@ class SRPClient(Handle):
         arguments: list[Any] = []
         for value in (identity, password, salt, server_public):
             arguments.extend(Bytes.readable(value))
-        return self.library.output_secret(f"{P}_client_premaster_secret", self.handle, *arguments)
+        return self.library.output_secret("umilib_crypto_srp_srp_client_premaster_secret", self.handle, *arguments)
 
     def __repr__(self) -> str:
         return "SRPClient(..)"
@@ -148,7 +146,7 @@ class SRPServer(Handle):
     """The server of SRP in the group and with the hash function of ``SRPServer[G, H]``: the verifier,
     the secret exponent b and B = k v + g^b % N; zeroized when released."""
 
-    FREE = f"{P}_server_free"
+    FREE = "umilib_crypto_srp_srp_server_free"
     PARAMETERS: ClassVar[tuple[Any, ...] | None] = None
 
     def __class_getitem__(cls, parameters: Any) -> Any:
@@ -162,7 +160,7 @@ class SRPServer(Handle):
         with source:
             with source.locked():
                 data, length = source.location()
-                pointer = Handle.create(f"{P}_server_new", *SRPSuite.names(type(self)), verifier_data, verifier_length, data, length)
+                pointer = Handle.create("umilib_crypto_srp_srp_server_new", *SRPSuite.names(type(self)), verifier_data, verifier_length, data, length)
         super().__init__(pointer)
 
     @classmethod
@@ -176,19 +174,19 @@ class SRPServer(Handle):
         verifier_data, verifier_length = Bytes.readable(verifier)
         handle, name, length = random.source()
         Handle.__init__(
-            server, Handle.create(f"{P}_server_generate", *SRPSuite.names(cls), verifier_data, verifier_length, handle, name, length)
+            server, Handle.create("umilib_crypto_srp_srp_server_generate", *SRPSuite.names(cls), verifier_data, verifier_length, handle, name, length)
         )
         return server
 
     def public_value(self) -> bytes:
         """B, as the server sends it (without leading zeros)."""
-        return self.library.output(f"{P}_server_public_value", self.handle)
+        return self.library.output("umilib_crypto_srp_srp_server_public_value", self.handle)
 
     def premaster_secret(self, client_public: bytes | bytearray | memoryview) -> bytearray:
         """The premaster secret of section 2.6 for the client's A, a secret to zeroize; raises
         ``InvalidKey`` for A % N = 0 or u = 0."""
         data, length = Bytes.readable(client_public)
-        return self.library.output_secret(f"{P}_server_premaster_secret", self.handle, data, length)
+        return self.library.output_secret("umilib_crypto_srp_srp_server_premaster_secret", self.handle, data, length)
 
     def __repr__(self) -> str:
         return "SRPServer(..)"

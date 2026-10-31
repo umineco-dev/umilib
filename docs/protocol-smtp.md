@@ -126,6 +126,9 @@ AUTH and STARTTLS carry what SASL and TLS need and no more:
 - After the 220 to STARTTLS, whatever was received before TLS is
   discarded on both sides (RFC 3207 §4.2, CVE-2011-0411), and the session
   begins again. Start TLS on the connection at `StartTLS`.
+- `shutdown(text)` replies 421 and closes (§3.8), for a server shutting
+  down; text of a CR, an LF or a NUL is refused (`Syntax`) and nothing is
+  written.
 
 ## Delivery
 

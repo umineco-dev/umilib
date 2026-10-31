@@ -34,7 +34,9 @@ runtime.block_on(async move {
 
 `ThreadPool::new(&ThreadPoolConfig { threads, name, stack_size })` starts
 `threads` threads (0: as many as the system's parallelism), named `name`
-followed by their index. It implements `runtime::Executor`: `spawn(future)`
+followed by their index. A number of threads whose bookkeeping does not fit
+in memory fails with `io::ErrorKind::OutOfMemory` (through C, with
+`InvalidArgument`) instead of aborting. It implements `runtime::Executor`: `spawn(future)`
 gives a `JoinHandle`. A task spawned on a pool's thread goes to that
 thread's queue. Other tasks go to a shared queue, and an idle thread takes
 work from the shared queue or from the other threads' queues.
@@ -52,8 +54,11 @@ work from the shared queue or from the other threads' queues.
 
 ## Reactor and timers
 
-`Reactor::new(&ReactorConfig { name, stack_size })` starts a thread that
-waits on the system's I/O:
+`Reactor::new(&ReactorConfig { name, stack_size, maximum_events, retry_delay })`
+starts a thread that waits on the system's I/O (`maximum_events`, 256 by
+default, is the most events or completions one wait takes; the others wait
+for the next round. `retry_delay`, 10 ms, is the pause after a failed wait,
+so that the thread does not spin while the system is out of resources):
 
 - an edge-triggered `epoll` (Linux, Android) or `kqueue` (Darwin) poller;
 - an I/O completion port (Windows).
@@ -148,7 +153,10 @@ if let Some(mut worker) = Worker::current()? {
   - `arguments` (by default, this process's);
   - `environment` (extra variables);
   - `restart` (`RestartPolicy::Never`, `OnFailure`, the default, or `Always`);
-  - `restart_delay` (1 s), `stop_timeout` (10 s) and `check_interval` (100 ms).
+  - `restart_delay` (1 s), `stop_timeout` (10 s), `check_interval` (100 ms)
+    and `stop_check_interval` (10 ms, how often `stop` looks for the workers' exit).
+    A `stop_timeout` whose deadline the clock cannot represent (such as
+    `Duration::MAX`) waits for the workers without limit.
 - `start()` starts the workers.
 - `check()` records the workers that exited, starts again those the policy
   says to (once `restart_delay` has passed since the exit), and returns how

@@ -18,7 +18,6 @@ from umilib.ffi import Buffer, Handle, Library, Structures
 from umilib.protocol.http import HTTPConfig, HTTPConnection
 from umilib.protocol.quic import QUICCloseReason, QUICConnection, QUICEvent, QUICEventKind
 
-P = "umilib_protocol_http_v3"
 
 __all__ = ["H3Config", "H3Connection", "H3Session"]
 
@@ -27,7 +26,7 @@ __all__ = ["H3Config", "H3Connection", "H3Session"]
 class H3Config:
     """The configuration of HTTP/3 connections; the defaults are the library's (:meth:`default`)."""
 
-    C_TYPE: ClassVar[str] = f"{P}_H3Config"
+    C_TYPE: ClassVar[str] = "umilib_protocol_http_v3_H3Config"
 
     http: HTTPConfig
     qpack_encoder: QPACKEncoderConfig
@@ -38,22 +37,22 @@ class H3Config:
     @classmethod
     def default(cls) -> H3Config:
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_h3_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_http_v3_h3_config_default", ctypes.byref(structure))
         return Structures.from_structure(cls, structure)
 
 
 class H3Connection(Handle):
     """The state of HTTP/3 on one QUIC connection."""
 
-    FREE = f"{P}_h3_connection_free"
+    FREE = "umilib_protocol_http_v3_h3_connection_free"
 
     @classmethod
     def client(cls, now: int, config: H3Config | None = None) -> H3Connection:
-        return cls(Handle.create(f"{P}_h3_connection_client", Structures.to_structure(config or H3Config.default()), now))
+        return cls(Handle.create("umilib_protocol_http_v3_h3_connection_client", Structures.to_structure(config or H3Config.default()), now))
 
     @classmethod
     def server(cls, now: int, config: H3Config | None = None) -> H3Connection:
-        return cls(Handle.create(f"{P}_h3_connection_server", Structures.to_structure(config or H3Config.default()), now))
+        return cls(Handle.create("umilib_protocol_http_v3_h3_connection_server", Structures.to_structure(config or H3Config.default()), now))
 
 
 class H3Session(HTTPConnection):
@@ -64,7 +63,7 @@ class H3Session(HTTPConnection):
         self.quic = quic
 
     def call(self, name: str, *arguments: Any) -> None:
-        Library.default().call(f"{P}_h3_connection_{name}", self.connection, self.quic.endpoint, self.quic.handle, *arguments)
+        Library.default().call(f"umilib_protocol_http_v3_h3_connection_{name}", self.connection, self.quic.endpoint, self.quic.handle, *arguments)
 
     def process(self, now: int) -> None:
         """Handles what the QUIC connection received: its events, frames and QPACK instructions."""

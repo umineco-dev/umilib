@@ -19,7 +19,6 @@ from typing import Any, ClassVar
 
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Nanoseconds, Text
 
-P = "umilib_protocol_pop_v3"
 
 __all__ = [
     "POP3Capabilities",
@@ -78,17 +77,17 @@ class POP3Response:
     def parse(cls, line: bytes) -> POP3Response:
         """The response of a status line without its CRLF; raises ``Syntax``."""
         ok, code, text = ctypes.c_bool(), Buffer(), Buffer()
-        Library.default().call(f"{P}_pop3_response_decode", *Bytes.readable(line), ctypes.byref(ok), ctypes.byref(code), ctypes.byref(text))
+        Library.default().call("umilib_protocol_pop_v3_pop3_response_decode", *Bytes.readable(line), ctypes.byref(ok), ctypes.byref(code), ctypes.byref(text))
         code_text = Library.default().take(code).decode("utf-8")
         return cls(ok.value, code_text.split("/") if code_text else [], Library.default().take(text))
 
     def encode(self) -> bytes:
         """The status line without its CRLF; raises ``Syntax`` for a level or text it cannot have."""
-        return Library.default().output(f"{P}_pop3_response_encode", self.ok, *Text.encode("/".join(self.code)), *Bytes.readable(self.text))
+        return Library.default().output("umilib_protocol_pop_v3_pop3_response_encode", self.ok, *Text.encode("/".join(self.code)), *Bytes.readable(self.text))
 
     def timestamp(self) -> bytes | None:
         """The timestamp of a greeting for APOP (RFC 1939 §7), its angle brackets included."""
-        return Library.default().optional(f"{P}_pop3_response_timestamp", Buffer, *Bytes.readable(self.encode()))
+        return Library.default().optional("umilib_protocol_pop_v3_pop3_response_timestamp", Buffer, *Bytes.readable(self.encode()))
 
     def has_code(self, levels: list[str]) -> bool:
         return len(self.code) == len(levels) and all(a.upper() == b.upper() for a, b in zip(self.code, levels))
@@ -104,7 +103,7 @@ class POP3Command:
     def parse(cls, line: bytes | str, utf8: bool = False) -> POP3Command:
         """The command of ``line``; UTF-8 arguments only if ``utf8`` (RFC 6856). Raises ``Syntax``."""
         data = line.encode("utf-8") if isinstance(line, str) else line
-        return cls(Library.default().output(f"{P}_pop3_command_normalize", *Bytes.readable(data), utf8).decode("utf-8"))
+        return cls(Library.default().output("umilib_protocol_pop_v3_pop3_command_normalize", *Bytes.readable(data), utf8).decode("utf-8"))
 
     @classmethod
     def apop(cls, name: str, timestamp: bytes, secret: bytes) -> POP3Command:
@@ -115,13 +114,13 @@ class POP3Command:
     def apop_digest(timestamp: bytes, secret: bytes) -> str:
         """MD5 of the timestamp and the secret, in lower-case hexadecimal. Present when the library
         has ``hash-md-v5`` and ``secret``."""
-        return Library.default().output(f"{P}_pop3_command_apop_digest", *Bytes.readable(timestamp), *Bytes.readable(secret)).decode("ascii")
+        return Library.default().output("umilib_protocol_pop_v3_pop3_command_apop_digest", *Bytes.readable(timestamp), *Bytes.readable(secret)).decode("ascii")
 
     @staticmethod
     def apop_matches(digest: str, timestamp: bytes, secret: bytes) -> bool:
         """Whether ``digest`` is the APOP digest of the timestamp and the secret, compared in constant time."""
         return Library.default().value(
-            f"{P}_pop3_command_apop_matches", ctypes.c_bool, *Text.encode(digest), *Bytes.readable(timestamp), *Bytes.readable(secret),
+            "umilib_protocol_pop_v3_pop3_command_apop_matches", ctypes.c_bool, *Text.encode(digest), *Bytes.readable(timestamp), *Bytes.readable(secret),
         )  # fmt: skip
 
     @property
@@ -130,7 +129,7 @@ class POP3Command:
 
     def is_multi_line(self) -> bool:
         """Whether a positive response to the command has lines after it."""
-        return Library.default().value(f"{P}_pop3_command_is_multi_line", ctypes.c_bool, *Text.encode(self.line))
+        return Library.default().value("umilib_protocol_pop_v3_pop3_command_is_multi_line", ctypes.c_bool, *Text.encode(self.line))
 
     def __str__(self) -> str:
         return self.line
@@ -156,7 +155,7 @@ class POP3Capabilities:
     @classmethod
     def parse(cls, data: bytes) -> POP3Capabilities:
         """The capabilities of the lines of a CAPA list, its periods removed; other lines are left out."""
-        text = Library.default().output(f"{P}_pop3_capabilities_decode", *Bytes.readable(data)).decode("utf-8")
+        text = Library.default().output("umilib_protocol_pop_v3_pop3_capabilities_decode", *Bytes.readable(data)).decode("utf-8")
         return cls([POP3Capability(words[0], tuple(words[1:])) for words in (line.split(" ") for line in text.split("\n") if line)])
 
     def get(self, tag: str) -> POP3Capability | None:
@@ -179,16 +178,16 @@ class POP3MultiLineReader(Handle):
     """A reader of the lines of a multi-line response: removes the periods added and finds its end.
     Only CRLF ends a line."""
 
-    FREE = f"{P}_pop3_multi_line_reader_free"
+    FREE = "umilib_protocol_pop_v3_pop3_multi_line_reader_free"
 
     @classmethod
     def new(cls) -> POP3MultiLineReader:
-        return cls(Handle.create(f"{P}_pop3_multi_line_reader_new"))
+        return cls(Handle.create("umilib_protocol_pop_v3_pop3_multi_line_reader_new"))
 
     def read(self, data: bytes) -> tuple[int, bytes, bool]:
         """Reads ``data`` to the end of the response: the octets read, the lines and whether it ended."""
         read, out, end = ctypes.c_size_t(), Buffer(), ctypes.c_bool()
-        self.library.call(f"{P}_pop3_multi_line_reader_read", self.handle, *Bytes.readable(data), ctypes.byref(read), ctypes.byref(out), ctypes.byref(end))
+        self.library.call("umilib_protocol_pop_v3_pop3_multi_line_reader_read", self.handle, *Bytes.readable(data), ctypes.byref(read), ctypes.byref(out), ctypes.byref(end))
         return read.value, self.library.take(out), end.value
 
 
@@ -196,24 +195,24 @@ class POP3MultiLineWriter(Handle):
     """A writer of the lines of a multi-line response, in pieces: every line break as CRLF, a period
     added before a line that begins with one."""
 
-    FREE = f"{P}_pop3_multi_line_writer_free"
+    FREE = "umilib_protocol_pop_v3_pop3_multi_line_writer_free"
 
     @classmethod
     def new(cls) -> POP3MultiLineWriter:
-        return cls(Handle.create(f"{P}_pop3_multi_line_writer_new"))
+        return cls(Handle.create("umilib_protocol_pop_v3_pop3_multi_line_writer_new"))
 
     def write(self, data: bytes) -> bytes:
-        return self.library.output(f"{P}_pop3_multi_line_writer_write", self.handle, *Bytes.readable(data))
+        return self.library.output("umilib_protocol_pop_v3_pop3_multi_line_writer_write", self.handle, *Bytes.readable(data))
 
     def finish(self) -> bytes:
         """The end of the response: a CRLF if the last line has none, and the line of a period."""
-        return self.library.output(f"{P}_pop3_multi_line_writer_finish", self.handle)
+        return self.library.output("umilib_protocol_pop_v3_pop3_multi_line_writer_finish", self.handle)
 
     @staticmethod
     def canonical_length(data: bytes) -> int:
         """The octets of ``data`` as the writer sends them, without the added periods and the end:
         the size of a message LIST gives (RFC 6856 §2.1)."""
-        return Library.default().value(f"{P}_pop3_multi_line_canonical_length", ctypes.c_uint64, *Bytes.readable(data))
+        return Library.default().value("umilib_protocol_pop_v3_pop3_multi_line_canonical_length", ctypes.c_uint64, *Bytes.readable(data))
 
 
 @dataclasses.dataclass
@@ -231,13 +230,13 @@ class POP3Config:
     #: (RFC 2595 §2.3).
     passwords_require_tls: bool
 
-    C_TYPE: ClassVar[str] = f"{P}_POP3Config"
+    C_TYPE: ClassVar[str] = "umilib_protocol_pop_v3_POP3Config"
     DURATIONS: ClassVar[tuple[str, ...]] = ("response_timeout", "autologout")
 
     @classmethod
     def default(cls) -> POP3Config:
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_pop3_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_pop_v3_pop3_config_default", ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -278,14 +277,14 @@ class POP3ServerConfig:
     implementation: str | None
     commands: list[str]
 
-    C_TYPE: ClassVar[str] = f"{P}_POP3ServerConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_pop_v3_POP3ServerConfig"
     BESIDE: ClassVar[tuple[str, ...]] = ("sasl_mechanisms", "plaintext_mechanisms", "login_delay", "expire", "implementation", "commands")
 
     @classmethod
     def default(cls) -> POP3ServerConfig:
         """The defaults of the library: no mechanism offered."""
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_pop3_server_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_pop_v3_pop3_server_config_default", ctypes.byref(structure))
         values = {field.name: getattr(structure, field.name) for field in dataclasses.fields(cls) if field.name not in cls.BESIDE}
         login_delay = structure.login_delay if structure.has_login_delay else None
         return cls(
@@ -341,7 +340,7 @@ class POP3ClientEvent:
         found, kind, error = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_void_p()
         command, response, data = Buffer(), Buffer(), Buffer()
         library.call(
-            f"{P}_pop3_client_poll_event", client.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
+            "umilib_protocol_pop_v3_pop3_client_poll_event", client.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
             ctypes.byref(response), ctypes.byref(data), ctypes.byref(error),
         )  # fmt: skip
         line, status, data_bytes = library.take(command), library.take(response), library.take(data)
@@ -370,7 +369,7 @@ class POP3ServerEvent:
         found, kind, error = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_void_p()
         command, response, data = Buffer(), Buffer(), Buffer()
         library.call(
-            f"{P}_pop3_server_poll_event", server.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
+            "umilib_protocol_pop_v3_pop3_server_poll_event", server.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(command),
             ctypes.byref(response), ctypes.byref(data), ctypes.byref(error),
         )  # fmt: skip
         line, _, data_bytes = library.take(command), library.take(response), library.take(data)
@@ -383,109 +382,113 @@ class POP3Client(Handle):
     """A POP3 client of one connection (RFC 1939): commands sent in order, pipelined when the server
     announces PIPELINING (RFC 2449 §6.6), STLS and AUTH only when announced, each in its state."""
 
-    FREE = f"{P}_pop3_client_free"
+    FREE = "umilib_protocol_pop_v3_pop3_client_free"
 
     @classmethod
     def new(cls, config: POP3Config | None, secure: bool, now: int) -> POP3Client:
         """A client of a new connection, ``secure`` if it is TLS from its start (RFC 8314)."""
-        return cls(Handle.create(f"{P}_pop3_client_new", (config or POP3Config.default()).to_structure(), secure, now))
+        return cls(Handle.create("umilib_protocol_pop_v3_pop3_client_new", (config or POP3Config.default()).to_structure(), secure, now))
 
     @property
     def state(self) -> POP3State:
-        return POP3State(self.library.value(f"{P}_pop3_client_state", ctypes.c_uint8, self.handle))
+        return POP3State(self.library.value("umilib_protocol_pop_v3_pop3_client_state", ctypes.c_uint8, self.handle))
 
     def is_open(self) -> bool:
-        return self.library.value(f"{P}_pop3_client_is_open", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_pop_v3_pop3_client_is_open", ctypes.c_bool, self.handle)
 
     def has_capability(self, tag: str) -> bool:
-        return self.library.value(f"{P}_pop3_client_has_capability", ctypes.c_bool, self.handle, *Text.encode(tag))
+        return self.library.value("umilib_protocol_pop_v3_pop3_client_has_capability", ctypes.c_bool, self.handle, *Text.encode(tag))
 
     def receive(self, data: bytes, now: int) -> None:
-        self.library.call(f"{P}_pop3_client_receive", self.handle, *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_pop_v3_pop3_client_receive", self.handle, *Bytes.readable(data), now)
 
     def send(self, command: POP3Command | str, now: int, utf8: bool = False) -> None:
         """Queues ``command``; raises ``State`` for one the state or the capabilities do not allow."""
-        self.library.call(f"{P}_pop3_client_send", self.handle, *Bytes.readable(str(command).encode("utf-8")), utf8, now)
+        self.library.call("umilib_protocol_pop_v3_pop3_client_send", self.handle, *Bytes.readable(str(command).encode("utf-8")), utf8, now)
 
     def auth_respond(self, response: bytes, now: int) -> None:
-        self.library.call(f"{P}_pop3_client_auth_respond", self.handle, *Bytes.readable(response), now)
+        self.library.call("umilib_protocol_pop_v3_pop3_client_auth_respond", self.handle, *Bytes.readable(response), now)
 
     def auth_cancel(self, now: int) -> None:
-        self.library.call(f"{P}_pop3_client_auth_cancel", self.handle, now)
+        self.library.call("umilib_protocol_pop_v3_pop3_client_auth_cancel", self.handle, now)
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_pop3_client_transmit", self.handle)
+        return self.library.output("umilib_protocol_pop_v3_pop3_client_transmit", self.handle)
 
     def poll_event(self) -> POP3ClientEvent | None:
         return POP3ClientEvent.poll(self)
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_pop3_client_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_pop_v3_pop3_client_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_pop3_client_expire", self.handle, now)
+        self.library.call("umilib_protocol_pop_v3_pop3_client_expire", self.handle, now)
 
 
 class POP3Server(Handle):
     """A POP3 server of one connection (RFC 1939): it answers CAPA, NOOP, QUIT in AUTHORIZATION and
     commands of the wrong state itself, and tells the caller each other command, one at a time."""
 
-    FREE = f"{P}_pop3_server_free"
+    FREE = "umilib_protocol_pop_v3_pop3_server_free"
 
     @classmethod
     def new(cls, config: POP3Config | None, server: POP3ServerConfig | None, secure: bool) -> POP3Server:
         server = server or POP3ServerConfig.default()
         mechanisms, plaintext, commands = Text.array(server.sasl_mechanisms), Text.array(server.plaintext_mechanisms), Text.array(server.commands)
         return cls(Handle.create(
-            f"{P}_pop3_server_new", (config or POP3Config.default()).to_structure(), server.to_structure(), *mechanisms[:2],
+            "umilib_protocol_pop_v3_pop3_server_new", (config or POP3Config.default()).to_structure(), server.to_structure(), *mechanisms[:2],
             *plaintext[:2], *commands[:2], *Text.encode(server.expire), *Text.encode(server.implementation), secure,
         ))  # fmt: skip
 
     def is_open(self) -> bool:
-        return self.library.value(f"{P}_pop3_server_is_open", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_pop_v3_pop3_server_is_open", ctypes.c_bool, self.handle)
 
     def passwords_taken(self) -> bool:
         """Whether passwords sent as they are are taken now (RFC 5034 §4)."""
-        return self.library.value(f"{P}_pop3_server_passwords_taken", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_pop_v3_pop3_server_passwords_taken", ctypes.c_bool, self.handle)
 
     def capabilities(self) -> POP3Capabilities:
         """The capabilities the server would announce now."""
-        return POP3Capabilities.parse(self.library.output(f"{P}_pop3_server_capabilities", self.handle))
+        return POP3Capabilities.parse(self.library.output("umilib_protocol_pop_v3_pop3_server_capabilities", self.handle))
 
     def greet(self, response: POP3Response, now: int) -> None:
         """Sends the greeting: +OK, with a timestamp if APOP is offered; -ERR closes the connection."""
-        self.library.call(f"{P}_pop3_server_greet", self.handle, *Bytes.readable(response.encode()), now)
+        self.library.call("umilib_protocol_pop_v3_pop3_server_greet", self.handle, *Bytes.readable(response.encode()), now)
 
     def wants_receive(self) -> bool:
         """Whether the server takes more input now: stop reading the connection while it is false,
         so that a peer that pipelines cannot make it hold more than ``maximum_buffered``."""
-        return self.library.value(f"{P}_pop3_server_wants_receive", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_pop_v3_pop3_server_wants_receive", ctypes.c_bool, self.handle)
 
     def receive(self, data: bytes, now: int) -> None:
-        self.library.call(f"{P}_pop3_server_receive", self.handle, *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_pop_v3_pop3_server_receive", self.handle, *Bytes.readable(data), now)
 
     def reply(self, response: POP3Response, now: int) -> None:
         """Answers the command told; a positive answer to a multi-line command is followed by
         :meth:`send_data` and :meth:`end_data`."""
-        self.library.call(f"{P}_pop3_server_reply", self.handle, *Bytes.readable(response.encode()), now)
+        self.library.call("umilib_protocol_pop_v3_pop3_server_reply", self.handle, *Bytes.readable(response.encode()), now)
 
     def send_data(self, data: bytes) -> None:
-        self.library.call(f"{P}_pop3_server_send_data", self.handle, *Bytes.readable(data))
+        self.library.call("umilib_protocol_pop_v3_pop3_server_send_data", self.handle, *Bytes.readable(data))
 
     def end_data(self, now: int) -> None:
-        self.library.call(f"{P}_pop3_server_end_data", self.handle, now)
+        self.library.call("umilib_protocol_pop_v3_pop3_server_end_data", self.handle, now)
 
     def auth_challenge(self, challenge: bytes, now: int) -> None:
-        self.library.call(f"{P}_pop3_server_auth_challenge", self.handle, *Bytes.readable(challenge), now)
+        self.library.call("umilib_protocol_pop_v3_pop3_server_auth_challenge", self.handle, *Bytes.readable(challenge), now)
+
+    def shutdown(self, text: str) -> None:
+        """Closes the connection with -ERR, of SYS/TEMP where response codes are announced (RFC 3206 §4); raises ``Syntax`` for a line break in ``text``."""
+        self.library.call("umilib_protocol_pop_v3_pop3_server_shutdown", self.handle, *Text.encode(text))
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_pop3_server_transmit", self.handle)
+        return self.library.output("umilib_protocol_pop_v3_pop3_server_transmit", self.handle)
 
     def poll_event(self) -> POP3ServerEvent | None:
         return POP3ServerEvent.poll(self)
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_pop3_server_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_pop_v3_pop3_server_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_pop3_server_expire", self.handle, now)
+        self.library.call("umilib_protocol_pop_v3_pop3_server_expire", self.handle, now)

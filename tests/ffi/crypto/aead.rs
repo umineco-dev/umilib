@@ -12,7 +12,7 @@ use umilib::ffi::crypto::mode::{ccm, gcm, gcmsiv, siv};
 
 use super::Cipher;
 use crate::Check;
-use crate::vectors::{Json, Wycheproof};
+use crate::vectors::{JSON, Wycheproof};
 
 type Encrypt<T> =
     unsafe extern "C" fn(*const T, *const u8, usize, *const u8, usize, *mut u8, usize, *mut u8, usize) -> *const Status;
@@ -55,7 +55,7 @@ impl<T> Suite<T> {
     /// test (null if it refuses them, which only an invalid test may make it do): a valid test encrypts
     /// to its ciphertext and tag and decrypts back; an invalid one fails to decrypt. Returns the number
     /// of tests.
-    fn run(&self, path: &str, create: impl Fn(&Json, &Json) -> *mut T) -> usize {
+    fn run(&self, path: &str, create: impl Fn(&JSON, &JSON) -> *mut T) -> usize {
         let tests = Wycheproof::tests(path);
         assert!(!tests.is_empty(), "{path}");
         for (group, test) in &tests {

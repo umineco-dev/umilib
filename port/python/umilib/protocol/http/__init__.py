@@ -15,7 +15,6 @@ from typing import Any, ClassVar
 
 from umilib.ffi import Buffer, Bytes, FFIError, Handle, Library
 
-P = "umilib_protocol_http"
 
 __all__ = [
     "HTTPConfig",
@@ -60,14 +59,14 @@ class HTTPStatus(int):
     @property
     def reason(self) -> str:
         """The reason phrase of the code, empty if it has none."""
-        return Library.default().output(f"{P}_http_status_reason", int(self)).decode("ascii")
+        return Library.default().output("umilib_protocol_http_http_status_reason", int(self)).decode("ascii")
 
 
 @dataclasses.dataclass
 class HTTPConfig:
     """The limits every version keeps on what a peer sends."""
 
-    C_TYPE: ClassVar[str] = f"{P}_HTTPConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_http_HTTPConfig"
 
     maximum_field_section_size: int = 1 << 16
     maximum_target_length: int = 8 << 10
@@ -78,10 +77,10 @@ class HTTPConfig:
 class HTTPFields(Handle):
     """A header or trailer section: field lines in their order, names lowercased (RFC 9110 §5)."""
 
-    FREE = f"{P}_http_fields_free"
+    FREE = "umilib_protocol_http_http_fields_free"
 
     def __init__(self, pointer: int | None = None) -> None:
-        super().__init__(pointer or Handle.create(f"{P}_http_fields_new"))
+        super().__init__(pointer or Handle.create("umilib_protocol_http_http_fields_new"))
 
     @classmethod
     def of(cls, lines: list[tuple[bytes, bytes]]) -> HTTPFields:
@@ -91,26 +90,26 @@ class HTTPFields(Handle):
         return fields
 
     def append(self, name: bytes, value: bytes) -> None:
-        self.library.call(f"{P}_http_fields_append", self.handle, *Bytes.readable(name), *Bytes.readable(value))
+        self.library.call("umilib_protocol_http_http_fields_append", self.handle, *Bytes.readable(name), *Bytes.readable(value))
 
     def set(self, name: bytes, value: bytes) -> None:
         """Replaces the lines of ``name`` with one of ``value``."""
-        self.library.call(f"{P}_http_fields_set", self.handle, *Bytes.readable(name), *Bytes.readable(value))
+        self.library.call("umilib_protocol_http_http_fields_set", self.handle, *Bytes.readable(name), *Bytes.readable(value))
 
     def remove(self, name: bytes) -> bool:
-        return self.library.value(f"{P}_http_fields_remove", ctypes.c_bool, self.handle, *Bytes.readable(name))
+        return self.library.value("umilib_protocol_http_http_fields_remove", ctypes.c_bool, self.handle, *Bytes.readable(name))
 
     def get(self, name: bytes) -> bytes | None:
         """The values of the lines of ``name`` joined by ", " (RFC 9110 §5.3), or ``None``."""
-        return self.library.optional(f"{P}_http_fields_get", Buffer, self.handle, *Bytes.readable(name))
+        return self.library.optional("umilib_protocol_http_http_fields_get", Buffer, self.handle, *Bytes.readable(name))
 
     def __len__(self) -> int:
-        return self.library.value(f"{P}_http_fields_count", ctypes.c_size_t, self.handle)
+        return self.library.value("umilib_protocol_http_http_fields_count", ctypes.c_size_t, self.handle)
 
     def line(self, index: int) -> tuple[bytes, bytes, bool]:
         """The name, value and sensitivity of the line ``index``."""
         name, value, sensitive = Buffer(), Buffer(), ctypes.c_bool()
-        self.library.call(f"{P}_http_fields_line", self.handle, index, ctypes.byref(name), ctypes.byref(value), ctypes.byref(sensitive))
+        self.library.call("umilib_protocol_http_http_fields_line", self.handle, index, ctypes.byref(name), ctypes.byref(value), ctypes.byref(sensitive))
         return self.library.take(name), self.library.take(value), sensitive.value
 
     def lines(self) -> list[tuple[bytes, bytes]]:
@@ -118,84 +117,84 @@ class HTTPFields(Handle):
 
     def set_sensitive(self, index: int, sensitive: bool) -> None:
         """Marks the line ``index`` never to be indexed by HPACK or QPACK."""
-        self.library.call(f"{P}_http_fields_set_sensitive", self.handle, index, sensitive)
+        self.library.call("umilib_protocol_http_http_fields_set_sensitive", self.handle, index, sensitive)
 
 
 class HTTPRequest(Handle):
     """The head of a request as every version carries it."""
 
-    FREE = f"{P}_http_request_free"
+    FREE = "umilib_protocol_http_http_request_free"
 
     @classmethod
     def new(cls, method: bytes, scheme: bytes, authority: bytes, path: bytes) -> HTTPRequest:
-        return cls(Handle.create(f"{P}_http_request_new", *Bytes.readable(method), *Bytes.readable(scheme), *Bytes.readable(authority), *Bytes.readable(path)))
+        return cls(Handle.create("umilib_protocol_http_http_request_new", *Bytes.readable(method), *Bytes.readable(scheme), *Bytes.readable(authority), *Bytes.readable(path)))
 
     @classmethod
     def connect(cls, authority: bytes) -> HTTPRequest:
         """A CONNECT request for a tunnel to ``authority`` (RFC 9110 §9.3.6)."""
-        return cls(Handle.create(f"{P}_http_request_connect", *Bytes.readable(authority)))
+        return cls(Handle.create("umilib_protocol_http_http_request_connect", *Bytes.readable(authority)))
 
     @property
     def method(self) -> bytes:
-        return self.library.output(f"{P}_http_request_method", self.handle)
+        return self.library.output("umilib_protocol_http_http_request_method", self.handle)
 
     @property
     def scheme(self) -> bytes | None:
-        return self.library.optional(f"{P}_http_request_scheme", Buffer, self.handle)
+        return self.library.optional("umilib_protocol_http_http_request_scheme", Buffer, self.handle)
 
     def host(self) -> bytes | None:
         """The authority of the target, else of the Host field."""
-        return self.library.optional(f"{P}_http_request_host", Buffer, self.handle)
+        return self.library.optional("umilib_protocol_http_http_request_host", Buffer, self.handle)
 
     @property
     def path(self) -> bytes:
-        return self.library.output(f"{P}_http_request_path", self.handle)
+        return self.library.output("umilib_protocol_http_http_request_path", self.handle)
 
     @property
     def protocol(self) -> bytes | None:
         """The protocol of an extended CONNECT (RFC 8441 §4)."""
-        return self.library.optional(f"{P}_http_request_protocol", Buffer, self.handle)
+        return self.library.optional("umilib_protocol_http_http_request_protocol", Buffer, self.handle)
 
     @protocol.setter
     def protocol(self, protocol: bytes | None) -> None:
         data, length = Bytes.readable(protocol) if protocol is not None else (None, 0)
-        self.library.call(f"{P}_http_request_set_protocol", self.handle, data, length)
+        self.library.call("umilib_protocol_http_http_request_set_protocol", self.handle, data, length)
 
     @property
     def fields(self) -> HTTPFields:
         """A copy of the header fields; assign to change them."""
-        return HTTPFields(Handle.create(f"{P}_http_request_fields", self.handle))
+        return HTTPFields(Handle.create("umilib_protocol_http_http_request_fields", self.handle))
 
     @fields.setter
     def fields(self, fields: HTTPFields) -> None:
-        self.library.call(f"{P}_http_request_set_fields", self.handle, fields)
+        self.library.call("umilib_protocol_http_http_request_set_fields", self.handle, fields)
 
     def check(self) -> None:
         """Checks the rules of the head every version shares (RFC 9110 §7.1, §9.3.6, RFC 8441 §4)."""
-        self.library.call(f"{P}_http_request_check", self.handle)
+        self.library.call("umilib_protocol_http_http_request_check", self.handle)
 
 
 class HTTPResponse(Handle):
     """The head of a response."""
 
-    FREE = f"{P}_http_response_free"
+    FREE = "umilib_protocol_http_http_response_free"
 
     @classmethod
     def new(cls, status: int) -> HTTPResponse:
-        return cls(Handle.create(f"{P}_http_response_new", status))
+        return cls(Handle.create("umilib_protocol_http_http_response_new", status))
 
     @property
     def status(self) -> HTTPStatus:
-        return HTTPStatus(self.library.value(f"{P}_http_response_status", ctypes.c_uint16, self.handle))
+        return HTTPStatus(self.library.value("umilib_protocol_http_http_response_status", ctypes.c_uint16, self.handle))
 
     @property
     def fields(self) -> HTTPFields:
         """A copy of the header fields; assign to change them."""
-        return HTTPFields(Handle.create(f"{P}_http_response_fields", self.handle))
+        return HTTPFields(Handle.create("umilib_protocol_http_http_response_fields", self.handle))
 
     @fields.setter
     def fields(self, fields: HTTPFields) -> None:
-        self.library.call(f"{P}_http_response_set_fields", self.handle, fields)
+        self.library.call("umilib_protocol_http_http_response_set_fields", self.handle, fields)
 
 
 class HTTPRule(Handle):
@@ -203,24 +202,24 @@ class HTTPRule(Handle):
     not decoded), method and fields. Patterns are the text of ``umilib.service.Pattern``: ``*``,
     ``prefix*``, ``*suffix`` or exact bytes."""
 
-    FREE = f"{P}_http_rule_free"
+    FREE = "umilib_protocol_http_http_rule_free"
 
     @classmethod
     def new(cls, host: bytes = b"*", path: bytes = b"*") -> HTTPRule:
-        return cls(Handle.create(f"{P}_http_rule_new", *Bytes.readable(host), *Bytes.readable(path)))
+        return cls(Handle.create("umilib_protocol_http_http_rule_new", *Bytes.readable(host), *Bytes.readable(path)))
 
     def with_method(self, method: bytes) -> HTTPRule:
         """These requests, of ``method`` only."""
-        self.library.call(f"{P}_http_rule_set_method", self.handle, *Bytes.readable(method))
+        self.library.call("umilib_protocol_http_http_rule_set_method", self.handle, *Bytes.readable(method))
         return self
 
     def with_field(self, name: bytes, value: bytes) -> HTTPRule:
         """These requests, with a field ``name`` whose value the pattern ``value`` matches."""
-        self.library.call(f"{P}_http_rule_add_field", self.handle, *Bytes.readable(name), *Bytes.readable(value))
+        self.library.call("umilib_protocol_http_http_rule_add_field", self.handle, *Bytes.readable(name), *Bytes.readable(value))
         return self
 
     def matches(self, request: HTTPRequest) -> bool:
-        return self.library.value(f"{P}_http_rule_matches", ctypes.c_bool, self.handle, request)
+        return self.library.value("umilib_protocol_http_http_rule_matches", ctypes.c_bool, self.handle, request)
 
 
 class HTTPEventKind(enum.IntEnum):
@@ -309,7 +308,7 @@ class HTTPConnection:
 
     def poll_event(self) -> HTTPEvent | None:
         found = ctypes.c_bool()
-        structure = Library.default().type(f"{P}_HTTPEvent")()
+        structure = Library.default().type("umilib_protocol_http_HTTPEvent")()
         request, response, fields = ctypes.c_void_p(), ctypes.c_void_p(), ctypes.c_void_p()
         self.call("poll_event", ctypes.byref(found), ctypes.byref(structure), ctypes.byref(request), ctypes.byref(response), ctypes.byref(fields))
         if not found.value:

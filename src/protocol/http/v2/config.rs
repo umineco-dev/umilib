@@ -31,7 +31,8 @@ pub struct H2Config {
     pub settings_timeout: Option<Duration>,
     /// How long a connection stays open without a stream: 60 s by default; `None` for ever.
     pub idle_timeout: Option<Duration>,
-    /// The most streams the peer may reset in `reset_window` before the
+    /// The most streams the peer may reset, or make this end reset with
+    /// frames that are stream errors, in `reset_window` before the
     /// connection closes with ENHANCE_YOUR_CALM, against floods of
     /// requests reset at once: 1000 by default.
     pub maximum_resets: u32,

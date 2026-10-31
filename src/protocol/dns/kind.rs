@@ -99,6 +99,14 @@ impl DNSType {
     pub const fn decompresses_names(self) -> bool {
         matches!(self.0, 2..=9 | 12 | 14 | 15 | 17 | 18 | 21 | 24 | 26 | 30 | 33 | 35)
     }
+
+    /// Whether the canonical form lowercases the names in its data: NS,
+    /// MD, MF, CNAME, SOA, MB, MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB,
+    /// RT, SIG, PX, NXT, NAPTR, KX, SRV, DNAME, A6 and RRSIG (RFC 4034
+    /// §6.2, without NSEC as RFC 6840 §5.1 says).
+    pub const fn lowercases_names(self) -> bool {
+        matches!(self.0, 2..=9 | 12..=15 | 17 | 18 | 21 | 24 | 26 | 30 | 33 | 35 | 36 | 38 | 39 | 46)
+    }
 }
 
 impl fmt::Display for DNSType {

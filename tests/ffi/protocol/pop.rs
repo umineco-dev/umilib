@@ -431,6 +431,36 @@ fn pop3_capabilities_rules_and_timeouts_through_the_c_abi() {
     }
 }
 
+/// Shutting down: -ERR, of SYS/TEMP where response codes are announced (RFC 3206 §4), then closed;
+/// a status line is one line (RFC 1939 §3), so text of a line break is refused.
+#[test]
+fn pop3_shutdown_through_the_c_abi() {
+    unsafe {
+        let server = new_server(server_config());
+        Check::ok(umilib_protocol_pop_v3_pop3_server_greet(server, b"+OK ready".as_ptr(), 9, 0));
+        let mut out = Buffer::EMPTY;
+        Check::ok(umilib_protocol_pop_v3_pop3_server_transmit(server, &mut out));
+        out.take();
+        let injected = b"bye\r\n+OK";
+        Check::fails(
+            umilib_protocol_pop_v3_pop3_server_shutdown(server, injected.as_ptr(), injected.len()),
+            "protocol.pop.v3",
+            "Syntax",
+        );
+        Check::ok(umilib_protocol_pop_v3_pop3_server_transmit(server, &mut out));
+        assert!(out.take().is_empty());
+        let text = b"shutting down";
+        Check::ok(umilib_protocol_pop_v3_pop3_server_shutdown(server, text.as_ptr(), text.len()));
+        Check::ok(umilib_protocol_pop_v3_pop3_server_transmit(server, &mut out));
+        assert_eq!(out.take(), b"-ERR [SYS/TEMP] shutting down\r\n");
+        let mut open = true;
+        Check::ok(umilib_protocol_pop_v3_pop3_server_is_open(server, &mut open));
+        assert!(!open);
+        assert_eq!(Event::server(server).last().map(|event| event.kind), Some(4));
+        umilib_protocol_pop_v3_pop3_server_free(server);
+    }
+}
+
 #[test]
 fn pop3_flow_control_through_the_c_abi() {
     unsafe {

@@ -193,6 +193,9 @@ pub struct DPoPConfig {
     pub require_nonce: bool,
     /// The most proof identifiers kept for the replay check; a proof is refused when it is full.
     pub maximum_proofs: usize,
+    /// How many nonces made before the current one are still taken, so that a rotation does not
+    /// refuse the requests in flight (§8.1 leaves how long a nonce stays valid to the server).
+    pub previous_nonces: usize,
 }
 
 impl Default for DPoPConfig {
@@ -213,6 +216,7 @@ impl Default for DPoPConfig {
             leeway: 60,
             require_nonce: false,
             maximum_proofs: 65536,
+            previous_nonces: 1,
         }
     }
 }
@@ -222,7 +226,7 @@ impl Default for DPoPConfig {
 pub struct DPoPVerifier {
     config: DPoPConfig,
     seen: BTreeMap<String, i64>,
-    /// The current nonce and the one before it, still taken.
+    /// The nonces still taken, the current one last: at most `previous_nonces` before it.
     nonces: Vec<String>,
 }
 
@@ -240,14 +244,14 @@ impl DPoPVerifier {
         self.nonces.last().map(String::as_str)
     }
 
-    /// Makes a new nonce; the one before it is still taken until the next rotation.
+    /// Makes a new nonce; the `previous_nonces` made last before it are still taken.
     pub fn rotate_nonce<R: Random>(&mut self, random: &mut R) -> Result<&str, OAuthError> {
         let mut octets = [0u8; 16];
         random.fill(&mut octets)?;
         self.nonces.push(Base64URL::encode(&octets));
-        if self.nonces.len() > 2 {
-            self.nonces.remove(0);
-        }
+        let kept = self.config.previous_nonces.saturating_add(1);
+        let excess = self.nonces.len().saturating_sub(kept);
+        self.nonces.drain(..excess);
         Ok(self.nonces.last().map(String::as_str).unwrap_or_default())
     }
 

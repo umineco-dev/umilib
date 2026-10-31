@@ -15,14 +15,12 @@ from typing import Any, ClassVar
 from umilib.ffi import Bytes, Fields, Handle, Library
 from umilib.hash import CryptographicDigest, Hasher, XOFReader
 
-P = "umilib_hash_blake_v2"
-
 
 class BLAKE2bParameters:
     """The parameter block of BLAKE2b: its fields are attributes, as in the Rust structure."""
 
-    STRUCTURE: ClassVar[str] = f"{P}_BLAKE2bParameters"
-    FUNCTIONS: ClassVar[str] = f"{P}_blake2b_parameters"
+    STRUCTURE: ClassVar[str] = "umilib_hash_blake_v2_BLAKE2bParameters"
+    FUNCTIONS: ClassVar[str] = "umilib_hash_blake_v2_blake2b_parameters"
     BLOCK: ClassVar[int] = 64
     FIELDS: ClassVar[tuple[str, ...]] = (
         "digest_length",
@@ -94,8 +92,8 @@ class BLAKE2bParameters:
 class BLAKE2sParameters(BLAKE2bParameters):
     """The parameter block of BLAKE2s: its fields are attributes, as in the Rust structure."""
 
-    STRUCTURE = f"{P}_BLAKE2sParameters"
-    FUNCTIONS = f"{P}_blake2s_parameters"
+    STRUCTURE = "umilib_hash_blake_v2_BLAKE2sParameters"
+    FUNCTIONS = "umilib_hash_blake_v2_blake2s_parameters"
     BLOCK = 32
 
 
@@ -140,7 +138,7 @@ class BLAKE2Variable(Hasher):
 class BLAKE2b(BLAKE2Variable):
     """BLAKE2b with any output length of 1 to 64 bytes and any parameters."""
 
-    PREFIX = f"{P}_blake2b"
+    PREFIX = "umilib_hash_blake_v2_blake2b"
     PARAMETERS: ClassVar[type[BLAKE2bParameters]] = BLAKE2bParameters
 
     @classmethod
@@ -164,38 +162,38 @@ class BLAKE2b(BLAKE2Variable):
 class BLAKE2s(BLAKE2b):
     """BLAKE2s with any output length of 1 to 32 bytes and any parameters."""
 
-    PREFIX = f"{P}_blake2s"
+    PREFIX = "umilib_hash_blake_v2_blake2s"
     PARAMETERS = BLAKE2sParameters
 
 
 class BLAKE2bp(BLAKE2Variable):
     """BLAKE2bp: BLAKE2b over 4 interleaved leaves."""
 
-    PREFIX = f"{P}_blake2bp"
+    PREFIX = "umilib_hash_blake_v2_blake2bp"
 
 
 class BLAKE2sp(BLAKE2Variable):
     """BLAKE2sp: BLAKE2s over 8 interleaved leaves."""
 
-    PREFIX = f"{P}_blake2sp"
+    PREFIX = "umilib_hash_blake_v2_blake2sp"
 
 
 class BLAKE2XbReader(XOFReader):
     """The output of BLAKE2Xb, computed node by node; reading past its length raises."""
 
-    PREFIX = f"{P}_blake2xb_reader"
+    PREFIX = "umilib_hash_blake_v2_blake2xb_reader"
 
 
 class BLAKE2XsReader(XOFReader):
     """The output of BLAKE2Xs, computed node by node; reading past its length raises."""
 
-    PREFIX = f"{P}_blake2xs_reader"
+    PREFIX = "umilib_hash_blake_v2_blake2xs_reader"
 
 
 class BLAKE2Xb(BLAKE2Variable):
     """BLAKE2Xb: outputs of up to 2^32 - 2 bytes over BLAKE2b; :attr:`UNKNOWN_LENGTH` leaves the length open."""
 
-    PREFIX = f"{P}_blake2xb"
+    PREFIX = "umilib_hash_blake_v2_blake2xb"
     UNKNOWN_LENGTH: ClassVar[int] = (1 << 32) - 1
     PARAMETERS: ClassVar[type[BLAKE2bParameters]] = BLAKE2bParameters
     READER: ClassVar[type[XOFReader]] = BLAKE2XbReader
@@ -217,7 +215,7 @@ class BLAKE2Xb(BLAKE2Variable):
 class BLAKE2Xs(BLAKE2Xb):
     """BLAKE2Xs: outputs of up to 2^16 - 2 bytes over BLAKE2s; :attr:`UNKNOWN_LENGTH` leaves the length open."""
 
-    PREFIX = f"{P}_blake2xs"
+    PREFIX = "umilib_hash_blake_v2_blake2xs"
     UNKNOWN_LENGTH = (1 << 16) - 1
     PARAMETERS = BLAKE2sParameters
     READER = BLAKE2XsReader
@@ -244,49 +242,49 @@ class BLAKE2Fixed(CryptographicDigest):
 class BLAKE2b160(BLAKE2Fixed):
     """BLAKE2b with 160 bits of output."""
 
-    PREFIX = f"{P}_blake2b160"
+    PREFIX = "umilib_hash_blake_v2_blake2b160"
 
 
 class BLAKE2b256(BLAKE2Fixed):
     """BLAKE2b with 256 bits of output."""
 
-    PREFIX = f"{P}_blake2b256"
+    PREFIX = "umilib_hash_blake_v2_blake2b256"
 
 
 class BLAKE2b384(BLAKE2Fixed):
     """BLAKE2b with 384 bits of output."""
 
-    PREFIX = f"{P}_blake2b384"
+    PREFIX = "umilib_hash_blake_v2_blake2b384"
 
 
 class BLAKE2b512(BLAKE2Fixed):
     """BLAKE2b with 512 bits of output."""
 
-    PREFIX = f"{P}_blake2b512"
+    PREFIX = "umilib_hash_blake_v2_blake2b512"
 
 
 class BLAKE2s128(BLAKE2Fixed):
     """BLAKE2s with 128 bits of output."""
 
-    PREFIX = f"{P}_blake2s128"
+    PREFIX = "umilib_hash_blake_v2_blake2s128"
 
 
 class BLAKE2s160(BLAKE2Fixed):
     """BLAKE2s with 160 bits of output."""
 
-    PREFIX = f"{P}_blake2s160"
+    PREFIX = "umilib_hash_blake_v2_blake2s160"
 
 
 class BLAKE2s224(BLAKE2Fixed):
     """BLAKE2s with 224 bits of output."""
 
-    PREFIX = f"{P}_blake2s224"
+    PREFIX = "umilib_hash_blake_v2_blake2s224"
 
 
 class BLAKE2s256(BLAKE2Fixed):
     """BLAKE2s with 256 bits of output."""
 
-    PREFIX = f"{P}_blake2s256"
+    PREFIX = "umilib_hash_blake_v2_blake2s256"
 
 
 __all__ = [

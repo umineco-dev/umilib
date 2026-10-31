@@ -112,29 +112,29 @@ impl Record {
 /// A JSON value, parsed by the tests themselves so that they do not depend
 /// on the JSON codec of the library under test.
 // Not every test crate reads JSON.
-#[allow(dead_code)]
+#[allow(dead_code, clippy::upper_case_acronyms)]
 #[derive(Clone, Debug, PartialEq)]
-pub enum Json {
+pub enum JSON {
     Null,
     Bool(bool),
     /// A number as written.
     Number(String),
     String(String),
-    Array(Vec<Json>),
-    Object(Vec<(String, Json)>),
+    Array(Vec<JSON>),
+    Object(Vec<(String, JSON)>),
 }
 
 #[allow(dead_code)]
-impl Json {
+impl JSON {
     /// The value of the file `path` of `tests/vectors`.
-    pub fn read(path: &str) -> Json {
-        Json::from_text(&Vectors::read(path))
+    pub fn read(path: &str) -> JSON {
+        JSON::from_text(&Vectors::read(path))
     }
 
     /// The value of the JSON text `text`.
-    pub fn from_text(text: &str) -> Json {
+    pub fn from_text(text: &str) -> JSON {
         let mut position = 0;
-        Json::parse(text.as_bytes(), &mut position)
+        JSON::parse(text.as_bytes(), &mut position)
     }
 
     fn skip(bytes: &[u8], position: &mut usize) {
@@ -143,24 +143,24 @@ impl Json {
         }
     }
 
-    fn parse(bytes: &[u8], position: &mut usize) -> Json {
-        Json::skip(bytes, position);
+    fn parse(bytes: &[u8], position: &mut usize) -> JSON {
+        JSON::skip(bytes, position);
         match bytes[*position] {
             b'{' => {
                 *position += 1;
                 let mut members = Vec::new();
                 loop {
-                    Json::skip(bytes, position);
+                    JSON::skip(bytes, position);
                     if bytes[*position] == b'}' {
                         *position += 1;
-                        return Json::Object(members);
+                        return JSON::Object(members);
                     }
-                    let Json::String(key) = Json::parse(bytes, position) else { panic!("an object key is a string") };
-                    Json::skip(bytes, position);
+                    let JSON::String(key) = JSON::parse(bytes, position) else { panic!("an object key is a string") };
+                    JSON::skip(bytes, position);
                     assert_eq!(bytes[*position], b':');
                     *position += 1;
-                    members.push((key, Json::parse(bytes, position)));
-                    Json::skip(bytes, position);
+                    members.push((key, JSON::parse(bytes, position)));
+                    JSON::skip(bytes, position);
                     if bytes[*position] == b',' {
                         *position += 1;
                     }
@@ -170,13 +170,13 @@ impl Json {
                 *position += 1;
                 let mut items = Vec::new();
                 loop {
-                    Json::skip(bytes, position);
+                    JSON::skip(bytes, position);
                     if bytes[*position] == b']' {
                         *position += 1;
-                        return Json::Array(items);
+                        return JSON::Array(items);
                     }
-                    items.push(Json::parse(bytes, position));
-                    Json::skip(bytes, position);
+                    items.push(JSON::parse(bytes, position));
+                    JSON::skip(bytes, position);
                     if bytes[*position] == b',' {
                         *position += 1;
                     }
@@ -215,19 +215,19 @@ impl Json {
                     text.push_str(std::str::from_utf8(&bytes[start..*position]).unwrap());
                 }
                 *position += 1;
-                Json::String(text)
+                JSON::String(text)
             }
             b't' => {
                 *position += 4;
-                Json::Bool(true)
+                JSON::Bool(true)
             }
             b'f' => {
                 *position += 5;
-                Json::Bool(false)
+                JSON::Bool(false)
             }
             b'n' => {
                 *position += 4;
-                Json::Null
+                JSON::Null
             }
             _ => {
                 let start = *position;
@@ -236,41 +236,41 @@ impl Json {
                 {
                     *position += 1;
                 }
-                Json::Number(std::str::from_utf8(&bytes[start..*position]).unwrap().to_string())
+                JSON::Number(std::str::from_utf8(&bytes[start..*position]).unwrap().to_string())
             }
         }
     }
 
     /// The member `key` of an object.
-    pub fn get(&self, key: &str) -> Option<&Json> {
+    pub fn get(&self, key: &str) -> Option<&JSON> {
         match self {
-            Json::Object(members) => members.iter().find(|member| member.0 == key).map(|member| &member.1),
+            JSON::Object(members) => members.iter().find(|member| member.0 == key).map(|member| &member.1),
             _ => None,
         }
     }
 
     /// The member `key`, which must exist.
-    pub fn field(&self, key: &str) -> &Json {
+    pub fn field(&self, key: &str) -> &JSON {
         self.get(key).unwrap_or_else(|| panic!("no member {key}"))
     }
 
     pub fn as_str(&self) -> &str {
         match self {
-            Json::String(text) => text,
+            JSON::String(text) => text,
             other => panic!("{other:?} is not a string"),
         }
     }
 
     pub fn as_usize(&self) -> usize {
         match self {
-            Json::Number(number) => number.parse().unwrap(),
+            JSON::Number(number) => number.parse().unwrap(),
             other => panic!("{other:?} is not a number"),
         }
     }
 
-    pub fn items(&self) -> &[Json] {
+    pub fn items(&self) -> &[JSON] {
         match self {
-            Json::Array(items) => items,
+            JSON::Array(items) => items,
             other => panic!("{other:?} is not an array"),
         }
     }
@@ -283,10 +283,10 @@ impl Json {
     /// The JSON text of the value, without white space, members in order.
     pub fn encode(&self) -> String {
         match self {
-            Json::Null => String::from("null"),
-            Json::Bool(value) => value.to_string(),
-            Json::Number(number) => number.clone(),
-            Json::String(text) => {
+            JSON::Null => String::from("null"),
+            JSON::Bool(value) => value.to_string(),
+            JSON::Number(number) => number.clone(),
+            JSON::String(text) => {
                 let mut out = String::from("\"");
                 for character in text.chars() {
                     match character {
@@ -302,12 +302,12 @@ impl Json {
                 out.push('"');
                 out
             }
-            Json::Array(items) => format!("[{}]", items.iter().map(Json::encode).collect::<Vec<_>>().join(",")),
-            Json::Object(members) => format!(
+            JSON::Array(items) => format!("[{}]", items.iter().map(JSON::encode).collect::<Vec<_>>().join(",")),
+            JSON::Object(members) => format!(
                 "{{{}}}",
                 members
                     .iter()
-                    .map(|(key, value)| format!("{}:{}", Json::String(key.clone()).encode(), value.encode()))
+                    .map(|(key, value)| format!("{}:{}", JSON::String(key.clone()).encode(), value.encode()))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -322,8 +322,8 @@ pub struct Wycheproof;
 #[allow(dead_code)]
 impl Wycheproof {
     /// Every test of the file `path`, with the group it belongs to.
-    pub fn tests(path: &str) -> Vec<(Json, Json)> {
-        let document = Json::read(path);
+    pub fn tests(path: &str) -> Vec<(JSON, JSON)> {
+        let document = JSON::read(path);
         let mut tests = Vec::new();
         for group in document.field("testGroups").items() {
             for test in group.field("tests").items() {
@@ -334,7 +334,7 @@ impl Wycheproof {
     }
 
     /// Whether the test's result is "valid" ("acceptable" tests are neither valid nor invalid).
-    pub fn valid(test: &Json) -> bool {
+    pub fn valid(test: &JSON) -> bool {
         test.field("result").as_str() == "valid"
     }
 }

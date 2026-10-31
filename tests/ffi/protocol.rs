@@ -1371,32 +1371,24 @@ mod http {
 }
 
 #[cfg(umilib_feature = "protocol-coap")]
-#[path = "protocol_coap.rs"]
 mod coap;
 
 #[cfg(umilib_feature = "protocol-dhcp")]
-#[path = "protocol_dhcp.rs"]
 mod dhcp;
 
 #[cfg(umilib_feature = "protocol-dns")]
-#[path = "protocol_dns.rs"]
 mod dns;
 
 #[cfg(umilib_feature = "protocol-smtp")]
-#[path = "protocol_smtp.rs"]
 mod smtp;
 
 #[cfg(umilib_feature = "protocol-pop-v3")]
-#[path = "protocol_pop.rs"]
 mod pop;
 
 #[cfg(umilib_feature = "protocol-imap-v4")]
-#[path = "protocol_imap.rs"]
 mod imap;
 
 #[cfg(umilib_feature = "protocol-ftp")]
-#[path = "protocol_ftp.rs"]
 mod ftp;
 
-#[path = "protocol_aliasing.rs"]
 mod aliasing;

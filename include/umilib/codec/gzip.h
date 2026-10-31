@@ -34,14 +34,15 @@ const umilib_ffi_Status* umilib_codec_gzip_gzip_compressor_new(uint32_t level, u
 /**
  * Writes a new decompressor into `out`: of a file of any number of members if
  * `multiple_members`, otherwise of one member; names, comments and extra fields longer than
- * `maximum_field` bytes fail with `LimitExceeded`.
+ * `maximum_field` bytes fail with `LimitExceeded`; the Deflate data keeps a window of
+ * 2^`window_bits` bytes (8 to 15), matches reaching farther failing with `LimitExceeded`.
  */
-const umilib_ffi_Status* umilib_codec_gzip_gzip_decompressor_new(bool multiple_members, size_t maximum_field, umilib_codec_gzip_GzipDecompressor** out);
+const umilib_ffi_Status* umilib_codec_gzip_gzip_decompressor_new(bool multiple_members, size_t maximum_field, uint32_t window_bits, umilib_codec_gzip_GzipDecompressor** out);
 
 /**
- * Writes the default `multiple_members` and `maximum_field` of a decompressor.
+ * Writes the default `multiple_members`, `maximum_field` and `window_bits` of a decompressor.
  */
-const umilib_ffi_Status* umilib_codec_gzip_gzip_decompressor_config_default(bool* multiple_members, size_t* maximum_field);
+const umilib_ffi_Status* umilib_codec_gzip_gzip_decompressor_config_default(bool* multiple_members, size_t* maximum_field, uint32_t* window_bits);
 
 /**
  * Writes the fixed fields of the header of the member being read (or of the last one) and the

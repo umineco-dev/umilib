@@ -15,8 +15,6 @@ from typing import Any
 from umilib.ffi import Bytes, Handle, Library, Preset
 from umilib.hash import Digest
 
-P = "umilib_hash_siphash"
-
 
 class SipHash(Digest):
     """SipHash-c-d with 64 bits of output and a 128-bit key."""
@@ -153,49 +151,49 @@ class HalfSipHash64(Digest):
 class SipHash24(SipHash):
     """SipHash-2-4, the recommended SipHash."""
 
-    PREFIX = f"{P}_sip_hash24"
+    PREFIX = "umilib_hash_siphash_sip_hash24"
 
 
 class SipHash13(SipHash):
     """SipHash-1-3, the faster variant."""
 
-    PREFIX = f"{P}_sip_hash13"
+    PREFIX = "umilib_hash_siphash_sip_hash13"
 
 
 class SipHash128_24(SipHash128):
     """SipHash-2-4 with 128 bits of output."""
 
-    PREFIX = f"{P}_sip_hash128_24"
+    PREFIX = "umilib_hash_siphash_sip_hash128_24"
 
 
 class SipHash128_13(SipHash128):
     """SipHash-1-3 with 128 bits of output."""
 
-    PREFIX = f"{P}_sip_hash128_13"
+    PREFIX = "umilib_hash_siphash_sip_hash128_13"
 
 
 class HalfSipHash24(HalfSipHash):
     """HalfSipHash-2-4 with 32 bits of output."""
 
-    PREFIX = f"{P}_half_sip_hash24"
+    PREFIX = "umilib_hash_siphash_half_sip_hash24"
 
 
 class HalfSipHash13(HalfSipHash):
     """HalfSipHash-1-3 with 32 bits of output."""
 
-    PREFIX = f"{P}_half_sip_hash13"
+    PREFIX = "umilib_hash_siphash_half_sip_hash13"
 
 
 class HalfSipHash64_24(HalfSipHash64):
     """HalfSipHash-2-4 with 64 bits of output."""
 
-    PREFIX = f"{P}_half_sip_hash64_24"
+    PREFIX = "umilib_hash_siphash_half_sip_hash64_24"
 
 
 class HalfSipHash64_13(HalfSipHash64):
     """HalfSipHash-1-3 with 64 bits of output."""
 
-    PREFIX = f"{P}_half_sip_hash64_13"
+    PREFIX = "umilib_hash_siphash_half_sip_hash64_13"
 
 
 __all__ = [

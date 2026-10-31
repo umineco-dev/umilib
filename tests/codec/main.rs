@@ -10,6 +10,7 @@ mod brotli;
     umilib_feature = "codec-brotli",
     umilib_feature = "codec-deflate",
     umilib_feature = "codec-filter",
+    umilib_feature = "codec-fse",
     umilib_feature = "codec-huffman",
     umilib_feature = "codec-lz4",
     umilib_feature = "codec-lz77",
@@ -25,6 +26,8 @@ mod compression;
 mod deflate;
 #[cfg(umilib_feature = "codec-filter")]
 mod filter;
+#[cfg(umilib_feature = "codec-fse")]
+mod fse;
 #[cfg(umilib_feature = "codec-gzip")]
 mod gzip;
 #[cfg(umilib_feature = "codec-hpack")]

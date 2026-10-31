@@ -94,7 +94,10 @@ impl Fuzzer {
                 break;
             }
             // Keep a bounded sample of generated inputs as material for later mutations.
-            if corpus.inputs.len() < 1024 && mutator.below(64) == 0 {
+            if corpus.inputs.len() < self.config.maximum_corpus_inputs
+                && self.config.sample_interval != 0
+                && mutator.below(self.config.sample_interval) == 0
+            {
                 corpus.inputs.push(input.clone());
             }
         }

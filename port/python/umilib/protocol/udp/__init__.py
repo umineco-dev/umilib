@@ -15,8 +15,6 @@ from typing import Any, ClassVar
 from umilib.ffi import Bytes, FFIError, Fields, Library
 from umilib.protocol.ip import IPAddress, IPEndpoint, IPEndpointPattern
 
-P = "umilib_protocol_udp"
-
 
 class UDPError(FFIError):
     """An error of a UDP datagram: ``Length``, ``Checksum``, ``ZeroChecksum``, ``Family`` or ``Source``."""
@@ -41,8 +39,8 @@ class UDPHeader:
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> UDPHeader:
         """The header at the start of ``data``; raises ``Length`` if it has fewer than 8 bytes."""
-        structure = Library.default().type(f"{P}_UDPHeader")()
-        Library.default().call(f"{P}_udp_header_decode", *Bytes.readable(data), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_udp_UDPHeader")()
+        Library.default().call("umilib_protocol_udp_udp_header_decode", *Bytes.readable(data), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -51,13 +49,13 @@ class UDPHeader:
 
     def to_structure(self) -> Any:
         """The C structure; raises ``OverflowError`` for a field that does not fit 16 bits."""
-        structure = Library.default().type(f"{P}_UDPHeader")()
+        structure = Library.default().type("umilib_protocol_udp_UDPHeader")()
         for name in ("source_port", "destination_port", "length", "checksum"):
             Fields.assign(structure, name, getattr(self, name))
         return structure
 
     def to_bytes(self) -> bytes:
-        return Library.default().output(f"{P}_udp_header_encode", self.to_structure())
+        return Library.default().output("umilib_protocol_udp_udp_header_encode", self.to_structure())
 
     def encode(self) -> bytes:
         return self.to_bytes()
@@ -93,7 +91,7 @@ class UDPDatagram:
 
     def to_structure(self) -> Any:
         """The C structure; raises ``OverflowError`` for a port that does not fit 16 bits."""
-        structure = Library.default().type(f"{P}_UDPDatagram")()
+        structure = Library.default().type("umilib_protocol_udp_UDPDatagram")()
         Fields.assign(structure, "source_port", self.source_port)
         Fields.assign(structure, "destination_port", self.destination_port)
         structure.checksummed = self.checksummed
@@ -106,9 +104,9 @@ class UDPDatagram:
         """The datagram of ``data``, carried from ``source`` to ``destination``; raises ``Length``,
         ``Checksum``, ``ZeroChecksum`` or ``Family``."""
         data = bytes(data)
-        structure, length = Library.default().type(f"{P}_UDPDatagram")(), ctypes.c_size_t()
+        structure, length = Library.default().type("umilib_protocol_udp_UDPDatagram")(), ctypes.c_size_t()
         Library.default().call(
-            f"{P}_udp_datagram_decode", data, len(data), source.octets, source.LENGTH, destination.octets, destination.LENGTH,
+            "umilib_protocol_udp_udp_datagram_decode", data, len(data), source.octets, source.LENGTH, destination.octets, destination.LENGTH,
             *UDPConfig.array(config.zero_checksum_receive_ports), ctypes.byref(structure), ctypes.byref(length),
         )  # fmt: skip
         payload = data[UDPHeader.LENGTH : UDPHeader.LENGTH + length.value]
@@ -116,16 +114,16 @@ class UDPDatagram:
 
     def header(self, source: IPAddress, destination: IPAddress, config: UDPConfig = UDPConfig()) -> UDPHeader:
         """The header of the datagram from ``source`` to ``destination``, with its length and checksum."""
-        structure = Library.default().type(f"{P}_UDPHeader")()
+        structure = Library.default().type("umilib_protocol_udp_UDPHeader")()
         Library.default().call(
-            f"{P}_udp_datagram_header", self.to_structure(), *Bytes.readable(self.payload), source.octets, source.LENGTH,
+            "umilib_protocol_udp_udp_datagram_header", self.to_structure(), *Bytes.readable(self.payload), source.octets, source.LENGTH,
             destination.octets, destination.LENGTH, *UDPConfig.array(config.zero_checksum_send_ports), ctypes.byref(structure),
         )  # fmt: skip
         return UDPHeader.from_structure(structure)
 
     def encode(self, source: IPAddress, destination: IPAddress, config: UDPConfig = UDPConfig()) -> bytes:
         return Library.default().output(
-            f"{P}_udp_datagram_encode", self.to_structure(), *Bytes.readable(self.payload), source.octets, source.LENGTH,
+            "umilib_protocol_udp_udp_datagram_encode", self.to_structure(), *Bytes.readable(self.payload), source.octets, source.LENGTH,
             destination.octets, destination.LENGTH, *UDPConfig.array(config.zero_checksum_send_ports),
         )  # fmt: skip
 
@@ -177,9 +175,9 @@ class UDPRule:
         return dataclasses.replace(self, remote=remote)
 
     def matches(self, request: UDPRequest) -> bool:
-        rule = Library.default().type(f"{P}_UDPRule")(self.local.to_structure(), self.remote.to_structure())
+        rule = Library.default().type("umilib_protocol_udp_UDPRule")(self.local.to_structure(), self.remote.to_structure())
         return Library.default().value(
-            f"{P}_udp_rule_matches", ctypes.c_bool, ctypes.byref(rule), ctypes.byref(request.local.to_structure()),
+            "umilib_protocol_udp_udp_rule_matches", ctypes.c_bool, ctypes.byref(rule), ctypes.byref(request.local.to_structure()),
             ctypes.byref(request.remote.to_structure()),
         )  # fmt: skip
 

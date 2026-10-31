@@ -51,7 +51,9 @@ while let Some(event) = client.poll_event() {
 - What a command writes must read back as that one command: a flag, a
   capability or another field of a line break is refused (`Syntax`). A
   command this type does not know (`Other`) is sent as its line, so it
-  cannot carry a literal.
+  cannot carry a literal: one whose line would end as the length of a
+  literal (`{5}`, `{5+}`) is refused, as the server would read what follows
+  as the literal's octets (§4.3).
 - LOGIN and AUTHENTICATE PLAIN or LOGIN are sent only under TLS while
   `IMAPConfig::passwords_require_tls` (true by default; RFC 9051 §11.1).
 - After STARTTLS the capabilities and IMAP4rev2 are forgotten (§6.2.1)
@@ -117,6 +119,9 @@ at a time, to be answered with `respond` and `complete`:
 - IDLE is accepted with `idle` and ended by the client's DONE
   (`IdleDone`); the autologout timer (30 minutes at least, §5.4) ends a
   silent session with BYE.
+- `shutdown(text)` sends an untagged BYE and closes (§7.1.5), for a server
+  shutting down; text of a CR, an LF or a NUL is refused (`Syntax`) and
+  nothing is written.
 
 The mailboxes are the application's. To answer FETCH,
 `IMAPEnvelope::from_fields`, `IMAPBody::from_entity` and

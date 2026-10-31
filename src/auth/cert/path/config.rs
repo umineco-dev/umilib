@@ -92,8 +92,12 @@ pub struct PathConfig {
     /// target and the trust anchor, not counting self-issued ones (which
     /// renew a CA's key, and which path length constraints do not count either).
     pub maximum_intermediates: usize,
-    /// The most signatures path building verifies before it gives up.
+    /// The most signatures path building verifies before it gives up,
+    /// those of CRLs and of revocation sources (OCSP responses) included.
     pub maximum_signatures: usize,
+    /// The most CRL issuer paths nested in one another (a CRL issuer whose
+    /// own revocation needs a CRL of another issuer, and so on).
+    pub maximum_nested_signers: usize,
     /// The most comparisons of a name with a name constraint a path may
     /// take, which bounds the work of certificates with many names and
     /// constraints (quadratic otherwise).
@@ -115,8 +119,8 @@ pub struct PathConfig {
 impl PathConfig {
     /// The defaults at `time`: the profile of RFC 5280, any policy with
     /// policy processing on and nothing inhibited, no name constraints, at
-    /// most 8 intermediate certificates, 100 signatures and 2^20 name
-    /// comparisons, SHA-1 refused,
+    /// most 8 intermediate certificates, 100 signatures, 4 nested CRL
+    /// issuer paths and 2^20 name comparisons, SHA-1 refused,
     /// no revocation checking, and no usage, purpose or identity asked for.
     pub fn new(time: ASN1Time) -> PathConfig {
         PathConfig {
@@ -129,6 +133,7 @@ impl PathConfig {
             initial_name_constraints: None,
             maximum_intermediates: 8,
             maximum_signatures: 100,
+            maximum_nested_signers: 4,
             maximum_name_checks: 1 << 20,
             key_limits: KeyLimits::default(),
             accept_sha1: false,

@@ -218,6 +218,10 @@ def test_timeouts_and_shutdown():
     [closed] = events(client)
     assert closed.kind == SMTPClientEventKind.CLOSED and closed.error.name == "Timeout"
     server = SMTPServer.new(config, None, False)
+    # RFC 5321 §4.2: a reply is lines of text; a line break in the text would add a reply.
+    with pytest.raises(SMTPError) as raised:
+        server.shutdown("bye\r\n250 OK")
+    assert raised.value.name == "Syntax" and server.transmit() == b"" and server.is_open()
     server.shutdown("Service not available")
     assert server.transmit().startswith(b"421 ")
     assert not server.is_open()

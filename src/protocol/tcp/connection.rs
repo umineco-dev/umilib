@@ -236,7 +236,7 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
             return Err(TCPError::Address);
         }
         let mut connection = TCPConnection::new(config, local, remote, iss, congestion, now)?;
-        connection.state = TCPState::SynSent;
+        connection.state = TCPState::SYNSent;
         connection.ecn = config.ecn == TCPECNMode::Request;
         connection.syn_due = true;
         Ok(connection)
@@ -261,7 +261,7 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
         }
         let mut connection = TCPConnection::new(config, local, remote, iss, congestion, now)?;
         connection.passive = true;
-        connection.state = TCPState::SynReceived;
+        connection.state = TCPState::SYNReceived;
         connection.synchronize(syn, now)?;
         // ECN: a SYN with ECE and CWR asks for it (RFC 3168 §6.1.1).
         connection.ecn = config.ecn != TCPECNMode::Off && syn.flags.contains(TCPFlags::ECE.union(TCPFlags::CWR));
@@ -550,12 +550,12 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
     /// does not exist") or the application already closed.
     pub fn close(&mut self) -> Result<(), TCPError> {
         match self.state {
-            TCPState::SynSent | TCPState::Listen => {
+            TCPState::SYNSent | TCPState::Listen => {
                 self.finish(TCPCloseReason::Aborted);
                 Ok(())
             }
-            TCPState::SynReceived | TCPState::Established | TCPState::CloseWait if self.closing => Err(TCPError::State),
-            TCPState::SynReceived | TCPState::Established | TCPState::CloseWait => {
+            TCPState::SYNReceived | TCPState::Established | TCPState::CloseWait if self.closing => Err(TCPError::State),
+            TCPState::SYNReceived | TCPState::Established | TCPState::CloseWait => {
                 self.closing = true;
                 Ok(())
             }
@@ -572,10 +572,10 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
         }
         if matches!(
             self.state,
-            TCPState::SynReceived
+            TCPState::SYNReceived
                 | TCPState::Established
-                | TCPState::FinWait1
-                | TCPState::FinWait2
+                | TCPState::FINWait1
+                | TCPState::FINWait2
                 | TCPState::CloseWait
         ) {
             self.reset_due = Some((self.send_next, None));
@@ -730,7 +730,7 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
     pub fn receive(&mut self, segment: &TCPSegment, ce: bool, now: Instant) {
         match self.state {
             TCPState::Closed | TCPState::Listen => {}
-            TCPState::SynSent => self.receive_syn_sent(segment, now),
+            TCPState::SYNSent => self.receive_syn_sent(segment, now),
             _ => self.receive_synchronized(segment, ce, now),
         }
     }
@@ -774,7 +774,7 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
             self.receive_text(segment, false, now);
         } else {
             // A simultaneous open: the SYN-ACK is due (RFC 9293 §3.5).
-            self.state = TCPState::SynReceived;
+            self.state = TCPState::SYNReceived;
             self.syn_due = true;
         }
     }
@@ -847,7 +847,7 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
         // A window probe's byte is not taken, but its CE is echoed (RFC 3168 §6.1.6).
         let carries_data = !segment.payload.is_empty();
         let mut trimmed = *segment;
-        if self.state == TCPState::SynReceived && segment.flags.contains(TCPFlags::SYN) && segment.sequence == self.irs
+        if self.state == TCPState::SYNReceived && segment.flags.contains(TCPFlags::SYN) && segment.sequence == self.irs
         {
             if !segment.flags.contains(TCPFlags::ACK) {
                 // The SYN again: the SYN-ACK was lost.
@@ -921,15 +921,15 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
                 return;
             }
             let reason = match self.state {
-                TCPState::SynReceived if !self.passive => TCPCloseReason::Refused,
-                TCPState::Closing | TCPState::LastAck | TCPState::TimeWait => TCPCloseReason::Normal,
+                TCPState::SYNReceived if !self.passive => TCPCloseReason::Refused,
+                TCPState::Closing | TCPState::LastACK | TCPState::TimeWait => TCPCloseReason::Normal,
                 _ => TCPCloseReason::Reset,
             };
             self.finish(reason);
             return;
         }
         if flags.contains(TCPFlags::SYN) {
-            if self.state == TCPState::SynReceived && self.passive {
+            if self.state == TCPState::SYNReceived && self.passive {
                 // A passive open returns to LISTEN (RFC 9293 §3.10.7.4, fourth): the
                 // half-open connection ends, and its listener forgets it.
                 self.finish(TCPCloseReason::Reset);
@@ -953,7 +953,7 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
             self.challenge(now);
             return;
         }
-        if self.state == TCPState::SynReceived {
+        if self.state == TCPState::SYNReceived {
             if acknowledgment.is_after(self.send_unacknowledged) {
                 self.acknowledge_syn(acknowledgment, Some(options), now);
                 self.state = TCPState::Established;
@@ -1233,9 +1233,9 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
     /// The FIN this end sent was acknowledged.
     pub fn fin_acknowledged(&mut self, now: Instant) {
         match self.state {
-            TCPState::FinWait1 => self.state = TCPState::FinWait2,
+            TCPState::FINWait1 => self.state = TCPState::FINWait2,
             TCPState::Closing => self.enter_time_wait(now),
-            TCPState::LastAck => self.finish(TCPCloseReason::Normal),
+            TCPState::LastACK => self.finish(TCPCloseReason::Normal),
             _ => {}
         }
     }
@@ -1290,10 +1290,10 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
                 let fin_acknowledged =
                     self.fin_sent && self.fin_sequence().is_some_and(|fin| self.send_unacknowledged.is_after(fin));
                 match self.state {
-                    TCPState::SynReceived | TCPState::Established => self.state = TCPState::CloseWait,
-                    TCPState::FinWait1 if fin_acknowledged => self.enter_time_wait(now),
-                    TCPState::FinWait1 => self.state = TCPState::Closing,
-                    TCPState::FinWait2 => self.enter_time_wait(now),
+                    TCPState::SYNReceived | TCPState::Established => self.state = TCPState::CloseWait,
+                    TCPState::FINWait1 if fin_acknowledged => self.enter_time_wait(now),
+                    TCPState::FINWait1 => self.state = TCPState::Closing,
+                    TCPState::FINWait2 => self.enter_time_wait(now),
                     _ => {}
                 }
             } else {
@@ -1374,7 +1374,7 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
         self.timer.expire();
         self.rtt_sample = None;
         match self.state {
-            TCPState::SynSent | TCPState::SynReceived => self.syn_due = true,
+            TCPState::SYNSent | TCPState::SYNReceived => self.syn_due = true,
             _ => {
                 let mss = self.mss();
                 self.congestion.timeout(self.flight(), mss, now);
@@ -1405,9 +1405,9 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
         }
         match self.state {
             TCPState::Closed | TCPState::Listen => return Ok(None),
-            TCPState::SynSent if self.syn_due => return self.write_syn(false, now, out).map(Some),
-            TCPState::SynReceived if self.syn_due => return self.write_syn(true, now, out).map(Some),
-            TCPState::SynSent | TCPState::SynReceived => {
+            TCPState::SYNSent if self.syn_due => return self.write_syn(false, now, out).map(Some),
+            TCPState::SYNReceived if self.syn_due => return self.write_syn(true, now, out).map(Some),
+            TCPState::SYNSent | TCPState::SYNReceived => {
                 return if self.ack_now { self.write_ack(now, out).map(Some) } else { Ok(None) };
             }
             _ => {}
@@ -1502,7 +1502,7 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
     pub fn write_data(&mut self, now: Instant, out: &mut impl Writer) -> Result<Option<TCPTransmission>, TCPError> {
         if !matches!(
             self.state,
-            TCPState::Established | TCPState::CloseWait | TCPState::FinWait1 | TCPState::Closing | TCPState::LastAck
+            TCPState::Established | TCPState::CloseWait | TCPState::FINWait1 | TCPState::Closing | TCPState::LastACK
         ) {
             return Ok(None);
         }
@@ -1744,8 +1744,8 @@ impl<C: TCPCongestionControl> TCPConnection<C> {
         if fin {
             self.fin_sent = true;
             match self.state {
-                TCPState::Established => self.state = TCPState::FinWait1,
-                TCPState::CloseWait => self.state = TCPState::LastAck,
+                TCPState::Established => self.state = TCPState::FINWait1,
+                TCPState::CloseWait => self.state = TCPState::LastACK,
                 _ => {}
             }
         }

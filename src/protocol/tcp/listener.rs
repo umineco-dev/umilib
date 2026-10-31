@@ -100,7 +100,7 @@ impl TCPListener {
         let key = (local, remote);
         let Some(connection) = self.connections.get(&key) else { return };
         match connection.state {
-            TCPState::SynReceived => {}
+            TCPState::SYNReceived => {}
             TCPState::Closed if connection.reset_due.is_none() => {
                 self.connections.remove(&key);
                 self.ready.retain(|ready| *ready != key);

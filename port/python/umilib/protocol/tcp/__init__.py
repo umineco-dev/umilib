@@ -20,8 +20,6 @@ from typing import Any, ClassVar
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Nanoseconds
 from umilib.protocol.ip import IPAddress, IPEndpoint, IPEndpointPattern
 
-P = "umilib_protocol_tcp"
-
 
 class TCPError(FFIError):
     """An error of TCP: ``Length``, ``Checksum``, ``Option``, ``Family``, ``Address``, ``State`` or ``Config``."""
@@ -44,10 +42,10 @@ class TCPSequence(int):
 
     def distance(self, earlier: int) -> int:
         """How far this number is after ``earlier``, modulo 2^32."""
-        return Library.default().function(f"{P}_tcp_sequence_distance")(int(self), int(earlier))
+        return Library.default().function("umilib_protocol_tcp_tcp_sequence_distance")(int(self), int(earlier))
 
     def is_before(self, other: int) -> bool:
-        return bool(Library.default().function(f"{P}_tcp_sequence_is_before")(int(self), int(other)))
+        return bool(Library.default().function("umilib_protocol_tcp_tcp_sequence_is_before")(int(self), int(other)))
 
     def is_after(self, other: int) -> bool:
         return TCPSequence(other).is_before(self)
@@ -130,21 +128,21 @@ class TCPHeader:
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> TCPHeader:
         """The header at the start of ``data``; raises ``Length`` if it has fewer than 20 bytes."""
-        structure = Library.default().type(f"{P}_TCPHeader")()
-        Library.default().call(f"{P}_tcp_header_decode", *Bytes.readable(data), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_tcp_TCPHeader")()
+        Library.default().call("umilib_protocol_tcp_tcp_header_decode", *Bytes.readable(data), ctypes.byref(structure))
         values = {name: getattr(structure, name) for name in TCPHeader.FIELDS}
         values["sequence"], values["acknowledgment"] = TCPSequence(values["sequence"]), TCPSequence(values["acknowledgment"])
         values["flags"] = TCPFlags(values["flags"])
         return cls(**values)
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_TCPHeader")()
+        structure = Library.default().type("umilib_protocol_tcp_TCPHeader")()
         for name in TCPHeader.FIELDS:
             Fields.assign(structure, name, int(getattr(self, name)))
         return structure
 
     def to_bytes(self) -> bytes:
-        return Library.default().output(f"{P}_tcp_header_encode", self.to_structure())
+        return Library.default().output("umilib_protocol_tcp_tcp_header_encode", self.to_structure())
 
     def encode(self) -> bytes:
         return self.to_bytes()
@@ -186,7 +184,7 @@ class TCPOption:
     @staticmethod
     def encode(kind: int, data: bytes = b"") -> bytes:
         """The bytes of an option of ``kind`` with ``data``; raises ``Option`` for data that does not fit."""
-        return Library.default().output(f"{P}_tcp_option_encode", int(kind), *Bytes.readable(data))
+        return Library.default().output("umilib_protocol_tcp_tcp_option_encode", int(kind), *Bytes.readable(data))
 
 
 class TCPOptions:
@@ -200,7 +198,7 @@ class TCPOptions:
         index = 0
         while True:
             found, kind, data = ctypes.c_bool(), ctypes.c_uint8(), Buffer()
-            library.call(f"{P}_tcp_options_get", self.data, len(self.data), index, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(data))
+            library.call("umilib_protocol_tcp_tcp_options_get", self.data, len(self.data), index, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(data))
             value = library.take(data)
             if not found.value:
                 return
@@ -247,8 +245,8 @@ class TCPOptionSet:
     @classmethod
     def decode(cls, data: bytes) -> TCPOptionSet:
         """The options of ``data``; raises ``Option`` for an illegal length."""
-        structure = Library.default().type(f"{P}_TCPOptionSet")()
-        Library.default().call(f"{P}_tcp_option_set_decode", *Bytes.readable(data), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_tcp_TCPOptionSet")()
+        Library.default().call("umilib_protocol_tcp_tcp_option_set_decode", *Bytes.readable(data), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -264,7 +262,7 @@ class TCPOptionSet:
 
     def to_structure(self) -> Any:
         library = Library.default()
-        structure = library.type(f"{P}_TCPOptionSet")()
+        structure = library.type("umilib_protocol_tcp_TCPOptionSet")()
         structure.has_mss = self.mss is not None
         Fields.assign(structure, "mss", self.mss or 0)
         structure.has_window_scale = self.window_scale is not None
@@ -272,10 +270,10 @@ class TCPOptionSet:
         structure.sack_permitted = self.sack_permitted
         structure.has_timestamps = self.timestamps is not None
         if self.timestamps is not None:
-            structure.timestamps = library.type(f"{P}_TCPTimestamps")(self.timestamps.value, self.timestamps.echo_reply)
+            structure.timestamps = library.type("umilib_protocol_tcp_TCPTimestamps")(self.timestamps.value, self.timestamps.echo_reply)
         blocks = self.sack()
         for index, block in enumerate(blocks):
-            structure.sack_blocks[index] = library.type(f"{P}_TCPSACKBlock")(int(block.left), int(block.right))
+            structure.sack_blocks[index] = library.type("umilib_protocol_tcp_TCPSACKBlock")(int(block.left), int(block.right))
         structure.sack_count = len(blocks)
         return structure
 
@@ -287,7 +285,7 @@ class TCPOptionSet:
 
     def encode(self) -> bytes:
         """The options as Linux lays them out; raises ``Option`` if they do not fit 40 bytes."""
-        return Library.default().output(f"{P}_tcp_option_set_encode", ctypes.byref(self.to_structure()))
+        return Library.default().output("umilib_protocol_tcp_tcp_option_set_encode", ctypes.byref(self.to_structure()))
 
     def length(self) -> int:
         """The bytes :meth:`encode` writes, which may be more than the 40 the header holds."""
@@ -318,7 +316,7 @@ class TCPSegment:
     payload: bytes = b""
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_TCPSegment")()
+        structure = Library.default().type("umilib_protocol_tcp_TCPSegment")()
         for name in TCPSegment.FIELDS:
             Fields.assign(structure, name, int(getattr(self, name)))
         return structure
@@ -335,10 +333,10 @@ class TCPSegment:
         """The segment of ``data``, carried from ``source`` to ``destination``; raises ``Length``,
         ``Checksum``, ``Option`` or ``Family``."""
         data = bytes(data)
-        structure = Library.default().type(f"{P}_TCPSegment")()
+        structure = Library.default().type("umilib_protocol_tcp_TCPSegment")()
         offsets = [ctypes.c_size_t() for _ in range(4)]
         Library.default().call(
-            f"{P}_tcp_segment_decode", data, len(data), source.octets, source.LENGTH, destination.octets, destination.LENGTH,
+            "umilib_protocol_tcp_tcp_segment_decode", data, len(data), source.octets, source.LENGTH, destination.octets, destination.LENGTH,
             ctypes.byref(structure), *[ctypes.byref(offset) for offset in offsets],
         )  # fmt: skip
         options_offset, options_length, payload_offset, payload_length = (offset.value for offset in offsets)
@@ -346,7 +344,7 @@ class TCPSegment:
 
     def encode(self, source: IPAddress, destination: IPAddress) -> bytes:
         return Library.default().output(
-            f"{P}_tcp_segment_encode", ctypes.byref(self.to_structure()), *Bytes.readable(self.options), *Bytes.readable(self.payload),
+            "umilib_protocol_tcp_tcp_segment_encode", ctypes.byref(self.to_structure()), *Bytes.readable(self.options), *Bytes.readable(self.payload),
             source.octets, source.LENGTH, destination.octets, destination.LENGTH,
         )  # fmt: skip
 
@@ -369,9 +367,9 @@ class TCPSegment:
 
     def reset_reply(self) -> TCPSegment | None:
         """The reset that answers this segment when no connection exists (RFC 9293 §3.10.7.1)."""
-        found, structure = ctypes.c_bool(), Library.default().type(f"{P}_TCPSegment")()
+        found, structure = ctypes.c_bool(), Library.default().type("umilib_protocol_tcp_TCPSegment")()
         Library.default().call(
-            f"{P}_tcp_segment_reset_reply", ctypes.byref(self.to_structure()), *Bytes.readable(self.options), *Bytes.readable(self.payload),
+            "umilib_protocol_tcp_tcp_segment_reset_reply", ctypes.byref(self.to_structure()), *Bytes.readable(self.options), *Bytes.readable(self.payload),
             ctypes.byref(found), ctypes.byref(structure),
         )  # fmt: skip
         return TCPSegment.from_structure(structure) if found.value else None
@@ -380,17 +378,17 @@ class TCPSegment:
 class TCPISNGenerator(Handle):
     """The generator of initial sequence numbers of RFC 6528 under a secret key of 16 bytes."""
 
-    FREE = f"{P}_tcp_isn_generator_free"
+    FREE = "umilib_protocol_tcp_tcp_isn_generator_free"
     TICK: ClassVar[datetime.timedelta] = datetime.timedelta(microseconds=4)
 
     def __init__(self, key: bytes) -> None:
         if len(key) != 16:
             raise ValueError("the key has 16 bytes")
-        super().__init__(Handle.create(f"{P}_tcp_isn_generator_new", bytes(key)))
+        super().__init__(Handle.create("umilib_protocol_tcp_tcp_isn_generator_new", bytes(key)))
 
     def generate(self, local: IPEndpoint, remote: IPEndpoint, now: int) -> TCPSequence:
         out = ctypes.c_uint32()
-        self.library.call(f"{P}_tcp_isn_generator_generate", self.handle, ctypes.byref(local.to_structure()), ctypes.byref(remote.to_structure()), now, ctypes.byref(out))
+        self.library.call("umilib_protocol_tcp_tcp_isn_generator_generate", self.handle, ctypes.byref(local.to_structure()), ctypes.byref(remote.to_structure()), now, ctypes.byref(out))
         return TCPSequence(out.value)
 
 
@@ -400,9 +398,9 @@ class TCPRetransmissionTimer:
     SYN_LOSS_TIMEOUT: ClassVar[datetime.timedelta] = datetime.timedelta(seconds=3)
 
     def __init__(self, initial: datetime.timedelta, minimum: datetime.timedelta, maximum: datetime.timedelta, granularity: datetime.timedelta) -> None:
-        self.structure = Library.default().type(f"{P}_TCPRetransmissionTimer")()
+        self.structure = Library.default().type("umilib_protocol_tcp_TCPRetransmissionTimer")()
         Library.default().call(
-            f"{P}_tcp_retransmission_timer_new", *(Nanoseconds.from_timedelta(value) for value in (initial, minimum, maximum, granularity)),
+            "umilib_protocol_tcp_tcp_retransmission_timer_new", *(Nanoseconds.from_timedelta(value) for value in (initial, minimum, maximum, granularity)),
             ctypes.byref(self.structure),
         )  # fmt: skip
 
@@ -419,16 +417,16 @@ class TCPRetransmissionTimer:
         return self.structure.backoff
 
     def sample(self, rtt: datetime.timedelta) -> None:
-        Library.default().call(f"{P}_tcp_retransmission_timer_sample", ctypes.byref(self.structure), Nanoseconds.from_timedelta(rtt))
+        Library.default().call("umilib_protocol_tcp_tcp_retransmission_timer_sample", ctypes.byref(self.structure), Nanoseconds.from_timedelta(rtt))
 
     def expire(self) -> None:
-        Library.default().call(f"{P}_tcp_retransmission_timer_expire", ctypes.byref(self.structure))
+        Library.default().call("umilib_protocol_tcp_tcp_retransmission_timer_expire", ctypes.byref(self.structure))
 
     def restore_after_syn_loss(self) -> None:
-        Library.default().call(f"{P}_tcp_retransmission_timer_restore_after_syn_loss", ctypes.byref(self.structure))
+        Library.default().call("umilib_protocol_tcp_tcp_retransmission_timer_restore_after_syn_loss", ctypes.byref(self.structure))
 
     def current(self) -> datetime.timedelta:
-        return Nanoseconds.to_timedelta(Library.default().function(f"{P}_tcp_retransmission_timer_current")(self.structure))
+        return Nanoseconds.to_timedelta(Library.default().function("umilib_protocol_tcp_tcp_retransmission_timer_current")(self.structure))
 
 
 class TCPCongestionKind(enum.IntEnum):
@@ -439,19 +437,19 @@ class TCPCongestionKind(enum.IntEnum):
 class TCPCongestion(Handle):
     """A congestion control (RFC 5681, RFC 9438): cwnd and ssthresh in bytes."""
 
-    FREE = f"{P}_tcp_congestion_free"
+    FREE = "umilib_protocol_tcp_tcp_congestion_free"
 
     def __init__(self, kind: TCPCongestionKind, window: int) -> None:
-        super().__init__(Handle.create(f"{P}_tcp_congestion_new", int(kind), window))
+        super().__init__(Handle.create("umilib_protocol_tcp_tcp_congestion_new", int(kind), window))
 
     @staticmethod
     def initial_window(mss: int) -> int:
         """The initial window of RFC 5681 §3.1 for ``mss``."""
-        return Library.default().function(f"{P}_tcp_congestion_initial_window")(mss)
+        return Library.default().function("umilib_protocol_tcp_tcp_congestion_initial_window")(mss)
 
     def windows(self) -> tuple[int, int]:
         window, threshold = ctypes.c_uint32(), ctypes.c_uint32()
-        self.library.call(f"{P}_tcp_congestion_window", self.handle, ctypes.byref(window), ctypes.byref(threshold))
+        self.library.call("umilib_protocol_tcp_tcp_congestion_window", self.handle, ctypes.byref(window), ctypes.byref(threshold))
         return window.value, threshold.value
 
     def window(self) -> int:
@@ -461,19 +459,19 @@ class TCPCongestion(Handle):
         return self.windows()[1]
 
     def set_window(self, window: int) -> None:
-        self.library.call(f"{P}_tcp_congestion_set_window", self.handle, window)
+        self.library.call("umilib_protocol_tcp_tcp_congestion_set_window", self.handle, window)
 
     def acknowledge(self, acknowledged: int, mss: int, rtt: datetime.timedelta, limited: bool, now: int) -> None:
-        self.library.call(f"{P}_tcp_congestion_acknowledge", self.handle, acknowledged, mss, Nanoseconds.from_timedelta(rtt), limited, now)
+        self.library.call("umilib_protocol_tcp_tcp_congestion_acknowledge", self.handle, acknowledged, mss, Nanoseconds.from_timedelta(rtt), limited, now)
 
     def congestion(self, in_flight: int, mss: int, ecn: bool, now: int) -> None:
-        self.library.call(f"{P}_tcp_congestion_congestion", self.handle, in_flight, mss, ecn, now)
+        self.library.call("umilib_protocol_tcp_tcp_congestion_congestion", self.handle, in_flight, mss, ecn, now)
 
     def timeout(self, in_flight: int, mss: int, now: int) -> None:
-        self.library.call(f"{P}_tcp_congestion_timeout", self.handle, in_flight, mss, now)
+        self.library.call("umilib_protocol_tcp_tcp_congestion_timeout", self.handle, in_flight, mss, now)
 
     def restart(self, restart: int, now: int) -> None:
-        self.library.call(f"{P}_tcp_congestion_restart", self.handle, restart, now)
+        self.library.call("umilib_protocol_tcp_tcp_congestion_restart", self.handle, restart, now)
 
 
 class TCPECNMode(enum.IntEnum):
@@ -522,7 +520,7 @@ class TCPConfig:
     hard_error_abort: bool = False
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_TCPConfig")()
+        structure = Library.default().type("umilib_protocol_tcp_TCPConfig")()
         for name in TCPConfig.INTEGERS:
             Fields.assign(structure, name, getattr(self, name))
         for name in TCPConfig.BOOLEANS:
@@ -546,8 +544,8 @@ class TCPConfig:
     @classmethod
     def default(cls) -> TCPConfig:
         """The defaults as the library has them."""
-        structure = Library.default().type(f"{P}_TCPConfig")()
-        Library.default().call(f"{P}_tcp_config_default", ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_tcp_TCPConfig")()
+        Library.default().call("umilib_protocol_tcp_tcp_config_default", ctypes.byref(structure))
         return cls.from_structure(structure)
 
 
@@ -671,13 +669,13 @@ class TCPConnection(Handle):
     """A TCP connection (RFC 9293) without I/O: give it the segments that arrive and the time, and
     call :meth:`transmit` until it returns ``None`` after each input and at :meth:`poll_timeout`."""
 
-    FREE = f"{P}_tcp_connection_free"
+    FREE = "umilib_protocol_tcp_tcp_connection_free"
 
     @classmethod
     def connect(cls, config: TCPConfig, local: IPEndpoint, remote: IPEndpoint, iss: int, now: int) -> TCPConnection:
         """An active open; raises ``Address`` for a remote address that names no single host (MUST-46)."""
         return cls(Handle.create(
-            f"{P}_tcp_connection_connect", ctypes.byref(config.to_structure()), ctypes.byref(local.to_structure()),
+            "umilib_protocol_tcp_tcp_connection_connect", ctypes.byref(config.to_structure()), ctypes.byref(local.to_structure()),
             ctypes.byref(remote.to_structure()), int(iss), now,
         ))  # fmt: skip
 
@@ -685,7 +683,7 @@ class TCPConnection(Handle):
     def accept(cls, config: TCPConfig, local: IPEndpoint, remote: IPEndpoint, syn: TCPSegment, iss: int, now: int) -> TCPConnection:
         """A passive open from the SYN ``syn``: the connection is in SYN-RECEIVED."""
         return cls(Handle.create(
-            f"{P}_tcp_connection_accept", ctypes.byref(config.to_structure()), ctypes.byref(local.to_structure()),
+            "umilib_protocol_tcp_tcp_connection_accept", ctypes.byref(config.to_structure()), ctypes.byref(local.to_structure()),
             ctypes.byref(remote.to_structure()), ctypes.byref(syn.to_structure()), *Bytes.readable(syn.options),
             *Bytes.readable(syn.payload), int(iss), now,
         ))  # fmt: skip
@@ -693,23 +691,23 @@ class TCPConnection(Handle):
     def receive(self, segment: TCPSegment, ce: bool, now: int) -> None:
         """Processes a segment that arrived at ``now``; ``ce`` is whether its IP header carried CE."""
         self.library.call(
-            f"{P}_tcp_connection_receive", self.handle, ctypes.byref(segment.to_structure()), *Bytes.readable(segment.options),
+            "umilib_protocol_tcp_tcp_connection_receive", self.handle, ctypes.byref(segment.to_structure()), *Bytes.readable(segment.options),
             *Bytes.readable(segment.payload), ce, now,
         )  # fmt: skip
 
     def transmit(self, now: int) -> tuple[bytes, TCPTransmission] | None:
         """The next segment due at ``now``, and what it is."""
         found, data, ect = ctypes.c_bool(), Buffer(), ctypes.c_bool()
-        self.library.call(f"{P}_tcp_connection_transmit", self.handle, now, ctypes.byref(found), ctypes.byref(data), ctypes.byref(ect))
+        self.library.call("umilib_protocol_tcp_tcp_connection_transmit", self.handle, now, ctypes.byref(found), ctypes.byref(data), ctypes.byref(ect))
         value = self.library.take(data)
         return (value, TCPTransmission(len(value), ect.value)) if found.value else None
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_tcp_connection_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_tcp_tcp_connection_poll_timeout", ctypes.c_uint64, self.handle)
 
     def poll_event(self) -> TCPEvent | None:
         found, kind, reason = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_uint8()
-        self.library.call(f"{P}_tcp_connection_poll_event", self.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(reason))
+        self.library.call("umilib_protocol_tcp_tcp_connection_poll_event", self.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(reason))
         if not found.value:
             return None
         name = TCPEvent.NAMES[kind.value]
@@ -717,20 +715,20 @@ class TCPConnection(Handle):
 
     def send(self, data: bytes) -> int:
         """Takes as much of ``data`` as fits and returns how much; raises ``State`` once closed."""
-        return self.library.value(f"{P}_tcp_connection_send", ctypes.c_size_t, self.handle, *Bytes.readable(data), False)
+        return self.library.value("umilib_protocol_tcp_tcp_connection_send", ctypes.c_size_t, self.handle, *Bytes.readable(data), False)
 
     def send_urgent(self, data: bytes) -> int:
-        return self.library.value(f"{P}_tcp_connection_send", ctypes.c_size_t, self.handle, *Bytes.readable(data), True)
+        return self.library.value("umilib_protocol_tcp_tcp_connection_send", ctypes.c_size_t, self.handle, *Bytes.readable(data), True)
 
     def read(self, size: int) -> bytes:
         """Up to ``size`` bytes of what arrived."""
         out = (ctypes.c_uint8 * max(size, 1))()
-        count = self.library.value(f"{P}_tcp_connection_read", ctypes.c_size_t, self.handle, out, size)
+        count = self.library.value("umilib_protocol_tcp_tcp_connection_read", ctypes.c_size_t, self.handle, out, size)
         return bytes(out[:count])
 
     def sizes(self) -> tuple[int, int, int]:
         readable, writable, urgent = ctypes.c_size_t(), ctypes.c_size_t(), ctypes.c_uint32()
-        self.library.call(f"{P}_tcp_connection_sizes", self.handle, ctypes.byref(readable), ctypes.byref(writable), ctypes.byref(urgent))
+        self.library.call("umilib_protocol_tcp_tcp_connection_sizes", self.handle, ctypes.byref(readable), ctypes.byref(writable), ctypes.byref(urgent))
         return readable.value, writable.value, urgent.value
 
     def readable(self) -> int:
@@ -744,25 +742,25 @@ class TCPConnection(Handle):
         return self.sizes()[2]
 
     def close(self) -> None:
-        """Closes the sending half: a FIN follows the data."""
-        self.library.call(f"{P}_tcp_connection_close", self.handle)
+        """Closes the sending half: a FIN follows the data. :meth:`free` releases the object."""
+        self.library.call("umilib_protocol_tcp_tcp_connection_close", self.handle)
 
     def abort(self) -> None:
-        self.library.call(f"{P}_tcp_connection_abort", self.handle)
+        self.library.call("umilib_protocol_tcp_tcp_connection_abort", self.handle)
 
     def accepts_syn(self, syn: TCPSegment) -> bool:
         """Whether the SYN ``syn`` may open a new incarnation of this connection in TIME-WAIT (RFC 6191 §2)."""
         return self.library.value(
-            f"{P}_tcp_connection_accepts_syn", ctypes.c_bool, self.handle, ctypes.byref(syn.to_structure()),
+            "umilib_protocol_tcp_tcp_connection_accepts_syn", ctypes.c_bool, self.handle, ctypes.byref(syn.to_structure()),
             *Bytes.readable(syn.options), *Bytes.readable(syn.payload),
         )  # fmt: skip
 
     def receive_error(self, error: TCPICMPError, sequence: int, now: int) -> None:
-        self.library.call(f"{P}_tcp_connection_receive_error", self.handle, error.kind, error.mtu, int(sequence), now)
+        self.library.call("umilib_protocol_tcp_tcp_connection_receive_error", self.handle, error.kind, error.mtu, int(sequence), now)
 
     def info(self) -> TCPConnectionInfo:
-        structure = self.library.type(f"{P}_TCPConnectionInfo")()
-        self.library.call(f"{P}_tcp_connection_info", self.handle, ctypes.byref(structure))
+        structure = self.library.type("umilib_protocol_tcp_TCPConnectionInfo")()
+        self.library.call("umilib_protocol_tcp_tcp_connection_info", self.handle, ctypes.byref(structure))
         sequences = ("iss", "send_unacknowledged", "send_next", "send_maximum", "irs", "receive_next")
         values: dict[str, Any] = {name: getattr(structure, name) for name, _ in structure._fields_ if name != "timer"}
         values |= {name: TCPSequence(values[name]) for name in sequences}
@@ -779,17 +777,17 @@ class TCPConnection(Handle):
 
     @property
     def config(self) -> TCPConfig:
-        structure = self.library.type(f"{P}_TCPConfig")()
-        self.library.call(f"{P}_tcp_connection_config", self.handle, ctypes.byref(structure))
+        structure = self.library.type("umilib_protocol_tcp_TCPConfig")()
+        self.library.call("umilib_protocol_tcp_tcp_connection_config", self.handle, ctypes.byref(structure))
         return TCPConfig.from_structure(structure)
 
     def set_config(self, config: TCPConfig, now: int) -> None:
         """Changes the parameters, such as Nagle (MUST-17) or keep-alives (MUST-24)."""
-        self.library.call(f"{P}_tcp_connection_set_config", self.handle, ctypes.byref(config.to_structure()), now)
+        self.library.call("umilib_protocol_tcp_tcp_connection_set_config", self.handle, ctypes.byref(config.to_structure()), now)
 
     def endpoints(self) -> tuple[IPEndpoint, IPEndpoint]:
         local, remote = self.library.type("umilib_protocol_ip_IPEndpoint")(), self.library.type("umilib_protocol_ip_IPEndpoint")()
-        self.library.call(f"{P}_tcp_connection_endpoints", self.handle, ctypes.byref(local), ctypes.byref(remote))
+        self.library.call("umilib_protocol_tcp_tcp_connection_endpoints", self.handle, ctypes.byref(local), ctypes.byref(remote))
         return IPEndpoint.from_structure(local), IPEndpoint.from_structure(remote)
 
     @property
@@ -806,20 +804,20 @@ class TCPListener(Handle):
     or established, from their SYN until they are accepted; until then the listener gives them their
     segments and timers."""
 
-    FREE = f"{P}_tcp_listener_free"
+    FREE = "umilib_protocol_tcp_tcp_listener_free"
 
     def __init__(self, config: TCPConfig, local: IPEndpointPattern, backlog: int, key: bytes) -> None:
         if len(key) != 16:
             raise ValueError("the key has 16 bytes")
-        super().__init__(Handle.create(f"{P}_tcp_listener_new", ctypes.byref(config.to_structure()), ctypes.byref(local.to_structure()), backlog, bytes(key)))
+        super().__init__(Handle.create("umilib_protocol_tcp_tcp_listener_new", ctypes.byref(config.to_structure()), ctypes.byref(local.to_structure()), backlog, bytes(key)))
 
     def matches(self, local: IPEndpoint) -> bool:
         """Whether the local endpoint ``local`` is one of the listener's."""
-        return self.library.value(f"{P}_tcp_listener_matches", ctypes.c_bool, self.handle, ctypes.byref(local.to_structure()))
+        return self.library.value("umilib_protocol_tcp_tcp_listener_matches", ctypes.c_bool, self.handle, ctypes.byref(local.to_structure()))
 
     def receive(self, segment: TCPSegment, local: IPEndpoint, remote: IPEndpoint, ce: bool, now: int) -> None:
         self.library.call(
-            f"{P}_tcp_listener_receive", self.handle, ctypes.byref(segment.to_structure()), *Bytes.readable(segment.options),
+            "umilib_protocol_tcp_tcp_listener_receive", self.handle, ctypes.byref(segment.to_structure()), *Bytes.readable(segment.options),
             *Bytes.readable(segment.payload), ctypes.byref(local.to_structure()), ctypes.byref(remote.to_structure()), ce, now,
         )  # fmt: skip
 
@@ -828,7 +826,7 @@ class TCPListener(Handle):
         found, ect, data = ctypes.c_bool(), ctypes.c_bool(), Buffer()
         local, remote = self.library.type("umilib_protocol_ip_IPEndpoint")(), self.library.type("umilib_protocol_ip_IPEndpoint")()
         self.library.call(
-            f"{P}_tcp_listener_transmit", self.handle, now, ctypes.byref(found), ctypes.byref(local), ctypes.byref(remote),
+            "umilib_protocol_tcp_tcp_listener_transmit", self.handle, now, ctypes.byref(found), ctypes.byref(local), ctypes.byref(remote),
             ctypes.byref(data), ctypes.byref(ect),
         )  # fmt: skip
         value = self.library.take(data)
@@ -838,12 +836,12 @@ class TCPListener(Handle):
 
     def accept(self) -> TCPConnection | None:
         found, pointer = ctypes.c_bool(), ctypes.c_void_p()
-        self.library.call(f"{P}_tcp_listener_accept", self.handle, ctypes.byref(found), ctypes.byref(pointer))
+        self.library.call("umilib_protocol_tcp_tcp_listener_accept", self.handle, ctypes.byref(found), ctypes.byref(pointer))
         return TCPConnection(pointer.value) if found.value else None
 
     def counts(self) -> tuple[int | None, int, int]:
         found, deadline, pending, ready = ctypes.c_bool(), ctypes.c_uint64(), ctypes.c_size_t(), ctypes.c_size_t()
-        self.library.call(f"{P}_tcp_listener_poll_timeout", self.handle, ctypes.byref(found), ctypes.byref(deadline), ctypes.byref(pending), ctypes.byref(ready))
+        self.library.call("umilib_protocol_tcp_tcp_listener_poll_timeout", self.handle, ctypes.byref(found), ctypes.byref(deadline), ctypes.byref(pending), ctypes.byref(ready))
         return (deadline.value if found.value else None), pending.value, ready.value
 
     def poll_timeout(self) -> int | None:
@@ -876,9 +874,9 @@ class TCPRule:
 
     def matches(self, connection: Any) -> bool:
         """Whether a connection (anything with ``local`` and ``remote`` endpoints) is the rule's."""
-        rule = Library.default().type(f"{P}_TCPRule")(self.local.to_structure(), self.remote.to_structure())
+        rule = Library.default().type("umilib_protocol_tcp_TCPRule")(self.local.to_structure(), self.remote.to_structure())
         return Library.default().value(
-            f"{P}_tcp_rule_matches", ctypes.c_bool, ctypes.byref(rule), ctypes.byref(connection.local.to_structure()),
+            "umilib_protocol_tcp_tcp_rule_matches", ctypes.c_bool, ctypes.byref(rule), ctypes.byref(connection.local.to_structure()),
             ctypes.byref(connection.remote.to_structure()),
         )  # fmt: skip
 

@@ -616,7 +616,7 @@ fn deflate_codecs_stream_through_the_c_abi() {
         ));
         Check::ok(gzip::compressor::compress_to_vec(compressor, data.as_ptr(), data.len(), &mut stream));
         let mut decompressor: *mut GzipDecompressor = ptr::null_mut();
-        Check::ok(gzip::umilib_codec_gzip_gzip_decompressor_new(true, 1 << 16, &mut decompressor));
+        Check::ok(gzip::umilib_codec_gzip_gzip_decompressor_new(true, 1 << 16, 15, &mut decompressor));
         Check::ok(gzip::decompressor::decompress_to_vec(
             decompressor,
             stream.as_slice().as_ptr(),
@@ -1137,5 +1137,103 @@ fn uri_references_and_forms_through_the_c_abi() {
         );
         umilib_codec_uri_uri_form_pairs_free(pairs);
         Check::fails(umilib_codec_uri_uri_form_parse(b"a=%FF".as_ptr(), 5, &mut pairs), "codec.uri", "UTF8");
+    }
+}
+
+#[test]
+fn fse_tables_through_the_c_abi() {
+    use umilib::codec::fse::{FSEDecodingTable, FSEDistribution, FSEEncodingTable};
+    use umilib::ffi::codec::fse::*;
+
+    unsafe {
+        // The offset codes of RFC 8878 section 3.1.1.3.2.2.3; state 31 of Appendix A.3 is the
+        // first "less than 1" symbol (24), read with 5 bits from 0.
+        let probabilities: [i16; 29] =
+            [1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1];
+        let mut distribution: *mut FSEDistribution = ptr::null_mut();
+        Check::ok(umilib_codec_fse_fse_distribution_new(5, probabilities.as_ptr(), 29, &mut distribution));
+        let mut probability = 0i16;
+        Check::ok(umilib_codec_fse_fse_distribution_probability(distribution, 24, &mut probability));
+        assert_eq!(probability, -1);
+        Check::fails(
+            umilib_codec_fse_fse_distribution_probability(distribution, 29, &mut probability),
+            "ffi",
+            "InvalidArgument",
+        );
+        let mut table: *mut FSEDecodingTable = ptr::null_mut();
+        Check::ok(umilib_codec_fse_fse_decoding_table_new(distribution, &mut table));
+        let (mut symbol, mut bits, mut baseline) = (0u8, 0u8, 0u16);
+        Check::ok(umilib_codec_fse_fse_decoding_table_entry(table, 31, &mut symbol, &mut bits, &mut baseline));
+        assert_eq!((symbol, bits, baseline), (24, 5, 0));
+        Check::fails(
+            umilib_codec_fse_fse_decoding_table_entry(table, 32, &mut symbol, &mut bits, &mut baseline),
+            "ffi",
+            "InvalidArgument",
+        );
+        let shared: *mut u8 = &mut symbol;
+        Check::fails(
+            umilib_codec_fse_fse_decoding_table_entry(table, 0, shared, shared, &mut baseline),
+            "ffi",
+            "InvalidArgument",
+        );
+        // The description round trips, and reports the bytes it took.
+        let mut description = Buffer::EMPTY;
+        Check::ok(umilib_codec_fse_fse_distribution_write(distribution, &mut description));
+        let mut bytes = description.as_slice().to_vec();
+        bytes.push(0xAA);
+        let mut read: *mut FSEDistribution = ptr::null_mut();
+        let mut used = 0usize;
+        Check::ok(umilib_codec_fse_fse_distribution_read(bytes.as_ptr(), bytes.len(), 9, 256, &mut read, &mut used));
+        assert_eq!(used, bytes.len() - 1);
+        assert_eq!(*read, *distribution);
+        umilib::ffi::umilib_ffi_buffer_free(&mut description);
+        umilib_codec_fse_fse_distribution_free(read);
+        Check::fails(
+            umilib_codec_fse_fse_distribution_read(bytes.as_ptr(), 1, 9, 256, &mut read, &mut used),
+            "codec",
+            "InvalidData",
+        );
+        // An encoder step is undone by the decoder's entry of the state it leads to.
+        let mut encoding: *mut FSEEncodingTable = ptr::null_mut();
+        Check::ok(umilib_codec_fse_fse_encoding_table_new(distribution, &mut encoding));
+        let (mut count, mut previous) = (0u32, 0u32);
+        Check::ok(umilib_codec_fse_fse_encoding_table_transition(encoding, 32 + 13, 6, &mut count, &mut previous));
+        Check::ok(umilib_codec_fse_fse_decoding_table_entry(
+            table,
+            previous as usize - 32,
+            &mut symbol,
+            &mut bits,
+            &mut baseline,
+        ));
+        assert_eq!((symbol, bits as u32), (6, count));
+        assert_eq!(baseline as u32 + ((32 + 13) & ((1 << count) - 1)), 13);
+        // States outside 32 to 63 and symbols without a probability are refused.
+        for (state, code) in [(31u32, 6usize), (64, 6), (40, 29)] {
+            Check::fails(
+                umilib_codec_fse_fse_encoding_table_transition(encoding, state, code, &mut count, &mut previous),
+                "ffi",
+                "InvalidArgument",
+            );
+        }
+        let mut state = 0u32;
+        Check::fails(
+            umilib_codec_fse_fse_encoding_table_initial_state(encoding, 29, &mut state),
+            "ffi",
+            "InvalidArgument",
+        );
+        umilib_codec_fse_fse_encoding_table_free(encoding);
+        umilib_codec_fse_fse_decoding_table_free(table);
+        umilib_codec_fse_fse_distribution_free(distribution);
+        // Distributions that do not add up to their scale, and counts of one symbol.
+        Check::fails(
+            umilib_codec_fse_fse_distribution_new(5, probabilities.as_ptr(), 28, &mut distribution),
+            "codec",
+            "InvalidParameter",
+        );
+        Check::fails(
+            umilib_codec_fse_fse_distribution_normalize([0u32, 7].as_ptr(), 2, 5, &mut distribution),
+            "codec",
+            "InvalidParameter",
+        );
     }
 }

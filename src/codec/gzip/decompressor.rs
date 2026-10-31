@@ -53,10 +53,12 @@ pub struct GzipDecompressor {
 }
 
 impl GzipDecompressor {
-    pub fn new(config: GzipDecompressorConfig) -> GzipDecompressor {
-        GzipDecompressor {
+    /// A decompressor of `config`; fails with `InvalidParameter` for a
+    /// window the Deflate decompressor does not take.
+    pub fn new(config: GzipDecompressorConfig) -> Result<GzipDecompressor, CompressionError> {
+        Ok(GzipDecompressor {
             config,
-            deflate: DeflateDecompressor::default(),
+            deflate: DeflateDecompressor::new(config.deflate)?,
             header: GzipHeader::new(),
             flags: 0,
             header_checksum: CRC::new(CRCCatalogue::CRC32_ISO_HDLC),
@@ -66,7 +68,7 @@ impl GzipDecompressor {
             filled: 0,
             members: 0,
             state: GzipState::Header,
-        }
+        })
     }
 
     pub fn config(&self) -> GzipDecompressorConfig {
@@ -154,7 +156,7 @@ impl GzipDecompressor {
 
 impl Default for GzipDecompressor {
     fn default() -> GzipDecompressor {
-        GzipDecompressor::new(GzipDecompressorConfig::default())
+        GzipDecompressor::new(GzipDecompressorConfig::default()).expect("the default window is valid")
     }
 }
 

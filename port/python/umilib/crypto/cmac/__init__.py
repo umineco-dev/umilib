@@ -12,13 +12,11 @@ from typing import Any, ClassVar
 from umilib.crypto import MAC, BlockCipher, BlockCipherClass, Specialization
 from umilib.ffi import Bytes, Handle, Library, Text
 
-P = "umilib_crypto_cmac_cmac"
-
 
 class CMAC(MAC):
     """CMAC over the cipher ``CMAC[C]``."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_cmac_cmac"
     #: The C type name, by which the KDFs select CMAC as their PRF.
     C_TYPE: ClassVar[str] = "umilib_crypto_cmac_CMAC"
     CIPHER: ClassVar[type[BlockCipher] | None] = None
@@ -34,7 +32,7 @@ class CMAC(MAC):
         cipher = Specialization.require(self.CIPHER, "CMAC")
         name, name_length = Text.encode(cipher.C_TYPE)
         data, length = Bytes.readable(key)
-        super().__init__(Handle.create(f"{P}_new", name, name_length, data, length))
+        super().__init__(Handle.create("umilib_crypto_cmac_cmac_new", name, name_length, data, length))
 
     @classmethod
     def mac(cls, key: bytes | bytearray | memoryview, data: bytes | bytearray | memoryview) -> bytes:
@@ -44,13 +42,13 @@ class CMAC(MAC):
         key_data, key_length = Bytes.readable(key)
         data, length = Bytes.readable(data)
         out = (ctypes.c_uint8 * cipher.BLOCK_SIZE)()
-        Library.default().call(f"{P}_mac", name, name_length, key_data, key_length, data, length, out, len(out))
+        Library.default().call("umilib_crypto_cmac_cmac_mac", name, name_length, key_data, key_length, data, length, out, len(out))
         return bytes(out)
 
     def verify_truncated(self, tag: bytes | bytearray | memoryview) -> bool:
         """Whether ``tag`` is the leftmost bytes (at least 8, or the whole block if shorter) of the tag;
         releases the state."""
-        return self.verify_with(f"{P}_verify_truncated", tag)
+        return self.verify_with("umilib_crypto_cmac_cmac_verify_truncated", tag)
 
     def verify_truncated_with_minimum(self, tag: bytes | bytearray | memoryview, minimum: int) -> bool:
         """Whether ``tag`` is the leftmost bytes, at least ``minimum`` (and one) of them, of the tag;
@@ -59,7 +57,7 @@ class CMAC(MAC):
         data, length = Bytes.readable(tag)
         valid = ctypes.c_bool()
         with self.locked():
-            self.library.call(f"{P}_verify_truncated_with_minimum", self.pointer, data, length, minimum, ctypes.byref(valid))
+            self.library.call("umilib_crypto_cmac_cmac_verify_truncated_with_minimum", self.pointer, data, length, minimum, ctypes.byref(valid))
             self.consumed()
         return valid.value
 

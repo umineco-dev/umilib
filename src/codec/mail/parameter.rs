@@ -52,7 +52,10 @@ impl MIMEParameter {
 
 impl MIMEParameterSection {
     /// The longest number of a section read: more sections than this are
-    /// taken as not of a value.
+    /// taken as not of a value. The writer makes no more, so that what it
+    /// writes reads back. A constant, not of `MailConfig`: a number costs
+    /// nothing, and what a field costs is bounded by
+    /// `MailConfig::maximum_field_length`.
     pub const MAXIMUM_NUMBER: u32 = 999;
 
     /// Reads `; name=value`, where the name may end in a section number and

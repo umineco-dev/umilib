@@ -27,7 +27,6 @@ from umilib.crypto.random import Random
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Text
 from umilib.protocol.jwt import JWK, JWKSet, JWSAlgorithm
 
-P = "umilib_auth_oauth"
 
 __all__ = [
     "DPoPConfig", "DPoPProof", "DPoPTarget", "DPoPVerifier", "OAuthAccessTokenFormat", "OAuthAuthorization",
@@ -103,17 +102,17 @@ class OAuthParameters(Handle):
     (RFC 6749 Appendix B), in order. A parameter without a value is omitted, and one given twice
     fails with ``Repeated`` unless it is repeatable (RFC 6749 §3.1, §3.2)."""
 
-    FREE = f"{P}_oauth_parameters_free"
+    FREE = "umilib_auth_oauth_oauth_parameters_free"
     REPEATABLE: ClassVar[list[str]] = ["resource"]
 
     def __init__(self, pointer: int | None = None) -> None:
-        super().__init__(pointer if pointer is not None else Handle.create(f"{P}_oauth_parameters_new"))
+        super().__init__(pointer if pointer is not None else Handle.create("umilib_auth_oauth_oauth_parameters_new"))
 
     @staticmethod
     def parse(data: bytes, repeatable: list[str] | None = None) -> OAuthParameters:
         """The parameters of the form-encoded ``data``, those of ``repeatable`` allowed more than once."""
         names = Text.array(repeatable if repeatable is not None else OAuthParameters.REPEATABLE)
-        return OAuthParameters(Handle.create(f"{P}_oauth_parameters_parse", *Bytes.readable(data), names[0], names[1]))
+        return OAuthParameters(Handle.create("umilib_auth_oauth_oauth_parameters_parse", *Bytes.readable(data), names[0], names[1]))
 
     @staticmethod
     def parse_with(data: bytes, repeatable: list[str]) -> OAuthParameters:
@@ -122,24 +121,24 @@ class OAuthParameters(Handle):
     @staticmethod
     def from_query(uri: str) -> OAuthParameters:
         """The parameters of the query of the URI reference ``uri``."""
-        return OAuthParameters(Handle.create(f"{P}_oauth_parameters_from_query", *Text.encode(str(uri))))
+        return OAuthParameters(Handle.create("umilib_auth_oauth_oauth_parameters_from_query", *Text.encode(str(uri))))
 
     def add_to_query(self, uri: str) -> URIReference:
         """``uri`` with these parameters added to its query, which it keeps (RFC 6749 §3.1)."""
-        return URIReference.parse(Calls.text(f"{P}_oauth_parameters_add_to_query", self.handle, *Text.encode(str(uri))))
+        return URIReference.parse(Calls.text("umilib_auth_oauth_oauth_parameters_add_to_query", self.handle, *Text.encode(str(uri))))
 
     def pairs(self) -> list[tuple[str, str]]:
-        count = self.library.value(f"{P}_oauth_parameters_count", ctypes.c_size_t, self.handle)
+        count = self.library.value("umilib_auth_oauth_oauth_parameters_count", ctypes.c_size_t, self.handle)
         pairs = []
         for index in range(count):
             name, value = Buffer(), Buffer()
-            self.library.call(f"{P}_oauth_parameters_entry", self.handle, index, ctypes.byref(name), ctypes.byref(value))
+            self.library.call("umilib_auth_oauth_oauth_parameters_entry", self.handle, index, ctypes.byref(name), ctypes.byref(value))
             pairs.append((self.library.take(name).decode("utf-8"), self.library.take(value).decode("utf-8")))
         return pairs
 
     def get(self, name: str) -> str | None:
         """The value of ``name``: the first if it is repeatable."""
-        value = self.library.optional(f"{P}_oauth_parameters_get", Buffer, self.handle, *Text.encode(name))
+        value = self.library.optional("umilib_auth_oauth_oauth_parameters_get", Buffer, self.handle, *Text.encode(name))
         return None if value is None else value.decode("utf-8")
 
     def all(self, name: str) -> list[str]:
@@ -155,18 +154,18 @@ class OAuthParameters(Handle):
 
     def push(self, name: str, value: str) -> None:
         """Appends ``name`` of ``value``; an empty value is not added."""
-        self.library.call(f"{P}_oauth_parameters_push", self.handle, *Text.encode(name), *Text.encode(value))
+        self.library.call("umilib_auth_oauth_oauth_parameters_push", self.handle, *Text.encode(name), *Text.encode(value))
 
     def push_optional(self, name: str, value: str | None) -> None:
         if value is not None:
             self.push(name, value)
 
     def remove(self, name: str) -> None:
-        self.library.call(f"{P}_oauth_parameters_remove", self.handle, *Text.encode(name))
+        self.library.call("umilib_auth_oauth_oauth_parameters_remove", self.handle, *Text.encode(name))
 
     def encode(self) -> str:
         """The parameters in the form encoding."""
-        return Calls.text(f"{P}_oauth_parameters_encode", self.handle)
+        return Calls.text("umilib_auth_oauth_oauth_parameters_encode", self.handle)
 
     @staticmethod
     def of(pairs: list[tuple[str, str]]) -> OAuthParameters:
@@ -185,7 +184,7 @@ class OAuthScope:
     @staticmethod
     def parse(text: str) -> OAuthScope:
         """The scope of the space-delimited ``text``."""
-        normalized = Calls.text(f"{P}_oauth_scope_parse", *Text.encode(text))
+        normalized = Calls.text("umilib_auth_oauth_oauth_scope_parse", *Text.encode(text))
         return OAuthScope(tuple(normalized.split(" ")))
 
     @staticmethod
@@ -209,13 +208,13 @@ class OAuthScope:
             return True
         if not other.tokens:
             return False
-        return Library.default().value(f"{P}_oauth_scope_is_subset_of", ctypes.c_bool, *Text.encode(str(self)), *Text.encode(str(other)))
+        return Library.default().value("umilib_auth_oauth_oauth_scope_is_subset_of", ctypes.c_bool, *Text.encode(str(self)), *Text.encode(str(other)))
 
     def intersection(self, other: OAuthScope) -> OAuthScope:
         """The tokens of this scope that are also in ``other``."""
         if not self.tokens or not other.tokens:
             return OAuthScope()
-        text = Calls.text(f"{P}_oauth_scope_intersection", *Text.encode(str(self)), *Text.encode(str(other)))
+        text = Calls.text("umilib_auth_oauth_oauth_scope_intersection", *Text.encode(str(self)), *Text.encode(str(other)))
         return OAuthScope(tuple(text.split(" "))) if text else OAuthScope()
 
     def is_empty(self) -> bool:
@@ -236,20 +235,20 @@ class PKCEMethod(enum.IntEnum):
     @staticmethod
     def parse(name: str) -> PKCEMethod:
         """The method named ``name``; ``plain`` and unknown names raise ``Invalid``."""
-        return PKCEMethod(Library.default().value(f"{P}_pkce_method_parse", ctypes.c_uint8, *Text.encode(name)))
+        return PKCEMethod(Library.default().value("umilib_auth_oauth_pkce_method_parse", ctypes.c_uint8, *Text.encode(name)))
 
 
 class PKCEVerifier(Handle):
     """A code verifier (RFC 7636 §4.1): 43 to 128 unreserved characters, zeroized when released."""
 
-    FREE = f"{P}_pkce_verifier_free"
+    FREE = "umilib_auth_oauth_pkce_verifier_free"
     MINIMUM_LENGTH: ClassVar[int] = 43
     MAXIMUM_LENGTH: ClassVar[int] = 128
     RANDOM_OCTETS: ClassVar[int] = 32
 
     def __init__(self, text: str | None = None, pointer: int | None = None) -> None:
         if pointer is None:
-            pointer = Handle.create(f"{P}_pkce_verifier_new", *Text.encode(text or ""))
+            pointer = Handle.create("umilib_auth_oauth_pkce_verifier_new", *Text.encode(text or ""))
         super().__init__(pointer)
 
     @staticmethod
@@ -259,14 +258,14 @@ class PKCEVerifier(Handle):
     @staticmethod
     def generate(random: Random) -> PKCEVerifier:
         """A verifier of 32 random octets, base64url-encoded."""
-        return PKCEVerifier(pointer=Handle.create(f"{P}_pkce_verifier_generate", *random.source()))
+        return PKCEVerifier(pointer=Handle.create("umilib_auth_oauth_pkce_verifier_generate", *random.source()))
 
     def as_str(self) -> str:
-        return Calls.text(f"{P}_pkce_verifier_text", self.handle)
+        return Calls.text("umilib_auth_oauth_pkce_verifier_text", self.handle)
 
     def challenge(self, method: PKCEMethod = PKCEMethod.S256) -> PKCEChallenge:
         """The challenge of this verifier by ``method`` (§4.2)."""
-        return PKCEChallenge(method, Calls.text(f"{P}_pkce_verifier_challenge", self.handle, int(method)))
+        return PKCEChallenge(method, Calls.text("umilib_auth_oauth_pkce_verifier_challenge", self.handle, int(method)))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -279,12 +278,12 @@ class PKCEChallenge:
     @staticmethod
     def new(method: PKCEMethod, value: str) -> PKCEChallenge:
         """The challenge ``value``, checked: for S256, 43 base64url characters of a SHA-256 digest."""
-        Library.default().call(f"{P}_pkce_challenge_check", int(method), *Text.encode(value))
+        Library.default().call("umilib_auth_oauth_pkce_challenge_check", int(method), *Text.encode(value))
         return PKCEChallenge(method, value)
 
     def verify(self, verifier: PKCEVerifier) -> bool:
         """Whether ``verifier`` is the verifier of this challenge (§4.6), compared in constant time."""
-        return Library.default().value(f"{P}_pkce_challenge_verify", ctypes.c_bool, int(self.method), *Text.encode(self.value), verifier.handle)
+        return Library.default().value("umilib_auth_oauth_pkce_challenge_verify", ctypes.c_bool, int(self.method), *Text.encode(self.value), verifier.handle)
 
 
 # Error responses and messages.
@@ -330,14 +329,14 @@ class OAuthErrorResponse:
 
     def encode(self) -> str:
         """The JSON text of the response."""
-        return Calls.text(f"{P}_oauth_error_response_encode", *Text.encode(self.code), *Text.encode(self.description), *Text.encode(self.uri))
+        return Calls.text("umilib_auth_oauth_oauth_error_response_encode", *Text.encode(self.code), *Text.encode(self.description), *Text.encode(self.uri))
 
     @staticmethod
     def decode(body: bytes) -> OAuthErrorResponse:
         """The response of a JSON body (RFC 6749 §5.2)."""
         library = Library.default()
         code, has_description, description, has_uri, uri = Buffer(), ctypes.c_bool(), Buffer(), ctypes.c_bool(), Buffer()
-        library.call(f"{P}_oauth_error_response_decode", *Bytes.readable(body), ctypes.byref(code), ctypes.byref(has_description), ctypes.byref(description), ctypes.byref(has_uri), ctypes.byref(uri))
+        library.call("umilib_auth_oauth_oauth_error_response_decode", *Bytes.readable(body), ctypes.byref(code), ctypes.byref(has_description), ctypes.byref(description), ctypes.byref(has_uri), ctypes.byref(uri))
         return OAuthErrorResponse(library.take(code).decode("utf-8"), library.take_optional_text(has_description, description), library.take_optional_text(has_uri, uri))
 
     @staticmethod
@@ -378,7 +377,7 @@ class OAuthAuthorizationRequest:
     @staticmethod
     def from_parameters(parameters: OAuthParameters) -> OAuthAuthorizationRequest:
         """The request of ``parameters``; a challenge without a method is ``plain`` and refused."""
-        with OAuthParameters(Handle.create(f"{P}_oauth_authorization_request_check", parameters.handle)) as checked:
+        with OAuthParameters(Handle.create("umilib_auth_oauth_oauth_authorization_request_check", parameters.handle)) as checked:
             challenge = checked.get("code_challenge")
             scope = checked.get("scope")
             return OAuthAuthorizationRequest(
@@ -426,7 +425,7 @@ class OAuthAuthorizationResponse:
     def from_parameters(parameters: OAuthParameters) -> OAuthAuthorizationResponse:
         """The response of the parameters of a redirect; an error response raises ``Response``."""
         out = ctypes.c_void_p()
-        Calls.with_response(f"{P}_oauth_authorization_response_check", parameters.handle, ctypes.byref(out))
+        Calls.with_response("umilib_auth_oauth_oauth_authorization_response_check", parameters.handle, ctypes.byref(out))
         with OAuthParameters(out.value) as checked:
             return OAuthAuthorizationResponse(checked.required("code"), checked.get("state"), checked.get("iss"))
 
@@ -498,7 +497,7 @@ class OAuthTokenRequest:
     @staticmethod
     def from_parameters(parameters: OAuthParameters) -> OAuthTokenRequest:
         """The request of ``parameters``; an unknown grant type raises ``Invalid``."""
-        with OAuthParameters(Handle.create(f"{P}_oauth_token_request_check", parameters.handle)) as checked:
+        with OAuthParameters(Handle.create("umilib_auth_oauth_oauth_token_request_check", parameters.handle)) as checked:
             kind = checked.required("grant_type")
             grant: Any
             if kind == OAuthGrant.AUTHORIZATION_CODE:
@@ -573,7 +572,7 @@ class OAuthTokenResponse:
     @staticmethod
     def decode(status: int, body: bytes) -> OAuthTokenResponse:
         """The response of a body: a success for status 200, otherwise raises ``Response``."""
-        members = Documents.decode(f"{P}_oauth_token_response_decode", status, body)
+        members = Documents.decode("umilib_auth_oauth_oauth_token_response_decode", status, body)
         scope = members.get("scope")
         return OAuthTokenResponse(
             members["access_token"],
@@ -617,7 +616,7 @@ class OAuthIntrospectionResponse:
 
     @staticmethod
     def decode(status: int, body: bytes) -> OAuthIntrospectionResponse:
-        members = Documents.decode(f"{P}_oauth_introspection_response_decode", status, body)
+        members = Documents.decode("umilib_auth_oauth_oauth_introspection_response_decode", status, body)
         audience = members.get("aud", [])
         scope = members.get("scope")
         return OAuthIntrospectionResponse(
@@ -653,7 +652,7 @@ class OAuthDeviceAuthorizationResponse:
 
     @staticmethod
     def decode(status: int, body: bytes) -> OAuthDeviceAuthorizationResponse:
-        members = Documents.decode(f"{P}_oauth_device_authorization_response_decode", status, body)
+        members = Documents.decode("umilib_auth_oauth_oauth_device_authorization_response_decode", status, body)
         return OAuthDeviceAuthorizationResponse(members["device_code"], members["user_code"], members["verification_uri"], members["expires_in"], members.get("verification_uri_complete"), members.get("interval"))
 
     def encode(self) -> str:
@@ -670,7 +669,7 @@ class OAuthPushedAuthorizationResponse:
     @staticmethod
     def decode(status: int, body: bytes) -> OAuthPushedAuthorizationResponse:
         """A success is status 201."""
-        members = Documents.decode(f"{P}_oauth_pushed_authorization_response_decode", status, body)
+        members = Documents.decode("umilib_auth_oauth_oauth_pushed_authorization_response_decode", status, body)
         return OAuthPushedAuthorizationResponse(members["request_uri"], members["expires_in"])
 
     def encode(self) -> str:
@@ -740,7 +739,7 @@ class OAuthMetadata:
     @staticmethod
     def decode(kind: OAuthMetadataKind, body: bytes) -> OAuthMetadata:
         """The document of the JSON ``body``, which must be an object with the identifier member."""
-        return OAuthMetadata(kind, json.loads(Calls.text(f"{P}_oauth_metadata_decode", int(kind), *Bytes.readable(body))))
+        return OAuthMetadata(kind, json.loads(Calls.text("umilib_auth_oauth_oauth_metadata_decode", int(kind), *Bytes.readable(body))))
 
     def encode(self) -> str:
         return json.dumps(self.object, separators=(",", ":"), ensure_ascii=False)
@@ -750,12 +749,12 @@ class OAuthMetadata:
 
     def check(self, expected: str) -> None:
         """Raises ``Issuer`` unless the document describes ``expected`` (RFC 8414 §3.3, RFC 9728 §3.3)."""
-        Library.default().call(f"{P}_oauth_metadata_check", int(self.kind), *Text.encode(self.encode()), *Text.encode(expected))
+        Library.default().call("umilib_auth_oauth_oauth_metadata_check", int(self.kind), *Text.encode(self.encode()), *Text.encode(expected))
 
     @staticmethod
     def location(kind: OAuthMetadataKind, identifier: str) -> str:
         """The URL of the document of ``identifier`` (RFC 8414 §3.1, RFC 9728 §3.1)."""
-        return Calls.text(f"{P}_oauth_metadata_location", int(kind), *Text.encode(identifier))
+        return Calls.text("umilib_auth_oauth_oauth_metadata_location", int(kind), *Text.encode(identifier))
 
     def string(self, name: str) -> str | None:
         value = self.object.get(name)
@@ -846,13 +845,13 @@ class OAuthClientAuthentication:
         """Adds ``authentication`` to a request to the server ``audience``, an assertion living
         ``lifetime`` seconds: parameters into ``parameters``; returns the value of the
         ``Authorization`` header if the method uses one."""
-        value = Library.default().optional(f"{P}_oauth_client_authentication_apply", Buffer, *OAuthClientAuthentication.arguments(authentication), *Text.encode(audience), now, lifetime, *random.source(), parameters.handle)
+        value = Library.default().optional("umilib_auth_oauth_oauth_client_authentication_apply", Buffer, *OAuthClientAuthentication.arguments(authentication), *Text.encode(audience), now, lifetime, *random.source(), parameters.handle)
         return None if value is None else value.decode("utf-8")
 
     @staticmethod
     def basic_credentials(client_id: str, secret: str) -> str:
         """The ``Authorization`` value of client_secret_basic (RFC 6749 §2.3.1)."""
-        return Calls.text(f"{P}_oauth_client_authentication_basic_credentials", *Text.encode(client_id), *Text.encode(secret))
+        return Calls.text("umilib_auth_oauth_oauth_client_authentication_basic_credentials", *Text.encode(client_id), *Text.encode(secret))
 
     @staticmethod
     def assertion(client_id: str, audience: str, now: int, lifetime: int, key: JWK, algorithm: JWSAlgorithm, random: Random) -> str:
@@ -879,10 +878,10 @@ class OAuthHTTPRequest:
         library = Library.default()
         try:
             method, uri, headers, body = Buffer(), Buffer(), Buffer(), Buffer()
-            library.call(f"{P}_oauth_http_request_parts", pointer, ctypes.byref(method), ctypes.byref(uri), ctypes.byref(headers), ctypes.byref(body))
+            library.call("umilib_auth_oauth_oauth_http_request_parts", pointer, ctypes.byref(method), ctypes.byref(uri), ctypes.byref(headers), ctypes.byref(body))
             return OAuthHTTPRequest(library.take(method).decode(), library.take(uri).decode(), Calls.header_pairs(library.take(headers).decode()), library.take(body))
         finally:
-            library.function(f"{P}_oauth_http_request_free")(pointer)
+            library.function("umilib_auth_oauth_oauth_http_request_free")(pointer)
 
     def header(self, name: str) -> str | None:
         return next((value for key, value in self.headers if key.lower() == name.lower()), None)
@@ -904,15 +903,15 @@ class OAuthEndpointRequest:
 
     def handle(self) -> Handle:
         """A C handle of this request, released by its ``with`` block."""
-        handle = EndpointRequestHandle(Handle.create(f"{P}_oauth_endpoint_request_new", *Text.encode(self.method), *Text.encode(self.uri), *Bytes.readable(self.body)))
-        handle.library.call(f"{P}_oauth_endpoint_request_set_fields", handle.handle, *Text.encode(self.authorization), *Text.encode(self.dpop), *Text.encode(self.content_type))
+        handle = EndpointRequestHandle(Handle.create("umilib_auth_oauth_oauth_endpoint_request_new", *Text.encode(self.method), *Text.encode(self.uri), *Bytes.readable(self.body)))
+        handle.library.call("umilib_auth_oauth_oauth_endpoint_request_set_fields", handle.handle, *Text.encode(self.authorization), *Text.encode(self.dpop), *Text.encode(self.content_type))
         return handle
 
 
 class EndpointRequestHandle(Handle):
     """The C handle of an :class:`OAuthEndpointRequest`."""
 
-    FREE = f"{P}_oauth_endpoint_request_free"
+    FREE = "umilib_auth_oauth_oauth_endpoint_request_free"
 
 
 @dataclasses.dataclass
@@ -928,10 +927,10 @@ class OAuthHTTPResponse:
         library = Library.default()
         try:
             status, headers, body = ctypes.c_uint16(), Buffer(), Buffer()
-            library.call(f"{P}_oauth_http_response_parts", pointer, ctypes.byref(status), ctypes.byref(headers), ctypes.byref(body))
+            library.call("umilib_auth_oauth_oauth_http_response_parts", pointer, ctypes.byref(status), ctypes.byref(headers), ctypes.byref(body))
             return OAuthHTTPResponse(status.value, Calls.header_pairs(library.take(headers).decode()), library.take(body))
         finally:
-            library.function(f"{P}_oauth_http_response_free")(pointer)
+            library.function("umilib_auth_oauth_oauth_http_response_free")(pointer)
 
     @staticmethod
     def json(status: int, body: str) -> OAuthHTTPResponse:
@@ -949,43 +948,43 @@ class OAuthClient(Handle):
     """A client of the authorization code grant with PKCE and of the token endpoint, without I/O,
     configured from the metadata of its server (checked against its issuer)."""
 
-    FREE = f"{P}_oauth_client_free"
+    FREE = "umilib_auth_oauth_oauth_client_free"
 
     def __init__(self, metadata: OAuthMetadata, authentication: Any, redirect_uri: str) -> None:
-        super().__init__(Handle.create(f"{P}_oauth_client_new", *Text.encode(metadata.encode()), *OAuthClientAuthentication.arguments(authentication), *Text.encode(redirect_uri)))
+        super().__init__(Handle.create("umilib_auth_oauth_oauth_client_new", *Text.encode(metadata.encode()), *OAuthClientAuthentication.arguments(authentication), *Text.encode(redirect_uri)))
 
     def pending_count(self) -> int:
-        return self.library.value(f"{P}_oauth_client_pending_count", ctypes.c_size_t, self.handle)
+        return self.library.value("umilib_auth_oauth_oauth_client_pending_count", ctypes.c_size_t, self.handle)
 
     def limits(self) -> tuple[int, int, int, int]:
         """The most pending requests, their lifetime, the random octets of a state, and the
         lifetime of a client assertion."""
         maximum, lifetime, octets, assertion = ctypes.c_size_t(), ctypes.c_int64(), ctypes.c_size_t(), ctypes.c_int64()
-        self.library.call(f"{P}_oauth_client_limits", self.handle, ctypes.byref(maximum), ctypes.byref(lifetime), ctypes.byref(octets), ctypes.byref(assertion))
+        self.library.call("umilib_auth_oauth_oauth_client_limits", self.handle, ctypes.byref(maximum), ctypes.byref(lifetime), ctypes.byref(octets), ctypes.byref(assertion))
         return maximum.value, lifetime.value, octets.value, assertion.value
 
     def authorize(self, scope: OAuthScope | None, resources: list[str], now: int, random: Random) -> URIReference:
         """The URL to send the user's browser to: a new state and an S256 challenge."""
         array = Text.array(resources)
-        text = Calls.text(f"{P}_oauth_client_authorize", self.handle, *Text.encode(None if scope is None else str(scope)), array[0], array[1], now, *random.source())
+        text = Calls.text("umilib_auth_oauth_oauth_client_authorize", self.handle, *Text.encode(None if scope is None else str(scope)), array[0], array[1], now, *random.source())
         return URIReference.parse(text)
 
     def callback(self, redirect: URIReference | str, now: int) -> OAuthTokenRequest:
         """The token request of the authorization response at ``redirect`` (RFC 6749 §10.12, RFC 9207
         §2.4); an error response raises ``Response`` after the same checks."""
         out = ctypes.c_void_p()
-        Calls.with_response(f"{P}_oauth_client_callback", self.handle, *Text.encode(str(redirect)), now, ctypes.byref(out))
+        Calls.with_response("umilib_auth_oauth_oauth_client_callback", self.handle, *Text.encode(str(redirect)), now, ctypes.byref(out))
         with OAuthParameters(out.value) as parameters:
             return OAuthTokenRequest.from_parameters(parameters)
 
     def token_request(self, request: OAuthTokenRequest, now: int, random: Random) -> OAuthHTTPRequest:
         """The HTTP request of ``request`` with the client's authentication."""
         with request.to_parameters() as parameters:
-            return OAuthHTTPRequest.take(Handle.create(f"{P}_oauth_client_token_request", self.handle, parameters.handle, now, *random.source()))
+            return OAuthHTTPRequest.take(Handle.create("umilib_auth_oauth_oauth_client_token_request", self.handle, parameters.handle, now, *random.source()))
 
     def endpoint_request(self, endpoint: str, parameters: OAuthParameters, now: int, random: Random) -> OAuthHTTPRequest:
         """The HTTP POST of ``parameters`` to ``endpoint`` with the client's authentication."""
-        return OAuthHTTPRequest.take(Handle.create(f"{P}_oauth_client_endpoint_request", self.handle, *Text.encode(endpoint), parameters.handle, now, *random.source()))
+        return OAuthHTTPRequest.take(Handle.create("umilib_auth_oauth_oauth_client_endpoint_request", self.handle, *Text.encode(endpoint), parameters.handle, now, *random.source()))
 
 
 # The authorization server.
@@ -1051,6 +1050,7 @@ class DPoPConfig:
     leeway: int = 60
     require_nonce: bool = False
     maximum_proofs: int = 65536
+    previous_nonces: int = 1
 
 
 @dataclasses.dataclass
@@ -1104,16 +1104,16 @@ class OAuthServerConfig:
     @staticmethod
     def new(issuer: str) -> OAuthServerConfig:
         """The configuration of ``issuer`` with the endpoints and settings of the Rust ``new``."""
-        with ServerConfigHandle(Handle.create(f"{P}_oauth_server_config_new", *Text.encode(issuer))) as handle:
-            limits = handle.library.type(f"{P}_OAuthServerLimits")()
-            handle.library.call(f"{P}_oauth_server_config_limits", handle.handle, ctypes.byref(limits))
-            endpoints = (Calls.text(f"{P}_oauth_server_config_endpoints", handle.handle) + "\n" * 8).split("\n")[:8]
+        with ServerConfigHandle(Handle.create("umilib_auth_oauth_oauth_server_config_new", *Text.encode(issuer))) as handle:
+            limits = handle.library.type("umilib_auth_oauth_OAuthServerLimits")()
+            handle.library.call("umilib_auth_oauth_oauth_server_config_limits", handle.handle, ctypes.byref(limits))
+            endpoints = (Calls.text("umilib_auth_oauth_oauth_server_config_endpoints", handle.handle) + "\n" * 8).split("\n")[:8]
             assertion, dpop_algorithms = Buffer(), Buffer()
-            handle.library.call(f"{P}_oauth_server_config_algorithms", handle.handle, ctypes.byref(assertion), ctypes.byref(dpop_algorithms))
+            handle.library.call("umilib_auth_oauth_oauth_server_config_algorithms", handle.handle, ctypes.byref(assertion), ctypes.byref(dpop_algorithms))
             assertion_algorithms = [JWSAlgorithm(index) for index in handle.library.take(assertion)]
             dpop_list = [JWSAlgorithm(index) for index in handle.library.take(dpop_algorithms)]
         optional = [endpoint or None for endpoint in endpoints[2:]]
-        dpop = DPoPConfig(dpop_list, limits.dpop_maximum_age, limits.dpop_leeway, limits.dpop_require_nonce, limits.dpop_maximum_proofs)
+        dpop = DPoPConfig(dpop_list, limits.dpop_maximum_age, limits.dpop_leeway, limits.dpop_require_nonce, limits.dpop_maximum_proofs, limits.dpop_previous_nonces)
         return OAuthServerConfig(
             issuer, endpoints[0], endpoints[1], *optional, OAuthAccessTokenFormat.Opaque(),
             *[getattr(limits, name) for name in OAuthServerConfig.LIMITS],
@@ -1123,28 +1123,28 @@ class OAuthServerConfig:
 
     def handle(self) -> Handle:
         """A C handle of this configuration, released by its ``with`` block."""
-        handle = ServerConfigHandle(Handle.create(f"{P}_oauth_server_config_new", *Text.encode(self.issuer)))
+        handle = ServerConfigHandle(Handle.create("umilib_auth_oauth_oauth_server_config_new", *Text.encode(self.issuer)))
         library = handle.library
         endpoints = [self.authorization_endpoint, self.token_endpoint, *[value or "" for value in (self.introspection_endpoint, self.revocation_endpoint, self.pushed_authorization_request_endpoint, self.device_authorization_endpoint, self.verification_uri, self.jwks_uri)]]
         array = Text.array(endpoints)
-        library.call(f"{P}_oauth_server_config_set_endpoints", handle.handle, array[0], array[1])
-        limits = library.type(f"{P}_OAuthServerLimits")()
+        library.call("umilib_auth_oauth_oauth_server_config_set_endpoints", handle.handle, array[0], array[1])
+        limits = library.type("umilib_auth_oauth_OAuthServerLimits")()
         for name in OAuthServerConfig.LIMITS:
             Fields.assign(limits, name, getattr(self, name))
-        for name in ("maximum_age", "leeway", "require_nonce", "maximum_proofs"):
+        for name in ("maximum_age", "leeway", "require_nonce", "maximum_proofs", "previous_nonces"):
             Fields.assign(limits, f"dpop_{name}", getattr(self.dpop, name))
-        library.call(f"{P}_oauth_server_config_set_limits", handle.handle, limits)
-        library.call(f"{P}_oauth_server_config_set_algorithms", handle.handle, *Calls.algorithms(self.assertion_algorithms), *Calls.algorithms(self.dpop.algorithms))
+        library.call("umilib_auth_oauth_oauth_server_config_set_limits", handle.handle, limits)
+        library.call("umilib_auth_oauth_oauth_server_config_set_algorithms", handle.handle, *Calls.algorithms(self.assertion_algorithms), *Calls.algorithms(self.dpop.algorithms))
         token_format = self.access_token_format
         if isinstance(token_format, OAuthAccessTokenFormat.JWT):
-            library.call(f"{P}_oauth_server_config_set_access_token_format", handle.handle, token_format.key.handle, int(token_format.algorithm), *Text.encode(token_format.default_audience))
+            library.call("umilib_auth_oauth_oauth_server_config_set_access_token_format", handle.handle, token_format.key.handle, int(token_format.algorithm), *Text.encode(token_format.default_audience))
         return handle
 
 
 class ServerConfigHandle(Handle):
     """The C handle of an :class:`OAuthServerConfig`."""
 
-    FREE = f"{P}_oauth_server_config_free"
+    FREE = "umilib_auth_oauth_oauth_server_config_free"
 
 
 @dataclasses.dataclass
@@ -1174,12 +1174,12 @@ class OAuthGrantRecord:
 class OAuthAuthorization(Handle):
     """An authorization request the server took, waiting for the user's decision."""
 
-    FREE = f"{P}_oauth_authorization_free"
+    FREE = "umilib_auth_oauth_oauth_authorization_free"
 
     def parts(self) -> tuple[str, str, OAuthScope, str | None, list[str], list[tuple[str, str]]]:
         library = self.library
         client_id, redirect_uri, scope, has_state, state, resources, other = Buffer(), Buffer(), Buffer(), ctypes.c_bool(), Buffer(), Buffer(), ctypes.c_void_p()
-        library.call(f"{P}_oauth_authorization_parts", self.handle, ctypes.byref(client_id), ctypes.byref(redirect_uri), ctypes.byref(scope), ctypes.byref(has_state), ctypes.byref(state), ctypes.byref(resources), ctypes.byref(other))
+        library.call("umilib_auth_oauth_oauth_authorization_parts", self.handle, ctypes.byref(client_id), ctypes.byref(redirect_uri), ctypes.byref(scope), ctypes.byref(has_state), ctypes.byref(state), ctypes.byref(resources), ctypes.byref(other))
         scope_text = library.take(scope).decode()
         with OAuthParameters(other.value) as parameters:
             pairs = parameters.pairs()
@@ -1238,13 +1238,13 @@ class OAuthServer(Handle):
     RFC 9068, RFC 9449): it keeps its clients and what it issued in bounded tables, and answers the
     requests its endpoints receive."""
 
-    FREE = f"{P}_oauth_server_free"
+    FREE = "umilib_auth_oauth_oauth_server_free"
     REQUEST_URI_PREFIX: ClassVar[str] = "urn:ietf:params:oauth:request_uri:"
     USER_CODE_CHARACTERS: ClassVar[bytes] = b"BCDFGHJKLMNPQRSTVWXZ"
 
     def __init__(self, config: OAuthServerConfig) -> None:
         with config.handle() as handle:
-            super().__init__(Handle.create(f"{P}_oauth_server_new", handle.handle))
+            super().__init__(Handle.create("umilib_auth_oauth_oauth_server_new", handle.handle))
         self.settings = config
 
     def config(self) -> OAuthServerConfig:
@@ -1256,25 +1256,25 @@ class OAuthServer(Handle):
         grants = Text.array(registration.grant_types)
         resources = Calls.strings(registration.resources)
         self.library.call(
-            f"{P}_oauth_server_register", self.handle, *Text.encode(registration.client_id), int(registration.method), *Text.encode(registration.secret),
+            "umilib_auth_oauth_oauth_server_register", self.handle, *Text.encode(registration.client_id), int(registration.method), *Text.encode(registration.secret),
             None if registration.keys is None else registration.keys.handle, redirects[0], redirects[1], grants[0], grants[1],
             *Text.encode(str(registration.scope) or None), resources[0], resources[1], registration.introspection,
         )  # fmt: skip
 
     def unregister(self, client_id: str) -> bool:
-        return self.library.value(f"{P}_oauth_server_unregister", ctypes.c_bool, self.handle, *Text.encode(client_id))
+        return self.library.value("umilib_auth_oauth_oauth_server_unregister", ctypes.c_bool, self.handle, *Text.encode(client_id))
 
     def metadata(self) -> OAuthMetadata:
-        return OAuthMetadata(OAuthMetadataKind.Server, json.loads(Calls.text(f"{P}_oauth_server_metadata", self.handle)))
+        return OAuthMetadata(OAuthMetadataKind.Server, json.loads(Calls.text("umilib_auth_oauth_oauth_server_metadata", self.handle)))
 
     def jwks(self) -> JWKSet | None:
-        text = self.library.optional(f"{P}_oauth_server_jwks", Buffer, self.handle)
+        text = self.library.optional("umilib_auth_oauth_oauth_server_jwks", Buffer, self.handle)
         return None if text is None else JWKSet.from_json(text)
 
     def authorize(self, parameters: OAuthParameters, now: int) -> OAuthAuthorization:
         """Checks the authorization request of ``parameters``; raises :class:`OAuthAuthorizationFailure`."""
         kind, out, text = ctypes.c_uint8(), ctypes.c_void_p(), Buffer()
-        self.library.call(f"{P}_oauth_server_authorize", self.handle, parameters.handle, now, ctypes.byref(kind), ctypes.byref(out), ctypes.byref(text))
+        self.library.call("umilib_auth_oauth_oauth_server_authorize", self.handle, parameters.handle, now, ctypes.byref(kind), ctypes.byref(out), ctypes.byref(text))
         body = self.library.take(text)
         if kind.value == 0:
             return OAuthAuthorization(out.value)
@@ -1284,15 +1284,15 @@ class OAuthServer(Handle):
 
     def approve(self, authorization: OAuthAuthorization, grant: OAuthGrantRecord, now: int, random: Random) -> URIReference:
         """Issues a code for ``authorization`` approved for ``grant`` and returns the redirect."""
-        return URIReference.parse(Calls.text(f"{P}_oauth_server_approve", self.handle, authorization.handle, *grant.arguments(), now, *random.source()))
+        return URIReference.parse(Calls.text("umilib_auth_oauth_oauth_server_approve", self.handle, authorization.handle, *grant.arguments(), now, *random.source()))
 
     def deny(self, authorization: OAuthAuthorization) -> URIReference:
-        return URIReference.parse(Calls.text(f"{P}_oauth_server_deny", self.handle, authorization.handle))
+        return URIReference.parse(Calls.text("umilib_auth_oauth_oauth_server_deny", self.handle, authorization.handle))
 
     def respond(self, function: str, request: OAuthEndpointRequest, now: int, random: Random | None) -> OAuthHTTPResponse:
         with request.handle() as handle:
             arguments = (now, *random.source()) if random is not None else (now,)
-            return OAuthHTTPResponse.take(Handle.create(f"{P}_oauth_server_{function}", self.handle, handle.handle, *arguments))
+            return OAuthHTTPResponse.take(Handle.create(f"umilib_auth_oauth_oauth_server_{function}", self.handle, handle.handle, *arguments))
 
     def token(self, request: OAuthEndpointRequest, now: int, random: Random) -> OAuthHTTPResponse:
         return self.respond("token", request, now, random)
@@ -1310,31 +1310,31 @@ class OAuthServer(Handle):
         return self.respond("device_authorize", request, now, random)
 
     def introspection(self, token: str, now: int) -> OAuthIntrospectionResponse:
-        return OAuthIntrospectionResponse.decode(200, Calls.text(f"{P}_oauth_server_introspection", self.handle, *Text.encode(token), now).encode())
+        return OAuthIntrospectionResponse.decode(200, Calls.text("umilib_auth_oauth_oauth_server_introspection", self.handle, *Text.encode(token), now).encode())
 
     def device(self, user_code: str, now: int) -> OAuthDeviceRecord | None:
         found, client_id, scope, resources = ctypes.c_bool(), Buffer(), Buffer(), Buffer()
-        self.library.call(f"{P}_oauth_server_device", self.handle, *Text.encode(user_code), now, ctypes.byref(found), ctypes.byref(client_id), ctypes.byref(scope), ctypes.byref(resources))
+        self.library.call("umilib_auth_oauth_oauth_server_device", self.handle, *Text.encode(user_code), now, ctypes.byref(found), ctypes.byref(client_id), ctypes.byref(scope), ctypes.byref(resources))
         client, scope_text, resource_text = self.library.take(client_id).decode(), self.library.take(scope).decode(), self.library.take(resources).decode()
         if not found.value:
             return None
         return OAuthDeviceRecord(client, OAuthScope.parse(scope_text) if scope_text else OAuthScope(), Calls.lines(resource_text))
 
     def device_approve(self, user_code: str, grant: OAuthGrantRecord, now: int) -> None:
-        self.library.call(f"{P}_oauth_server_device_approve", self.handle, *Text.encode(user_code), *grant.arguments(), now)
+        self.library.call("umilib_auth_oauth_oauth_server_device_approve", self.handle, *Text.encode(user_code), *grant.arguments(), now)
 
     def device_deny(self, user_code: str, now: int) -> None:
-        self.library.call(f"{P}_oauth_server_device_deny", self.handle, *Text.encode(user_code), now)
+        self.library.call("umilib_auth_oauth_oauth_server_device_deny", self.handle, *Text.encode(user_code), now)
 
     def revoke_subject(self, subject: str) -> None:
-        self.library.call(f"{P}_oauth_server_revoke_subject", self.handle, *Text.encode(subject))
+        self.library.call("umilib_auth_oauth_oauth_server_revoke_subject", self.handle, *Text.encode(subject))
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_oauth_server_expire", self.handle, now)
+        self.library.call("umilib_auth_oauth_oauth_server_expire", self.handle, now)
 
     def rotate_dpop_nonce(self, random: Random) -> str:
         """Makes a new DPoP nonce (RFC 9449 §8); the one before it is still taken."""
-        return Calls.text(f"{P}_oauth_server_rotate_dpop_nonce", self.handle, *random.source())
+        return Calls.text("umilib_auth_oauth_oauth_server_rotate_dpop_nonce", self.handle, *random.source())
 
 
 # DPoP.
@@ -1364,28 +1364,28 @@ class DPoPProof:
     @staticmethod
     def create(key: JWK, algorithm: JWSAlgorithm, target: DPoPTarget, now: int, nonce: str | None, random: Random) -> str:
         """A proof for ``target`` signed with the private ``key``."""
-        return Calls.text(f"{P}_dpop_proof_create", key.handle, int(algorithm), *target.arguments(), now, *Text.encode(nonce), *random.source())
+        return Calls.text("umilib_auth_oauth_dpop_proof_create", key.handle, int(algorithm), *target.arguments(), now, *Text.encode(nonce), *random.source())
 
     @staticmethod
     def verify(text: str, algorithms: list[JWSAlgorithm], target: DPoPTarget, now: int, maximum_age: int, leeway: int) -> DPoPProof:
         """The proof ``text`` with the checks of RFC 9449 §4.3 that need no state."""
         thumbprint, claims = Buffer(), Buffer()
-        Library.default().call(f"{P}_dpop_proof_verify", *Text.encode(text), *Calls.algorithms(algorithms), *target.arguments(), now, maximum_age, leeway, ctypes.byref(thumbprint), ctypes.byref(claims))
+        Library.default().call("umilib_auth_oauth_dpop_proof_verify", *Text.encode(text), *Calls.algorithms(algorithms), *target.arguments(), now, maximum_age, leeway, ctypes.byref(thumbprint), ctypes.byref(claims))
         return DPoPProof(Library.default().take(thumbprint).decode(), json.loads(Library.default().take(claims)))
 
     @staticmethod
     def thumbprint_of(key: JWK) -> str:
         """The base64url JWK SHA-256 thumbprint of ``key``."""
-        return Calls.text(f"{P}_dpop_proof_thumbprint", key.handle)
+        return Calls.text("umilib_auth_oauth_dpop_proof_thumbprint", key.handle)
 
     @staticmethod
     def access_token_hash(access_token: str) -> str:
-        return Calls.text(f"{P}_dpop_proof_access_token_hash", *Text.encode(access_token))
+        return Calls.text("umilib_auth_oauth_dpop_proof_access_token_hash", *Text.encode(access_token))
 
     @staticmethod
     def target(uri: str) -> str:
         """``uri`` as an ``htu`` is compared (§4.3)."""
-        return Calls.text(f"{P}_dpop_proof_target", *Text.encode(uri))
+        return Calls.text("umilib_auth_oauth_dpop_proof_target", *Text.encode(uri))
 
     def identifier(self) -> str | None:
         return self.claims.get("jti")
@@ -1397,24 +1397,24 @@ class DPoPProof:
 class DPoPVerifier(Handle):
     """The checks of DPoP proofs that keep state: replays and nonces (RFC 9449 §4.3, §8)."""
 
-    FREE = f"{P}_dpop_verifier_free"
+    FREE = "umilib_auth_oauth_dpop_verifier_free"
 
     def __init__(self, config: DPoPConfig | None = None) -> None:
         config = config or DPoPConfig()
-        super().__init__(Handle.create(f"{P}_dpop_verifier_new", *Calls.algorithms(config.algorithms), config.maximum_age, config.leeway, config.require_nonce, config.maximum_proofs))
+        super().__init__(Handle.create("umilib_auth_oauth_dpop_verifier_new", *Calls.algorithms(config.algorithms), config.maximum_age, config.leeway, config.require_nonce, config.maximum_proofs, config.previous_nonces))
 
     def check(self, text: str, target: DPoPTarget, now: int) -> DPoPProof:
         """The proof ``text``, with every check of RFC 9449 §4.3; a refused proof raises ``Response``
         with ``invalid_dpop_proof`` or ``use_dpop_nonce``."""
         out, claims = Buffer(), Buffer()
-        Calls.with_response(f"{P}_dpop_verifier_check", self.handle, *Text.encode(text), *target.arguments(), now, ctypes.byref(out), ctypes.byref(claims))
+        Calls.with_response("umilib_auth_oauth_dpop_verifier_check", self.handle, *Text.encode(text), *target.arguments(), now, ctypes.byref(out), ctypes.byref(claims))
         return DPoPProof(self.library.take(out).decode(), json.loads(self.library.take(claims)))
 
     def rotate_nonce(self, random: Random) -> str:
-        return Calls.text(f"{P}_dpop_verifier_rotate_nonce", self.handle, *random.source())
+        return Calls.text("umilib_auth_oauth_dpop_verifier_rotate_nonce", self.handle, *random.source())
 
     def nonce(self) -> str | None:
-        value = self.library.optional(f"{P}_dpop_verifier_nonce", Buffer, self.handle)
+        value = self.library.optional("umilib_auth_oauth_dpop_verifier_nonce", Buffer, self.handle)
         return None if value is None else value.decode()
 
 
@@ -1440,7 +1440,7 @@ class OAuthPresentedToken:
         """The token of the ``Authorization`` value, ``None`` for another scheme; a malformed Bearer or
         DPoP value raises ``Invalid``."""
         found, scheme, token = ctypes.c_bool(), ctypes.c_uint8(), Buffer()
-        Library.default().call(f"{P}_oauth_presented_token_from_authorization", *Text.encode(value), ctypes.byref(found), ctypes.byref(scheme), ctypes.byref(token))
+        Library.default().call("umilib_auth_oauth_oauth_presented_token_from_authorization", *Text.encode(value), ctypes.byref(found), ctypes.byref(scheme), ctypes.byref(token))
         text = Library.default().take(token).decode()
         return OAuthPresentedToken(OAuthTokenScheme(scheme.value), text) if found.value else None
 
@@ -1459,23 +1459,23 @@ class OAuthChallenge:
     @staticmethod
     def parse(value: str) -> list[OAuthChallenge]:
         """The challenges of a ``WWW-Authenticate`` value."""
-        return OAuthChallenge.take(Handle.create(f"{P}_oauth_challenges_parse", *Text.encode(value)))
+        return OAuthChallenge.take(Handle.create("umilib_auth_oauth_oauth_challenges_parse", *Text.encode(value)))
 
     @staticmethod
     def take(pointer: int) -> list[OAuthChallenge]:
         library = Library.default()
         try:
             challenges = []
-            for index in range(library.value(f"{P}_oauth_challenges_count", ctypes.c_size_t, pointer)):
+            for index in range(library.value("umilib_auth_oauth_oauth_challenges_count", ctypes.c_size_t, pointer)):
                 scheme, names, values = Buffer(), Buffer(), Buffer()
-                library.call(f"{P}_oauth_challenges_get", pointer, index, ctypes.byref(scheme), ctypes.byref(names), ctypes.byref(values))
+                library.call("umilib_auth_oauth_oauth_challenges_get", pointer, index, ctypes.byref(scheme), ctypes.byref(names), ctypes.byref(values))
                 scheme_text, name_text, value_text = library.take(scheme).decode(), library.take(names).decode(), library.take(values).decode()
                 count = len(name_text.split("\n")) if name_text or value_text else 0
                 pairs = list(zip(name_text.split("\n"), value_text.split("\n"))) if count else []
                 challenges.append(OAuthChallenge(scheme_text, pairs))
             return challenges
         finally:
-            library.function(f"{P}_oauth_challenges_free")(pointer)
+            library.function("umilib_auth_oauth_oauth_challenges_free")(pointer)
 
     def push(self, name: str, value: str) -> None:
         self.parameters.append((name, value))
@@ -1494,7 +1494,7 @@ class OAuthChallenge:
         """The challenge as ``WWW-Authenticate`` carries it, every value a quoted-string."""
         names = Text.array([name for name, _ in self.parameters])
         values = Text.array([value for _, value in self.parameters])
-        return Calls.text(f"{P}_oauth_challenge_encode", *Text.encode(self.scheme), names[0], values[0], names[1])
+        return Calls.text("umilib_auth_oauth_oauth_challenge_encode", *Text.encode(self.scheme), names[0], values[0], names[1])
 
 
 @dataclasses.dataclass
@@ -1517,11 +1517,11 @@ class OAuthTokenInfo:
             flags = [ctypes.c_bool() for _ in range(4)]
             texts = [Buffer() for _ in range(6)]
             library.call(
-                f"{P}_oauth_token_info_texts", pointer, ctypes.byref(flags[0]), ctypes.byref(texts[0]), ctypes.byref(flags[1]), ctypes.byref(texts[1]),
+                "umilib_auth_oauth_oauth_token_info_texts", pointer, ctypes.byref(flags[0]), ctypes.byref(texts[0]), ctypes.byref(flags[1]), ctypes.byref(texts[1]),
                 ctypes.byref(texts[2]), ctypes.byref(texts[3]), ctypes.byref(flags[2]), ctypes.byref(texts[4]), ctypes.byref(flags[3]), ctypes.byref(texts[5]),
             )  # fmt: skip
             has_expires, expires, has_time, time = ctypes.c_bool(), ctypes.c_int64(), ctypes.c_bool(), ctypes.c_int64()
-            library.call(f"{P}_oauth_token_info_times", pointer, ctypes.byref(has_expires), ctypes.byref(expires), ctypes.byref(has_time), ctypes.byref(time))
+            library.call("umilib_auth_oauth_oauth_token_info_times", pointer, ctypes.byref(has_expires), ctypes.byref(expires), ctypes.byref(has_time), ctypes.byref(time))
             client_id = library.take_optional_text(flags[0], texts[0])
             subject = library.take_optional_text(flags[1], texts[1])
             scope = library.take(texts[2]).decode()
@@ -1533,13 +1533,13 @@ class OAuthTokenInfo:
                 expires.value if has_expires.value else None, confirmation, time.value if has_time.value else None, context,
             )  # fmt: skip
         finally:
-            library.function(f"{P}_oauth_token_info_free")(pointer)
+            library.function("umilib_auth_oauth_oauth_token_info_free")(pointer)
 
     def handle(self) -> Handle:
         """A C handle of this information, released by its ``with`` block."""
         audience = Text.array(self.audience)
         return TokenInfoHandle(Handle.create(
-            f"{P}_oauth_token_info_new", *Text.encode(self.client_id), *Text.encode(self.subject), *Text.encode(str(self.scope) or None),
+            "umilib_auth_oauth_oauth_token_info_new", *Text.encode(self.client_id), *Text.encode(self.subject), *Text.encode(str(self.scope) or None),
             audience[0], audience[1], self.expires is not None, self.expires or 0, *Text.encode(self.confirmation),
             self.authentication_time is not None, self.authentication_time or 0, *Text.encode(self.authentication_context),
         ))  # fmt: skip
@@ -1548,7 +1548,7 @@ class OAuthTokenInfo:
 class TokenInfoHandle(Handle):
     """The C handle of an :class:`OAuthTokenInfo`."""
 
-    FREE = f"{P}_oauth_token_info_free"
+    FREE = "umilib_auth_oauth_oauth_token_info_free"
 
 
 class OAuthResourceError(Exception):
@@ -1567,11 +1567,11 @@ class OAuthResourceError(Exception):
         library = Library.default()
         try:
             status, has_nonce, nonce, challenges = ctypes.c_uint16(), ctypes.c_bool(), Buffer(), ctypes.c_void_p()
-            library.call(f"{P}_oauth_resource_error_parts", pointer, ctypes.byref(status), ctypes.byref(has_nonce), ctypes.byref(nonce), ctypes.byref(challenges))
-            response = OAuthHTTPResponse.take(Handle.create(f"{P}_oauth_resource_error_to_response", pointer))
+            library.call("umilib_auth_oauth_oauth_resource_error_parts", pointer, ctypes.byref(status), ctypes.byref(has_nonce), ctypes.byref(nonce), ctypes.byref(challenges))
+            response = OAuthHTTPResponse.take(Handle.create("umilib_auth_oauth_oauth_resource_error_to_response", pointer))
             return OAuthResourceError(status.value, OAuthChallenge.take(challenges.value), library.take_optional_text(has_nonce, nonce), response)
         finally:
-            library.function(f"{P}_oauth_resource_error_free")(pointer)
+            library.function("umilib_auth_oauth_oauth_resource_error_free")(pointer)
 
     def to_response(self) -> OAuthHTTPResponse:
         """The HTTP response of the refusal: one ``WWW-Authenticate`` field per challenge."""
@@ -1611,16 +1611,16 @@ class OAuthResourceServer(Handle):
     """The checks of a protected resource (RFC 6750, RFC 9068 §4, RFC 9449 §7, RFC 9470, RFC 9728)
     without I/O. A refusal raises :class:`OAuthResourceError`."""
 
-    FREE = f"{P}_oauth_resource_server_free"
+    FREE = "umilib_auth_oauth_oauth_resource_server_free"
 
     def __init__(self, config: OAuthResourceConfig) -> None:
         validation = config.validation
         jwt = isinstance(validation, OAuthTokenValidation.JWT)
         algorithms = Calls.algorithms(validation.algorithms if jwt else [])
         super().__init__(Handle.create(
-            f"{P}_oauth_resource_server_new", *Text.encode(config.resource), *Text.encode(config.realm), *Text.encode(config.resource_metadata),
+            "umilib_auth_oauth_oauth_resource_server_new", *Text.encode(config.resource), *Text.encode(config.realm), *Text.encode(config.resource_metadata),
             *Text.encode(validation.issuer if jwt else None), validation.keys.handle if jwt else None, *algorithms, config.require_dpop,
-            *Calls.algorithms(config.dpop.algorithms), config.dpop.maximum_age, config.dpop.leeway, config.dpop.require_nonce, config.dpop.maximum_proofs, config.leeway,
+            *Calls.algorithms(config.dpop.algorithms), config.dpop.maximum_age, config.dpop.leeway, config.dpop.require_nonce, config.dpop.maximum_proofs, config.dpop.previous_nonces, config.leeway,
         ))  # fmt: skip
         self.settings = config
 
@@ -1639,19 +1639,19 @@ class OAuthResourceServer(Handle):
 
     def metadata(self, authorization_servers: list[str], scopes: list[str]) -> OAuthMetadata:
         servers, scope_array = Text.array(authorization_servers), Text.array(scopes)
-        text = Calls.text(f"{P}_oauth_resource_server_metadata", self.handle, servers[0], servers[1], scope_array[0], scope_array[1])
+        text = Calls.text("umilib_auth_oauth_oauth_resource_server_metadata", self.handle, servers[0], servers[1], scope_array[0], scope_array[1])
         return OAuthMetadata(OAuthMetadataKind.Resource, json.loads(text))
 
     def refuse(self, error: OAuthErrorResponse | None, scheme: OAuthTokenScheme | None) -> OAuthResourceError:
         """A refusal of ``error`` (none for a request without credentials), challenged with ``scheme``,
         or every scheme the resource takes."""
         body = None if error is None else error.encode()
-        return OAuthResourceError.take(Handle.create(f"{P}_oauth_resource_server_refuse", self.handle, *Text.encode(body), scheme is not None, int(scheme or 0)))
+        return OAuthResourceError.take(Handle.create("umilib_auth_oauth_oauth_resource_server_refuse", self.handle, *Text.encode(body), scheme is not None, int(scheme or 0)))
 
     def presented(self, request: OAuthEndpointRequest) -> OAuthPresentedToken:
         with request.handle() as handle:
             accepted, scheme, token, refusal = ctypes.c_bool(), ctypes.c_uint8(), Buffer(), ctypes.c_void_p()
-            self.library.call(f"{P}_oauth_resource_server_presented", self.handle, handle.handle, ctypes.byref(accepted), ctypes.byref(scheme), ctypes.byref(token), ctypes.byref(refusal))
+            self.library.call("umilib_auth_oauth_oauth_resource_server_presented", self.handle, handle.handle, ctypes.byref(accepted), ctypes.byref(scheme), ctypes.byref(token), ctypes.byref(refusal))
             text = self.library.take(token).decode()
             if not accepted.value:
                 raise OAuthResourceError.take(refusal.value)
@@ -1660,24 +1660,24 @@ class OAuthResourceServer(Handle):
     def accept_jwt(self, request: OAuthEndpointRequest, now: int) -> OAuthTokenInfo:
         """The JWT access token of ``request``, checked as RFC 9068 §4 says, and its DPoP binding."""
         with request.handle() as handle:
-            return self.outcome(f"{P}_oauth_resource_server_accept_jwt", self.handle, handle.handle, now)
+            return self.outcome("umilib_auth_oauth_oauth_resource_server_accept_jwt", self.handle, handle.handle, now)
 
     def accept_introspection(self, request: OAuthEndpointRequest, introspection: OAuthIntrospectionResponse, now: int) -> OAuthTokenInfo:
         """The token of ``request`` as ``introspection`` describes it, and its DPoP binding."""
         with request.handle() as handle:
-            return self.outcome(f"{P}_oauth_resource_server_accept_introspection", self.handle, handle.handle, *Text.encode(introspection.encode()), now)
+            return self.outcome("umilib_auth_oauth_oauth_resource_server_accept_introspection", self.handle, handle.handle, *Text.encode(introspection.encode()), now)
 
     def require_scope(self, info: OAuthTokenInfo, scope: OAuthScope, scheme: OAuthTokenScheme) -> None:
         """Raises ``insufficient_scope`` unless ``info`` grants ``scope`` (RFC 6750 §3.1)."""
         with info.handle() as handle:
-            self.outcome(f"{P}_oauth_resource_server_require_scope", self.handle, handle.handle, *Text.encode(str(scope) or None), int(scheme), value=False)
+            self.outcome("umilib_auth_oauth_oauth_resource_server_require_scope", self.handle, handle.handle, *Text.encode(str(scope) or None), int(scheme), value=False)
 
     def require_authentication(self, info: OAuthTokenInfo, now: int, max_age: int | None, acr_values: list[str], scheme: OAuthTokenScheme) -> None:
         """Raises ``insufficient_user_authentication`` unless the user authenticated recently and
         strongly enough (RFC 9470 §3)."""
         values = Text.array(acr_values)
         with info.handle() as handle:
-            self.outcome(f"{P}_oauth_resource_server_require_authentication", self.handle, handle.handle, now, max_age is not None, max_age or 0, values[0], values[1], int(scheme), value=False)
+            self.outcome("umilib_auth_oauth_oauth_resource_server_require_authentication", self.handle, handle.handle, now, max_age is not None, max_age or 0, values[0], values[1], int(scheme), value=False)
 
     def rotate_dpop_nonce(self, random: Random) -> str:
-        return Calls.text(f"{P}_oauth_resource_server_rotate_dpop_nonce", self.handle, *random.source())
+        return Calls.text("umilib_auth_oauth_oauth_resource_server_rotate_dpop_nonce", self.handle, *random.source())

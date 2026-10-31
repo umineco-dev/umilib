@@ -34,7 +34,7 @@ use umilib::math::pairing::{BLS12381, BN254, G2Affine, PairingCurve, SM9BN256};
 
 use super::{Bytes, Generator};
 use crate::Check;
-use crate::vectors::{Json, Vectors, Wycheproof};
+use crate::vectors::{JSON, Vectors, Wycheproof};
 
 /// The C type name of the hash function of a Wycheproof file.
 fn hash_name(sha: &str) -> &'static [u8] {
@@ -55,7 +55,7 @@ fn hash_name(sha: &str) -> &'static [u8] {
 }
 
 /// The expectation of a Wycheproof test on the outcome of a verification.
-fn check_result(test: &Json, verified: bool, label: &str) {
+fn check_result(test: &JSON, verified: bool, label: &str) {
     match test.field("result").as_str() {
         "valid" => assert!(verified, "{label}: refused"),
         "invalid" => assert!(!verified, "{label}: accepted"),
@@ -333,7 +333,7 @@ struct DSAKey {
 }
 
 impl DSAKey {
-    fn new(group: &Json) -> DSAKey {
+    fn new(group: &JSON) -> DSAKey {
         let public = group.field("publicKey");
         let (p, q, g, y) = (public.bytes("p"), public.bytes("q"), public.bytes("g"), public.bytes("y"));
         let (mut parameters, mut key) = (ptr::null_mut(), ptr::null_mut());
@@ -444,7 +444,7 @@ fn dsa_wycheproof() {
 struct RSAPublic(*mut umilib::crypto::rsa::RSAPublicKey);
 
 impl RSAPublic {
-    fn new(key: &Json) -> RSAPublic {
+    fn new(key: &JSON) -> RSAPublic {
         let (n, e) = (key.bytes("modulus"), key.bytes("publicExponent"));
         let mut handle = ptr::null_mut();
         Check::ok(unsafe {

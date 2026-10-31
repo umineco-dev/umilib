@@ -276,9 +276,9 @@ class SliceWriter(Writer):
     def capacity(self) -> int:
         return self.library.value("umilib_bytes_slice_writer_capacity", ctypes.c_size_t, self.handle)
 
-    def close(self) -> None:
+    def free(self) -> None:
         """Releases the writer and the export of the ``bytearray``, which can then be resized."""
-        super().close()
+        super().free()
         self.view = None
 
     def remaining(self) -> int:

@@ -77,6 +77,16 @@ fn the_generic_format_of_rfc_3597() {
     assert_eq!(records[1].data, DNSData::Unknown(Vec::new()));
     assert_eq!(records[2].data, DNSData::A("10.0.0.1".parse().unwrap()));
     assert_eq!(records[3].data, DNSData::A("10.0.0.2".parse().unwrap()));
+    // §5: the generic form is the RDATA uncompressed, even of a type whose names are compressed in
+    // messages: a SOA whose RNAME points at its MNAME is refused, written whole it is read.
+    let pointer = "s.example. SOA \\# 25 016100 C000 0000000100000002000000030000000400000005\n";
+    assert!(DNSZoneFile::new(None).parse(pointer).is_err());
+    let whole = zone("s.example. SOA \\# 26 016100 016100 0000000100000002000000030000000400000005\n");
+    assert!(
+        matches!(&whole[0].data, DNSData::SOA(soa) if soa.rname == name("a.") && soa.serial == 1),
+        "{:?}",
+        whole[0].data
+    );
     // §4: names in the data of types after RFC 1035 are never compressed.
     let mut message = DNSMessage::query(1, DNSQuestion::new(name("example."), DNSType::SRV));
     message.answers.push(DNSRecord::new(
@@ -405,4 +415,61 @@ fn rrsig_times_are_dates() {
     assert!(DNSToken::time("20230431000000").is_err());
     assert!(DNSToken::time("+20201010000000").is_err());
     assert!(DNSToken::time("+2021010000000").is_err());
+}
+
+#[test]
+fn malformed_data_of_known_types() {
+    // RFC 9460 §2.2: an SVCB record whose parameters are malformed is ignored, not the message. So is
+    // the data of every type whose bytes stand alone, of no name compressed (RFC 3597 §4) or lowercased
+    // (RFC 4034 §6.2): a CAA tag not of letters and digits (RFC 8659 §4.1), an NSEC3 of an empty hash
+    // (RFC 5155 §3.2), an A not of 4 bytes (RFC 1035 §3.4.1). Each is kept as its bytes, written again
+    // the same, and the records beside it are read.
+    let question = [&[0u8, 1, 0x84, 0, 0, 1, 0, 6, 0, 0, 0, 0][..], &[7], b"example", &[0, 0, 1, 0, 1]].concat();
+    let answer = |kind: u16, rdata: &[u8]| {
+        [&[0xC0u8, 12][..], &kind.to_be_bytes(), &[0, 1, 0, 0, 0, 60], &(rdata.len() as u16).to_be_bytes(), rdata]
+            .concat()
+    };
+    let malformed: [(u16, &[u8]); 5] = [
+        (64, &[0, 1, 0, 0, 3, 0, 1, 80]),
+        (65, &[0, 1, 0, 0, 3, 0, 2, 0, 80, 0, 1, 0, 2, 0, 1]),
+        (257, b"\x00\x03a-bvalue"),
+        (50, &[1, 0, 0, 0, 0, 0]),
+        (1, &[192, 0, 2]),
+    ];
+    let mut bytes = question.clone();
+    for (kind, rdata) in malformed {
+        bytes.extend_from_slice(&answer(kind, rdata));
+    }
+    bytes.extend_from_slice(&answer(1, &[192, 0, 2, 1]));
+    let message = DNSMessage::decode(&bytes).unwrap();
+    for (record, (kind, rdata)) in message.answers.iter().zip(malformed) {
+        assert_eq!((record.kind, &record.data), (DNSType(kind), &DNSData::Unknown(rdata.to_vec())), "{kind}");
+        assert_eq!(record.data.canonical(record.kind), rdata, "{kind}");
+    }
+    assert_eq!(message.answers[5].data, DNSData::A("192.0.2.1".parse().unwrap()));
+    assert_eq!(DNSMessage::decode(&message.encode(65535).unwrap()).unwrap(), message);
+    // RFC 3597 §5: the generic form of the same data is read as the wire form is, and written back so.
+    for (kind, rdata) in malformed {
+        let kind = DNSType(kind);
+        let hex: String = rdata.iter().map(|byte| format!("{byte:02x}")).collect();
+        let text = format!("example. 60 IN {kind} \\# {} {hex}\n", rdata.len());
+        let records = DNSZoneFile::new(None).parse(&text).unwrap();
+        assert_eq!(records[0].data, DNSData::Unknown(rdata.to_vec()), "{text}");
+        let again = DNSZoneFile::new(None).parse(&format!("{}\n", records[0])).unwrap();
+        assert_eq!(again[0].data, records[0].data, "{text}");
+    }
+    // Data of a type of names compressed or lowercased cannot stand alone: malformed, the message is.
+    let mut bytes = question.clone();
+    bytes[7] = 1;
+    bytes.extend_from_slice(&answer(15, &[0, 10]));
+    assert!(DNSMessage::decode(&bytes).is_err());
+    assert!(DNSZoneFile::new(None).parse("example. 60 IN MX \\# 2 000a\n").is_err());
+    // RFC 9460 §7.2: a port of another length than 2 bytes is no port.
+    let mut binding = DNSServiceBinding::new(1, name("."));
+    for value in [&[][..], &[1], &[1, 2, 3]] {
+        binding.set(DNSServiceKey::PORT, value);
+        assert_eq!(binding.port(), None, "{value:?}");
+    }
+    binding.set(DNSServiceKey::PORT, &[0x01, 0xBB]);
+    assert_eq!(binding.port(), Some(443));
 }

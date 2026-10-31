@@ -1,9 +1,9 @@
 use alloc::vec::Vec;
 
-use super::{
-    FSEDecodingTable, FSEDistribution, FSEEncodingTable, ZstandardBitReader, ZstandardBitWriter, ZstandardFormat,
-};
+use super::ZstandardFormat;
+use crate::bytes::{BackwardBitReader, BackwardBitWriter};
 use crate::codec::CompressionError;
+use crate::codec::fse::{FSEDecodingTable, FSEDistribution, FSEEncodingTable};
 
 /// A sequence of a compressed block: `literals_length` literals, then a
 /// match of `match_length` bytes at the offset of `offset_value` (an
@@ -190,7 +190,8 @@ impl ZstandardSequences {
             tables.offset.as_ref().expect("read above"),
             tables.match_length.as_ref().expect("read above"),
         );
-        let mut reader = ZstandardBitReader::new(bytes.get(position..).ok_or(invalid("truncated sequences section"))?)?;
+        let stream = bytes.get(position..).ok_or(invalid("truncated sequences section"))?;
+        let mut reader = BackwardBitReader::new(stream).ok_or(invalid("bitstream without its final bit"))?;
         let mut literals_state = literals_table.initial_state(&mut reader);
         let mut offset_state = offset_table.initial_state(&mut reader);
         let mut match_state = match_table.initial_state(&mut reader);
@@ -267,8 +268,9 @@ impl ZstandardSequences {
         let wanted = (usize::BITS - codes.len().leading_zeros()).saturating_sub(2);
         let needed = usize::BITS - present.leading_zeros();
         let log = wanted.clamp(FSEDistribution::MINIMUM_LOG, maximum_log).max(needed);
-        let distribution = FSEDistribution::normalize(&counts, log);
-        distribution.write(out);
+        let distribution = FSEDistribution::normalize(&counts, log)
+            .expect("2 or more codes, at most 2^log, of an accuracy log of 5 to 9");
+        distribution.write(out).expect("an accuracy log of 5 to 9");
         (ZstandardFormat::FSE_MODE, FSEEncodingTable::new(&distribution))
     }
 
@@ -309,7 +311,7 @@ impl ZstandardSequences {
         );
         out[modes_position] = literals_mode << 6 | offset_mode << 4 | match_mode << 2;
         // The reverse of the decoder's order (as the reference encoder writes it).
-        let mut writer = ZstandardBitWriter::new();
+        let mut writer = BackwardBitWriter::new();
         let last = count - 1;
         let mut match_state = match_table.initial_state(codes[last].1);
         let mut offset_state = offset_table.initial_state(codes[last].2 as usize);
@@ -328,7 +330,7 @@ impl ZstandardSequences {
     }
 
     /// Writes the extra bits of a sequence: literals length, match length, offset.
-    pub fn write_extra(sequence: &ZstandardSequence, codes: &(usize, usize, u32), writer: &mut ZstandardBitWriter) {
+    pub fn write_extra(sequence: &ZstandardSequence, codes: &(usize, usize, u32), writer: &mut BackwardBitWriter) {
         let (literals, matches, offset) = *codes;
         writer.write(
             sequence.literals_length - ZstandardFormat::LITERALS_LENGTH_BASELINES[literals],

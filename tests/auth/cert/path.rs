@@ -66,6 +66,15 @@ impl PKITSCase {
     }
 
     fn run_with(&self, profile: PathProfile) -> Result<(), PathErrorReason> {
+        self.run_adjusted(profile, |config| config)
+    }
+
+    /// The validation under `profile` and the configuration of the case changed by `adjust`.
+    fn run_adjusted(
+        &self,
+        profile: PathProfile,
+        adjust: impl Fn(PathConfig) -> PathConfig,
+    ) -> Result<(), PathErrorReason> {
         let read = |kind: &str, name: &str| std::fs::read(format!("{}/{kind}/{name}", PKITSCase::DIRECTORY)).unwrap();
         let certificates: Vec<Certificate<'static>> = self
             .objects
@@ -85,7 +94,7 @@ impl PKITSCase {
         let (root, intermediates) = rest.split_first().unwrap();
         let anchor =
             TrustAnchor::from_certificate(root.clone(), &KeyLimits::default()).map_err(|error| error.reason)?;
-        let config = PathConfig { profile, ..self.config() };
+        let config = PathConfig { profile, ..adjust(self.config()) };
         let anchors = [anchor];
         let validator = PathValidator::new(&config, &anchors, intermediates, &crls);
         validator.validate(target).map(drop).map_err(|error| error.reason)
@@ -113,6 +122,21 @@ fn pkits() {
         }
     }
     assert!(failures.is_empty(), "{} of {} PKITS cases differ:\n{}", failures.len(), cases.len(), failures.join("\n"));
+}
+
+#[test]
+fn crl_issuer_paths_nest_as_deep_as_the_configuration_allows() {
+    // PKITS 4.14.28: the CRL is signed by a CRL issuer whose own path (RFC 5280 §6.3.3 (f)) must
+    // be validated, one level of nesting. Without it, the CRL has no valid signer.
+    let cases = PKITSCase::all();
+    let case = cases.iter().find(|case| case.number == "4.14.28").unwrap();
+    assert!(case.valid);
+    assert_eq!(PathConfig::new(ASN1Time::new(2020, 1, 1, 0, 0, 0, 0).unwrap()).maximum_nested_signers, 4);
+    let nested = |depth: usize| {
+        case.run_adjusted(PathProfile::Algorithm, |config| PathConfig { maximum_nested_signers: depth, ..config })
+    };
+    assert_eq!(nested(1), Ok(()));
+    assert_eq!(nested(0), Err(PathErrorReason::InvalidCRL));
 }
 
 #[test]
@@ -382,6 +406,28 @@ fn name_constraints_compare_as_rfc_5280_defines() {
         "an address is not a fully qualified domain name"
     );
     assert_eq!(NameMatching::uri_within("urn:isbn:0451450523", ".example.com"), None, "no authority");
+    // §4.2.1.6: a URI name follows the syntax of RFC 3986; the host of anything else is not guessed.
+    // `\` is not in the userinfo of RFC 3986 §3.2.1, and WHATWG parsers read `a.example` as the host.
+    assert_eq!(NameMatching::uri_within("http://a.example\\@b.example/x", "b.example"), None);
+    assert_eq!(NameMatching::uri_within("http://a.example\\@b.example/x", "a.example"), None);
+    // `@` is not in the userinfo either (§3.2.1), so the authority below has no host of RFC 3986.
+    assert_eq!(NameMatching::uri_within("http://a.example@b@c.example/", "c.example"), None);
+    // A userinfo of unreserved characters, sub-delims and `:` is valid (§3.2.1).
+    assert_eq!(NameMatching::uri_within("http://user:pa;ss@host.example.com:8443/", ".example.com"), Some(true));
+    // The port is digits (§3.2.3).
+    assert_eq!(NameMatching::uri_within("http://host.example.com:80a/", ".example.com"), None);
+    // Characters outside the grammar (§2).
+    assert_eq!(NameMatching::uri_within("http://host.example.com/a b", ".example.com"), None);
+    assert_eq!(NameMatching::uri_within("http://host.example.com\\/", ".example.com"), None);
+    // A percent-encoded host is a registered name, but not a domain name in preferred syntax.
+    assert_eq!(NameMatching::uri_within("http://host%2Eexample.com/", ".example.com"), None);
+    // An IPv6 literal (§3.2.2) is not a domain name.
+    assert_eq!(NameMatching::uri_within("http://[2001:db8::1]/", ".example.com"), None);
+    // A reference without a scheme is not a URI (§4.2.1.6: not relative).
+    assert_eq!(NameMatching::uri_within("//host.example.com/", ".example.com"), None);
+    // The host is compared without case (§7.4), and an empty path is a path (§3.3).
+    assert_eq!(NameMatching::uri_within("HTTP://HOST.EXAMPLE.COM", "host.example.com"), Some(true));
+    assert_eq!(NameMatching::uri_host("https://user@host.example.com:8443/p?q#f").as_deref(), Some("host.example.com"));
     // §4.2.1.10: an address and a CIDR mask; the example 192.0.2.0/24.
     let class_c = [0xC0, 0x00, 0x02, 0x00, 0xFF, 0xFF, 0xFF, 0x00];
     assert_eq!(NameMatching::ip_within(&[192, 0, 2, 1], &class_c), Some(true));

@@ -97,6 +97,40 @@ def test_handles_reject_null_and_use_after_close():
     assert isinstance(ctypes.sizeof(U128), int)
 
 
+def test_collection_and_with_blocks_free_handles_whose_close_is_an_operation():
+    """``__del__`` and ``__exit__`` release a handle with ``free()``; a ``close()``
+    of a protocol, such as sending a FIN, is never what releases it."""
+    import gc
+
+    from umilib.runtime import Channel
+
+    _, receiver = Channel.bounded(1)
+    closes = []
+    receiver.close = lambda: closes.append(True)  # type: ignore[method-assign]
+    with receiver:
+        pass
+    assert receiver.pointer is None and closes == []
+    sender, receiver = Channel.bounded(1)
+    freed = []
+
+    class Recorded(type(receiver)):
+        def close(self) -> None:
+            closes.append(True)
+
+        def free(self) -> None:
+            freed.append(True)
+            super().free()
+
+    recorded = Recorded(receiver.detach())
+    del recorded
+    gc.collect()
+    assert freed == [True] and closes == []
+    # The receiver is gone, so the channel is closed for the sender.
+    with pytest.raises(FFIError) as error:
+        sender.try_send(b"a")
+    assert error.value.name == "Closed"
+
+
 def test_handles_are_locked_for_each_call():
     import threading
 

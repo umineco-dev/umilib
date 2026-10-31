@@ -88,7 +88,8 @@ impl<'a> BitReader<'a> {
     /// The next `length` whole bytes, from a position at the start of a
     /// byte; `None` (consuming nothing) if unaligned or fewer remain.
     pub fn read_bytes(&mut self, length: usize) -> Option<&'a [u8]> {
-        if !self.is_aligned() || length * 8 > self.remaining() {
+        // Divided, not multiplied: `length * 8` overflows a 32-bit usize.
+        if !self.is_aligned() || length > self.remaining() / 8 {
             return None;
         }
         let start = self.position / 8;

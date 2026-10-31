@@ -534,10 +534,17 @@ crate::ffi_functions! {
     }
 
     /// Writes the date-time of `seconds` since 1970 at the offset `offset` in minutes, with its
-    /// quotes, into `out`.
+    /// quotes, into `out`; `InvalidArgument` for a date-time of a year outside 0000 to 9999 or a
+    /// zone beyond 99 hours, which the syntax cannot write.
     pub unsafe extern "C" fn umilib_protocol_imap_v4_imap_date_time_format(seconds: i64, offset: i16, out: *mut Buffer) -> *const Status {
-        // SAFETY: the caller passes a writable pointer.
-        Status::from_result(unsafe { Pointer::write_text(out, alloc::format!("{}", IMAPDateTime::new(seconds, offset))) })
+        Status::from_result((|| {
+            let date = IMAPDateTime::new(seconds, offset);
+            if !date.is_valid() {
+                return Err(&Status::INVALID_ARGUMENT);
+            }
+            // SAFETY: the caller passes a writable pointer.
+            unsafe { Pointer::write_text(out, alloc::format!("{date}")) }
+        })())
     }
 
     /// Writes the ENVELOPE (RFC 9051 §7.5.2) of the message at `message`, of `config`, into `out`.
@@ -887,8 +894,7 @@ crate::ffi_functions! {
         Status::from_result((|| {
             // SAFETY: the caller passes a valid handle and readable text.
             let server = unsafe { Pointer::reference_mut(server) }?;
-            server.shutdown(unsafe { Pointer::text(text, length) }?);
-            Ok(())
+            server.shutdown(unsafe { Pointer::text(text, length) }?).map_err(|error| error.to_status())
         })())
     }
 

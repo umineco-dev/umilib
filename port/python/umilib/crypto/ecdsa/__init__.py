@@ -16,13 +16,11 @@ from umilib.ffi import Bytes, Library, Text
 from umilib.hash import CryptographicDigest
 from umilib.math.ec import WeierstrassCurve
 
-P = "umilib_crypto_ecdsa_ecdsa"
-
 
 class ECDSA(SignatureScheme):
     """ECDSA on the curve and with the hash function of ``ECDSA[C, H]``."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_ecdsa_ecdsa"
 
     def __class_getitem__(cls, parameters: Any) -> Any:
         curve, hash = Specialization.pair(parameters, "ECDSA")
@@ -65,13 +63,13 @@ class ECDSASignature:
         ``InvalidSignature`` for another encoding or values out of range."""
         name, length = cls.curve_name()
         data, data_length = Bytes.readable(der)
-        return cls(Library.default().output(f"{P}_signature_from_der", name, length, data, data_length))
+        return cls(Library.default().output("umilib_crypto_ecdsa_ecdsa_signature_from_der", name, length, data, data_length))
 
     def to_der(self) -> bytes:
         """The DER ``ECDSA-Sig-Value``."""
         name, length = self.curve_name()
         data, data_length = Bytes.readable(self.data)
-        return Library.default().output(f"{P}_signature_to_der", name, length, data, data_length)
+        return Library.default().output("umilib_crypto_ecdsa_ecdsa_signature_to_der", name, length, data, data_length)
 
     def __eq__(self, other: object) -> bool:
         if type(other) is not type(self):

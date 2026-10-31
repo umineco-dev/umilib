@@ -432,7 +432,8 @@ impl<'a> BasicOCSPResponse<'a> {
     /// response that [`BasicOCSPResponse::authorizes`].
     /// The responder identifier must name the signer. At most
     /// `config.maximum_signatures` signatures are verified, so that a
-    /// response with many certificates costs little. A delegated
+    /// response with many certificates costs little; `Work` when they run
+    /// out before a signer is found. A delegated
     /// responder's certificate is not checked for revocation, as if it had
     /// the extension `id-pkix-ocsp-nocheck` (§4.2.2.2.1).
     pub fn signer(
@@ -441,13 +442,28 @@ impl<'a> BasicOCSPResponse<'a> {
         issuer_key: &PublicKey,
         config: &OCSPConfig,
     ) -> Result<PublicKey, OCSPError> {
+        let mut signatures = config.maximum_signatures;
+        self.signer_within(issuer_name, issuer_key, config, &mut signatures)
+    }
+
+    /// The key that signed the response, as [`BasicOCSPResponse::signer`]
+    /// finds it, but spending each signature it verifies from `signatures`
+    /// instead of `config.maximum_signatures`, so that the checks of
+    /// several responses, or of a whole certification path, share one
+    /// bound; `Work` when it runs out before a signer is found.
+    pub fn signer_within(
+        &self,
+        issuer_name: &Name<'_>,
+        issuer_key: &PublicKey,
+        config: &OCSPConfig,
+        signatures: &mut usize,
+    ) -> Result<PublicKey, OCSPError> {
         if !config.accepts(&self.signature_algorithm) {
             return Err(OCSPError::Algorithm);
         }
         let responder = &self.tbs_response_data.responder_id;
-        let mut signatures = config.maximum_signatures;
         if responder.names(issuer_name, issuer_key.key()) {
-            signatures = signatures.checked_sub(1).ok_or(OCSPError::Signer)?;
+            *signatures = signatures.checked_sub(1).ok_or(OCSPError::Work)?;
             if self.verifies(issuer_key) {
                 return Ok(issuer_key.clone());
             }
@@ -461,7 +477,7 @@ impl<'a> BasicOCSPResponse<'a> {
                 continue;
             }
             // The certificate's signature and the response's.
-            signatures = signatures.checked_sub(2).ok_or(OCSPError::Signer)?;
+            *signatures = signatures.checked_sub(2).ok_or(OCSPError::Work)?;
             if BasicOCSPResponse::authorizes(certificate, issuer_name, issuer_key, config) && self.verifies(&key) {
                 return Ok(key);
             }
@@ -481,6 +497,22 @@ impl<'a> BasicOCSPResponse<'a> {
         issuer_key: &PublicKey,
         config: &OCSPConfig,
     ) -> Result<&SingleResponse<'a>, OCSPError> {
+        let mut signatures = config.maximum_signatures;
+        self.verify_within(cert_id, issuer_name, issuer_key, config, &mut signatures)
+    }
+
+    /// The status of the certificate `cert_id` names, checked as
+    /// [`BasicOCSPResponse::verify`] checks it, but spending the signatures
+    /// of the search of the signer from `signatures`
+    /// ([`BasicOCSPResponse::signer_within`]).
+    pub fn verify_within(
+        &self,
+        cert_id: &CertID<'_>,
+        issuer_name: &Name<'_>,
+        issuer_key: &PublicKey,
+        config: &OCSPConfig,
+        signatures: &mut usize,
+    ) -> Result<&SingleResponse<'a>, OCSPError> {
         let data = &self.tbs_response_data;
         let unknown = |extensions: &Extensions<'_>| {
             extensions
@@ -493,7 +525,7 @@ impl<'a> BasicOCSPResponse<'a> {
         if unknown(&data.extensions) || unknown(&response.extensions) {
             return Err(OCSPError::UnknownCriticalExtension);
         }
-        self.signer(issuer_name, issuer_key, config)?;
+        self.signer_within(issuer_name, issuer_key, config, signatures)?;
         if let Some(nonce) = &config.nonce {
             let answered = data.extensions.typed::<OCSPNonce<'_>>()?;
             if answered.is_none_or(|answered| answered.nonce.as_ref() != nonce.as_slice()) {

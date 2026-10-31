@@ -2,6 +2,7 @@ use alloc::boxed::Box;
 use alloc::collections::{BTreeMap, VecDeque};
 use alloc::sync::Arc;
 use alloc::vec::Vec;
+use core::time::Duration;
 
 use crate::crypto::random::Random;
 use crate::protocol::ip::IPEndpoint;
@@ -32,6 +33,12 @@ pub struct QUICEndpointConfig {
     pub maximum_connections: usize,
     /// The most stateless packets (Version Negotiation, Retry, resets) queued.
     pub maximum_stateless: usize,
+    /// How long a Retry token stays valid, counted in whole seconds:
+    /// [`QUICTokenKey::RETRY_LIFETIME`] by default.
+    pub retry_token_lifetime: Duration,
+    /// How long a NEW_TOKEN token stays valid, counted in whole seconds:
+    /// [`QUICTokenKey::NEW_TOKEN_LIFETIME`] by default.
+    pub new_token_lifetime: Duration,
 }
 
 impl core::fmt::Debug for QUICEndpointConfig {
@@ -54,6 +61,8 @@ impl QUICEndpointConfig {
             retry: false,
             maximum_connections: 1024,
             maximum_stateless: 256,
+            retry_token_lifetime: Duration::from_secs(QUICTokenKey::RETRY_LIFETIME),
+            new_token_lifetime: Duration::from_secs(QUICTokenKey::NEW_TOKEN_LIFETIME),
         }
     }
 }
@@ -318,7 +327,7 @@ impl QUICEndpoint {
                 ..
             }) if version == header.version
                 && retry_source == header.destination
-                && (time as u64).saturating_sub(issued) <= QUICTokenKey::RETRY_LIFETIME =>
+                && (time as u64).saturating_sub(issued) <= self.config.retry_token_lifetime.as_secs() =>
             {
                 acceptance.original_destination = original_destination;
                 acceptance.retry_source = Some(retry_source);
@@ -333,7 +342,7 @@ impl QUICEndpoint {
             Some(QUICToken { kind: QUICTokenKind::NewToken, version, time: issued, address, .. })
                 if version == header.version
                     && address.address == remote.address
-                    && (time as u64).saturating_sub(issued) <= QUICTokenKey::NEW_TOKEN_LIFETIME =>
+                    && (time as u64).saturating_sub(issued) <= self.config.new_token_lifetime.as_secs() =>
             {
                 acceptance.validated = true;
             }

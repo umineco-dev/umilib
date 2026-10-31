@@ -101,7 +101,11 @@ returns the status of the certificate `cert_id` names after these checks:
 
 The search of the signer verifies at most `config.maximum_signatures`
 signatures (9 by default: the CA's key and four delegated responders, two
-signatures each), so a response with many certificates costs little.
+signatures each), so a response with many certificates costs little. When
+they run out before a signer is found, it fails with `Work`, not `Signer`:
+the response was not found unauthorized, the search gave up.
+`signer_within` and `verify_within` spend from a count the caller gives
+instead, so that the checks of several responses share one bound.
 
 Times are compared in whole seconds. The times of a response are
 GeneralizedTime without a fraction (§4.2.2.1 refers to RFC 5280

@@ -21,8 +21,6 @@ from umilib.hash import CryptographicDigest
 from umilib.math.ec import WeierstrassCurve
 from umilib.secret import Secret
 
-P = "umilib_crypto_eccsi_eccsi"
-
 
 class ECCSINames:
     """The arguments that name a curve and a hash function."""
@@ -38,7 +36,7 @@ class ECCSINames:
     def kms_sizes(curve: Any) -> tuple[int, int]:
         """The bytes of a secret and of a point on ``curve``."""
         out = (ctypes.c_size_t * 2)()
-        Library.default().call(f"{P}_kms_sizes", *ECCSINames.of(curve), out)
+        Library.default().call("umilib_crypto_eccsi_eccsi_kms_sizes", *ECCSINames.of(curve), out)
         return out[0], out[1]
 
     @staticmethod
@@ -46,7 +44,7 @@ class ECCSINames:
         """The bytes of a secret, a point and a signature; raises ``InvalidParameter`` for a pair other
         than those of section 4.1."""
         out = (ctypes.c_size_t * 3)()
-        Library.default().call(f"{P}_sizes", *ECCSINames.of(curve, hash), out)
+        Library.default().call("umilib_crypto_eccsi_eccsi_sizes", *ECCSINames.of(curve, hash), out)
         return out[0], out[1], out[2]
 
 
@@ -69,7 +67,7 @@ class ECCSIKMS:
         try:
             with self.secret_value.locked():
                 data, length = self.secret_value.location()
-                Library.default().call(f"{P}_kms_public_key", *ECCSINames.of(curve), data, length, out, len(out))
+                Library.default().call("umilib_crypto_eccsi_eccsi_kms_public_key", *ECCSINames.of(curve), data, length, out, len(out))
         except BaseException:
             self.secret_value.close()
             raise
@@ -91,7 +89,7 @@ class ECCSIKMS:
         with Handle.locked_all(kms.secret_value, random):
             data, data_length = kms.secret_value.location_mut()
             Library.default().call(
-                f"{P}_kms_generate", *ECCSINames.of(curve), handle, name, length, data, data_length, public, len(public)
+                "umilib_crypto_eccsi_eccsi_kms_generate", *ECCSINames.of(curve), handle, name, length, data, data_length, public, len(public)
             )
         kms.public = bytes(public)
         return kms
@@ -130,7 +128,7 @@ class ECCSIKMS:
             secret_data, secret_length = secret.location_mut()
             arguments = tail.location() if isinstance(tail, Secret) else tail
             Library.default().call(
-                f"{P}_{function}",
+                f"umilib_crypto_eccsi_eccsi_{function}",
                 *ECCSINames.of(curve, hash),
                 kms_data,
                 kms_length,
@@ -176,7 +174,7 @@ class ECCSIUserKey:
             with self.secret_value.locked():
                 data, length = self.secret_value.location()
                 Library.default().call(
-                    f"{P}_user_key_check", *self.names(), *self.public_arguments(), data, length, *Bytes.readable(self.token_value)
+                    "umilib_crypto_eccsi_eccsi_user_key_check", *self.names(), *self.public_arguments(), data, length, *Bytes.readable(self.token_value)
                 )
         except BaseException:
             self.secret_value.close()
@@ -269,7 +267,7 @@ class ECCSI:
             data, length = key.secret_value.location()
             arguments = tail.location() if isinstance(tail, Secret) else tail
             Library.default().call(
-                f"{P}_{function}",
+                f"umilib_crypto_eccsi_eccsi_{function}",
                 *key.names(),
                 *key.public_arguments(),
                 data,
@@ -297,7 +295,7 @@ class ECCSI:
         arguments: list[Any] = []
         for value in (authority, identity, message, signature):
             arguments.extend(Bytes.readable(value))
-        Library.default().call(f"{P}_verify", *ECCSINames.of(cls.CURVE, cls.HASH), *arguments)
+        Library.default().call("umilib_crypto_eccsi_eccsi_verify", *ECCSINames.of(cls.CURVE, cls.HASH), *arguments)
 
 
 __all__ = ["ECCSI", "ECCSIKMS", "ECCSINames", "ECCSIUserKey"]

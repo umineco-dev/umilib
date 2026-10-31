@@ -248,7 +248,10 @@ impl SMTPServer {
     }
 
     /// Writes a reply the server makes itself, with an enhanced status code if offered.
-    pub fn answer(&mut self, code: u16, status: SMTPEnhancedStatus, text: &str) {
+    /// The text is a constant of the program (`&'static str`), never text received or made at run
+    /// time, which would go unchecked into the reply: such text is sent with
+    /// [`SMTPServer::reply`], which checks it.
+    pub fn answer(&mut self, code: u16, status: SMTPEnhancedStatus, text: &'static str) {
         self.reply_of(code, status, text).encode(&mut self.output);
     }
 
@@ -262,8 +265,8 @@ impl SMTPServer {
 
     /// Refuses `command` with a reply of the server's own. The chunk of a BDAT refused is read
     /// and discarded first (RFC 3030 §2: the receiver MUST accept and discard it), so that its
-    /// octets are never taken as commands.
-    pub fn refuse(&mut self, command: &SMTPCommand, code: u16, status: SMTPEnhancedStatus, text: &str) {
+    /// octets are never taken as commands. As for [`SMTPServer::answer`], the text is a constant.
+    pub fn refuse(&mut self, command: &SMTPCommand, code: u16, status: SMTPEnhancedStatus, text: &'static str) {
         let reply = self.reply_of(code, status, text);
         match command {
             SMTPCommand::Bdat { size, last } => {
@@ -797,13 +800,16 @@ impl SMTPServer {
         }
     }
 
-    /// Closes the connection with 421 (RFC 5321 §3.8): for shutting down.
-    pub fn shutdown(&mut self, text: &str) {
-        if !self.is_open() {
-            return;
+    /// Closes the connection with 421 and `text` (RFC 5321 §3.8): for shutting down. Fails for a
+    /// text that cannot be written, a line break in it.
+    pub fn shutdown(&mut self, text: &str) -> Result<(), SMTPError> {
+        let reply = self.reply_of(421, SMTPEnhancedStatus::new(4, 3, 2), text);
+        reply.check()?;
+        if self.is_open() {
+            reply.encode(&mut self.output);
+            self.close(None);
         }
-        self.answer(421, SMTPEnhancedStatus::new(4, 3, 2), text);
-        self.close(None);
+        Ok(())
     }
 
     /// Appends what is to be sent to `out`.

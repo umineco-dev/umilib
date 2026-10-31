@@ -17,6 +17,13 @@ pub struct FuzzConfig {
     pub corpus: Option<PathBuf>,
     /// A directory where failing inputs are saved.
     pub crashes: Option<PathBuf>,
+    /// Generated inputs are kept in memory, as material for later
+    /// mutations, only while the inputs in memory (those loaded from the
+    /// corpus included) are fewer than this.
+    pub maximum_corpus_inputs: usize,
+    /// About one generated input in this many is kept in memory (at
+    /// random); 0 keeps none.
+    pub sample_interval: usize,
 }
 
 impl Default for FuzzConfig {
@@ -28,6 +35,8 @@ impl Default for FuzzConfig {
             duration: None,
             corpus: None,
             crashes: None,
+            maximum_corpus_inputs: 1024,
+            sample_interval: 64,
         }
     }
 }

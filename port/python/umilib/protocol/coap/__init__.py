@@ -22,7 +22,6 @@ from typing import Any, ClassVar
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Nanoseconds, Text
 from umilib.protocol.ip import IPEndpoint
 
-P = "umilib_protocol_coap"
 
 __all__ = [
     "CoAPBlock",
@@ -241,7 +240,7 @@ class CoAPOptionNumber(int):
 
     def flag(self, name: str) -> bool:
         """The property ``name`` of the number (RFC 7252 §5.4.6)."""
-        return Library.default().value(f"{P}_coap_option_number_{name}", ctypes.c_bool, int(self))
+        return Library.default().value(f"umilib_protocol_coap_coap_option_number_{name}", ctypes.c_bool, int(self))
 
     def is_critical(self) -> bool:
         """Critical: an endpoint that does not know it cannot ignore it (RFC 7252 §5.4.1)."""
@@ -258,8 +257,8 @@ class CoAPOptionNumber(int):
     def definition(self) -> CoAPOptionDefinition | None:
         """The definition of a known option, or ``None``."""
         found = ctypes.c_bool()
-        structure = Library.default().type(f"{P}_CoAPOptionDefinition")()
-        Library.default().call(f"{P}_coap_option_number_definition", int(self), ctypes.byref(found), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_coap_CoAPOptionDefinition")()
+        Library.default().call("umilib_protocol_coap_coap_option_number_definition", int(self), ctypes.byref(found), ctypes.byref(structure))
         if not found.value:
             return None
         return CoAPOptionDefinition(CoAPOptionFormat(structure.format), structure.least, structure.greatest, structure.repeatable)
@@ -301,16 +300,16 @@ class CoAPBlock:
     def new(cls, number: int, more: bool, size: int) -> CoAPBlock:
         """The block of ``size`` bytes, 16 to 1024 in powers of 2; raises ``Option`` for another size
         or a number of more than 20 bits."""
-        structure = Library.default().type(f"{P}_CoAPBlock")()
-        Library.default().call(f"{P}_coap_block_new", number, more, size, ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_coap_CoAPBlock")()
+        Library.default().call("umilib_protocol_coap_coap_block_new", number, more, size, ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
     def decode(cls, value: bytes | bytearray | memoryview) -> CoAPBlock:
         """The block of an option's value; raises ``Option`` for a value longer than 3 bytes or of the
         reserved SZX 7."""
-        structure = Library.default().type(f"{P}_CoAPBlock")()
-        Library.default().call(f"{P}_coap_block_decode", *Bytes.readable(value), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_coap_CoAPBlock")()
+        Library.default().call("umilib_protocol_coap_coap_block_decode", *Bytes.readable(value), ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -319,21 +318,21 @@ class CoAPBlock:
 
     def to_structure(self) -> Any:
         """The C structure; raises ``OverflowError`` for a field that does not fit."""
-        structure = Library.default().type(f"{P}_CoAPBlock")()
+        structure = Library.default().type("umilib_protocol_coap_CoAPBlock")()
         Fields.assign(structure, "number", self.number)
         structure.more = self.more
         Fields.assign(structure, "exponent", self.exponent)
         return structure
 
     def encode(self) -> bytes:
-        return Library.default().output(f"{P}_coap_block_encode", self.to_structure())
+        return Library.default().output("umilib_protocol_coap_coap_block_encode", self.to_structure())
 
     def size(self) -> int:
-        return Library.default().value(f"{P}_coap_block_size", ctypes.c_size_t, self.to_structure())
+        return Library.default().value("umilib_protocol_coap_coap_block_size", ctypes.c_size_t, self.to_structure())
 
     def offset(self) -> int:
         """The offset of the block in the whole body (RFC 7959 §2.2)."""
-        return Library.default().value(f"{P}_coap_block_offset", ctypes.c_size_t, self.to_structure())
+        return Library.default().value("umilib_protocol_coap_coap_block_offset", ctypes.c_size_t, self.to_structure())
 
     def slice(self, body: bytes) -> tuple[bytes, bool] | None:
         """The block of ``body`` at this block's number and size and whether more follow (RFC 7959
@@ -341,7 +340,7 @@ class CoAPBlock:
         body = bytes(body)
         found, length, more = ctypes.c_bool(), ctypes.c_size_t(), ctypes.c_bool()
         Library.default().call(
-            f"{P}_coap_block_slice", self.to_structure(), *Bytes.readable(body), ctypes.byref(found), ctypes.byref(length),
+            "umilib_protocol_coap_coap_block_slice", self.to_structure(), *Bytes.readable(body), ctypes.byref(found), ctypes.byref(length),
             ctypes.byref(more),
         )  # fmt: skip
         if not found.value:
@@ -354,25 +353,25 @@ class CoAPOptions(Handle):
     """The options of a message, in the order of their numbers, repeated ones in the order given
     (RFC 7252 §3.1, §5.4.5)."""
 
-    FREE = f"{P}_coap_options_free"
+    FREE = "umilib_protocol_coap_coap_options_free"
 
     def __init__(self, pointer: int | None = None) -> None:
-        super().__init__(pointer or Handle.create(f"{P}_coap_options_new"))
+        super().__init__(pointer or Handle.create("umilib_protocol_coap_coap_options_new"))
 
     @classmethod
     def new(cls) -> CoAPOptions:
         return cls()
 
     def clone(self) -> CoAPOptions:
-        return CoAPOptions(Handle.create(f"{P}_coap_options_clone", self.handle))
+        return CoAPOptions(Handle.create("umilib_protocol_coap_coap_options_clone", self.handle))
 
     def __len__(self) -> int:
-        return self.library.value(f"{P}_coap_options_count", ctypes.c_size_t, self.handle)
+        return self.library.value("umilib_protocol_coap_coap_options_count", ctypes.c_size_t, self.handle)
 
     def entry(self, index: int) -> tuple[CoAPOptionNumber, bytes]:
         """The number and value of the option ``index``; raises ``InvalidArgument`` past the end."""
         number, value = ctypes.c_uint16(), Buffer()
-        self.library.call(f"{P}_coap_options_entry", self.handle, index, ctypes.byref(number), ctypes.byref(value))
+        self.library.call("umilib_protocol_coap_coap_options_entry", self.handle, index, ctypes.byref(number), ctypes.byref(value))
         return CoAPOptionNumber(number.value), self.library.take(value)
 
     @property
@@ -381,53 +380,53 @@ class CoAPOptions(Handle):
 
     def push(self, number: int, value: bytes) -> None:
         """Adds an option after those of its number and before greater ones."""
-        self.library.call(f"{P}_coap_options_push", self.handle, number, *Bytes.readable(value))
+        self.library.call("umilib_protocol_coap_coap_options_push", self.handle, number, *Bytes.readable(value))
 
     def set(self, number: int, value: bytes) -> None:
         """Sets the one option ``number``, replacing those there are."""
-        self.library.call(f"{P}_coap_options_set", self.handle, number, *Bytes.readable(value))
+        self.library.call("umilib_protocol_coap_coap_options_set", self.handle, number, *Bytes.readable(value))
 
     def remove(self, number: int) -> None:
-        self.library.call(f"{P}_coap_options_remove", self.handle, number)
+        self.library.call("umilib_protocol_coap_coap_options_remove", self.handle, number)
 
     def get(self, number: int) -> bytes | None:
         """The value of the first option ``number``, or ``None``."""
-        return self.library.optional(f"{P}_coap_options_get", Buffer, self.handle, number)
+        return self.library.optional("umilib_protocol_coap_coap_options_get", Buffer, self.handle, number)
 
     def all(self, number: int) -> list[bytes]:
         """The values of the options ``number``, in their order."""
         return [value for found, value in self.entries if found == number]
 
     def contains(self, number: int) -> bool:
-        return self.library.value(f"{P}_coap_options_contains", ctypes.c_bool, self.handle, number)
+        return self.library.value("umilib_protocol_coap_coap_options_contains", ctypes.c_bool, self.handle, number)
 
     @staticmethod
     def uint_bytes(value: int) -> bytes:
         """The bytes of the uint ``value``, without leading zeros (RFC 7252 §3.2)."""
-        return Library.default().output(f"{P}_coap_options_uint_bytes", value)
+        return Library.default().output("umilib_protocol_coap_coap_options_uint_bytes", value)
 
     @staticmethod
     def uint_of(data: bytes | bytearray | memoryview) -> int | None:
         """The uint of ``data``, of at most 4 bytes (RFC 7252 §3.2), or ``None``."""
-        return Library.default().optional(f"{P}_coap_options_uint_of", ctypes.c_uint32, *Bytes.readable(data))
+        return Library.default().optional("umilib_protocol_coap_coap_options_uint_of", ctypes.c_uint32, *Bytes.readable(data))
 
     def uint(self, number: int) -> int | None:
-        return self.library.optional(f"{P}_coap_options_uint", ctypes.c_uint32, self.handle, number)
+        return self.library.optional("umilib_protocol_coap_coap_options_uint", ctypes.c_uint32, self.handle, number)
 
     def set_uint(self, number: int, value: int) -> None:
-        self.library.call(f"{P}_coap_options_set_uint", self.handle, number, value)
+        self.library.call("umilib_protocol_coap_coap_options_set_uint", self.handle, number, value)
 
     def check(self) -> CoAPOptionNumber | None:
         """The number of the first option that makes the message one to reject (RFC 7252 §5.4.1,
         §5.4.3, §5.4.5) — a critical option unknown, of a value its definition does not allow, or
         repeated though it may not be — or ``None``. Elective ones so are ignored (:meth:`usable`)."""
-        number = self.library.optional(f"{P}_coap_options_check", ctypes.c_uint16, self.handle)
+        number = self.library.optional("umilib_protocol_coap_coap_options_check", ctypes.c_uint16, self.handle)
         return None if number is None else CoAPOptionNumber(number)
 
     def usable(self) -> CoAPOptions:
         """The options without the elective ones to ignore: unknown, of a value out of their
         definition, or repeated beyond the first (RFC 7252 §5.4.1, §5.4.5)."""
-        return CoAPOptions(Handle.create(f"{P}_coap_options_usable", self.handle))
+        return CoAPOptions(Handle.create("umilib_protocol_coap_coap_options_usable", self.handle))
 
     def path(self) -> list[str]:
         """The path of the Uri-Path options (RFC 7252 §6.5), each segment as given, as text."""
@@ -439,25 +438,25 @@ class CoAPOptions(Handle):
     def set_uri(self, path: str, query: str | None = None) -> None:
         """Sets the Uri-Path options of ``path`` ("/a/b") and the Uri-Query options of ``query``
         ("x=1&y"), as RFC 7252 §6.4 splits a URI."""
-        self.library.call(f"{P}_coap_options_set_uri", self.handle, *Text.encode(path), *Text.encode(query))
+        self.library.call("umilib_protocol_coap_coap_options_set_uri", self.handle, *Text.encode(path), *Text.encode(query))
 
     def content_format(self) -> CoAPContentFormat | None:
-        value = self.library.optional(f"{P}_coap_options_content_format", ctypes.c_uint16, self.handle)
+        value = self.library.optional("umilib_protocol_coap_coap_options_content_format", ctypes.c_uint16, self.handle)
         return None if value is None else CoAPContentFormat(value)
 
     def max_age(self) -> int:
         """The Max-Age in seconds: 60 without the option (RFC 7252 §5.10.5)."""
-        return self.library.value(f"{P}_coap_options_max_age", ctypes.c_uint32, self.handle)
+        return self.library.value("umilib_protocol_coap_coap_options_max_age", ctypes.c_uint32, self.handle)
 
     def observe(self) -> int | None:
         """The Observe value (RFC 7641 §2): of 24 bits."""
-        return self.library.optional(f"{P}_coap_options_observe", ctypes.c_uint32, self.handle)
+        return self.library.optional("umilib_protocol_coap_coap_options_observe", ctypes.c_uint32, self.handle)
 
     def block(self, number: int) -> CoAPBlock | None:
         """The Block1 or Block2 option ``number``, or ``None``; raises ``Option`` for one not valid."""
         found = ctypes.c_bool()
-        structure = Library.default().type(f"{P}_CoAPBlock")()
-        self.library.call(f"{P}_coap_options_block", self.handle, number, ctypes.byref(found), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_coap_CoAPBlock")()
+        self.library.call("umilib_protocol_coap_coap_options_block", self.handle, number, ctypes.byref(found), ctypes.byref(structure))
         return CoAPBlock.from_structure(structure) if found.value else None
 
     def __repr__(self) -> str:
@@ -468,7 +467,7 @@ class CoAPMessage(Handle):
     """A CoAP message (RFC 7252 §3): its type, code, Message ID, token (of up to 65804 bytes, RFC 8974
     §2.1), options and payload. :attr:`options` is a copy: assign it to change them."""
 
-    FREE = f"{P}_coap_message_free"
+    FREE = "umilib_protocol_coap_coap_message_free"
     VERSION: ClassVar[int] = 1
     #: The default port of CoAP over UDP (RFC 7252 §6.1).
     PORT: ClassVar[int] = 5683
@@ -477,83 +476,83 @@ class CoAPMessage(Handle):
 
     @classmethod
     def new(cls, kind: CoAPType, code: int, id: int) -> CoAPMessage:
-        return cls(Handle.create(f"{P}_coap_message_new", int(kind), int(code), id))
+        return cls(Handle.create("umilib_protocol_coap_coap_message_new", int(kind), int(code), id))
 
     @classmethod
     def empty(cls, kind: CoAPType, id: int) -> CoAPMessage:
         """An empty message of ``kind`` and ``id``: an ACK or a RST (RFC 7252 §4.1, §4.2)."""
-        return cls(Handle.create(f"{P}_coap_message_empty", int(kind), id))
+        return cls(Handle.create("umilib_protocol_coap_coap_message_empty", int(kind), id))
 
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> CoAPMessage:
         """The message of ``data`` (RFC 7252 §3); raises ``Malformed`` for a message format error:
         another version, a token length of 15, an option of delta or length 15, a payload marker
         without payload, or an empty message with a token, options or payload (§4.1)."""
-        return cls(Handle.create(f"{P}_coap_message_decode", *Bytes.readable(data)))
+        return cls(Handle.create("umilib_protocol_coap_coap_message_decode", *Bytes.readable(data)))
 
     def encode(self) -> bytes:
         """The bytes of the message; raises ``TooLarge`` for a token or an option value above its largest length."""
-        return self.library.output(f"{P}_coap_message_encode", self.handle)
+        return self.library.output("umilib_protocol_coap_coap_message_encode", self.handle)
 
     @staticmethod
     def header(data: bytes | bytearray | memoryview) -> tuple[CoAPType, int] | None:
         """The type and Message ID of ``data`` if it has a header of version 1: what a message that
         cannot be read otherwise is rejected by (RFC 7252 §4.2, §4.3)."""
         found, kind, id = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_uint16()
-        Library.default().call(f"{P}_coap_message_header", *Bytes.readable(data), ctypes.byref(found), ctypes.byref(kind), ctypes.byref(id))
+        Library.default().call("umilib_protocol_coap_coap_message_header", *Bytes.readable(data), ctypes.byref(found), ctypes.byref(kind), ctypes.byref(id))
         return (CoAPType(kind.value), id.value) if found.value else None
 
     def clone(self) -> CoAPMessage:
-        return CoAPMessage(Handle.create(f"{P}_coap_message_clone", self.handle))
+        return CoAPMessage(Handle.create("umilib_protocol_coap_coap_message_clone", self.handle))
 
     @property
     def kind(self) -> CoAPType:
-        return CoAPType(self.library.value(f"{P}_coap_message_kind", ctypes.c_uint8, self.handle))
+        return CoAPType(self.library.value("umilib_protocol_coap_coap_message_kind", ctypes.c_uint8, self.handle))
 
     @kind.setter
     def kind(self, kind: CoAPType) -> None:
-        self.library.call(f"{P}_coap_message_set_kind", self.handle, int(kind))
+        self.library.call("umilib_protocol_coap_coap_message_set_kind", self.handle, int(kind))
 
     @property
     def code(self) -> CoAPCode:
-        return CoAPCode(self.library.value(f"{P}_coap_message_code", ctypes.c_uint8, self.handle))
+        return CoAPCode(self.library.value("umilib_protocol_coap_coap_message_code", ctypes.c_uint8, self.handle))
 
     @code.setter
     def code(self, code: int) -> None:
-        self.library.call(f"{P}_coap_message_set_code", self.handle, int(code))
+        self.library.call("umilib_protocol_coap_coap_message_set_code", self.handle, int(code))
 
     @property
     def id(self) -> int:
-        return self.library.value(f"{P}_coap_message_id", ctypes.c_uint16, self.handle)
+        return self.library.value("umilib_protocol_coap_coap_message_id", ctypes.c_uint16, self.handle)
 
     @id.setter
     def id(self, id: int) -> None:
-        self.library.call(f"{P}_coap_message_set_id", self.handle, id)
+        self.library.call("umilib_protocol_coap_coap_message_set_id", self.handle, id)
 
     @property
     def token(self) -> bytes:
-        return self.library.output(f"{P}_coap_message_token", self.handle)
+        return self.library.output("umilib_protocol_coap_coap_message_token", self.handle)
 
     @token.setter
     def token(self, token: bytes) -> None:
-        self.library.call(f"{P}_coap_message_set_token", self.handle, *Bytes.readable(token))
+        self.library.call("umilib_protocol_coap_coap_message_set_token", self.handle, *Bytes.readable(token))
 
     @property
     def options(self) -> CoAPOptions:
         """A copy of the options; assign to change them."""
-        return CoAPOptions(Handle.create(f"{P}_coap_message_options", self.handle))
+        return CoAPOptions(Handle.create("umilib_protocol_coap_coap_message_options", self.handle))
 
     @options.setter
     def options(self, options: CoAPOptions) -> None:
-        self.library.call(f"{P}_coap_message_set_options", self.handle, options)
+        self.library.call("umilib_protocol_coap_coap_message_set_options", self.handle, options)
 
     @property
     def payload(self) -> bytes:
-        return self.library.output(f"{P}_coap_message_payload", self.handle)
+        return self.library.output("umilib_protocol_coap_coap_message_payload", self.handle)
 
     @payload.setter
     def payload(self, payload: bytes) -> None:
-        self.library.call(f"{P}_coap_message_set_payload", self.handle, *Bytes.readable(payload))
+        self.library.call("umilib_protocol_coap_coap_message_set_payload", self.handle, *Bytes.readable(payload))
 
     def __repr__(self) -> str:
         return f"CoAPMessage({self.kind.name}, {self.code}, {self.id:#06x})"
@@ -579,14 +578,17 @@ class CoAPConfig:
     maximum_token: int
     #: The most messages remembered to find duplicates (RFC 7252 §4.5).
     maximum_seen: int
+    #: The most requests received and not yet answered or ignored; when full, a Confirmable request is
+    #: answered 5.03 and a Non-confirmable one is ignored.
+    maximum_incoming: int
 
     DURATIONS: ClassVar[tuple[str, ...]] = ("ack_timeout", "exchange_lifetime", "non_lifetime", "ack_delay")
-    COUNTS: ClassVar[tuple[str, ...]] = ("ack_random_factor", "max_retransmit", "nstart", "maximum_token", "maximum_seen")
+    COUNTS: ClassVar[tuple[str, ...]] = ("ack_random_factor", "max_retransmit", "nstart", "maximum_token", "maximum_seen", "maximum_incoming")
 
     @classmethod
     def default(cls) -> CoAPConfig:
-        structure = Library.default().type(f"{P}_CoAPConfig")()
-        Library.default().call(f"{P}_coap_config_default", ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_coap_CoAPConfig")()
+        Library.default().call("umilib_protocol_coap_coap_config_default", ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -597,7 +599,7 @@ class CoAPConfig:
 
     def to_structure(self) -> Any:
         """The C structure; raises ``OverflowError`` for a field that does not fit."""
-        structure = Library.default().type(f"{P}_CoAPConfig")()
+        structure = Library.default().type("umilib_protocol_coap_CoAPConfig")()
         for name in self.DURATIONS:
             Fields.assign(structure, name, Nanoseconds.from_timedelta(getattr(self, name)) // 1_000_000)
         for name in self.COUNTS:
@@ -627,7 +629,7 @@ class CoAPEvent:
     peer: IPEndpoint | None = None
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_CoAPEvent")()
+        structure = Library.default().type("umilib_protocol_coap_CoAPEvent")()
         structure.kind = int(self.kind)
         Fields.assign(structure, "exchange", self.exchange)
         Fields.assign(structure, "request", self.request)
@@ -652,71 +654,77 @@ class CoAPEndpoint(Handle):
     responses to requests by token (§5.3.2), piggybacked or separate (§5.2), with the notifications of
     observations (RFC 7641 §3)."""
 
-    FREE = f"{P}_coap_endpoint_free"
+    FREE = "umilib_protocol_coap_coap_endpoint_free"
 
     @classmethod
     def new(cls, config: CoAPConfig | None, random: Any) -> CoAPEndpoint:
         """An endpoint of ``config`` (the default if ``None``), its first Message ID drawn from
         ``random`` (§4.4); raises ``Config`` for a configuration that cannot work."""
         structure = (config or CoAPConfig.default()).to_structure()
-        return cls(Handle.create(f"{P}_coap_endpoint_new", ctypes.byref(structure), *random.source()))
+        return cls(Handle.create("umilib_protocol_coap_coap_endpoint_new", ctypes.byref(structure), *random.source()))
 
     def request(self, peer: IPEndpoint, message: CoAPMessage, now: int, random: Any) -> int:
         """Sends the request ``message`` (Confirmable or Non-confirmable, a random token of 8 bytes if
         it has none) to ``peer``; the handle its response and notifications come with. It waits while
         NSTART interactions with the peer are outstanding (§4.7). Raises ``State`` for another message."""
         return self.library.value(
-            f"{P}_coap_endpoint_request", ctypes.c_uint64, self.handle, ctypes.byref(peer.to_structure()), message, now,
+            "umilib_protocol_coap_coap_endpoint_request", ctypes.c_uint64, self.handle, ctypes.byref(peer.to_structure()), message, now,
             *random.source(),
         )  # fmt: skip
 
     def receive(self, peer: IPEndpoint, data: bytes, now: int, random: Any) -> None:
         """Takes the datagram ``data`` from ``peer``."""
-        self.library.call(f"{P}_coap_endpoint_receive", self.handle, ctypes.byref(peer.to_structure()), *Bytes.readable(data), now, *random.source())
+        self.library.call("umilib_protocol_coap_coap_endpoint_receive", self.handle, ctypes.byref(peer.to_structure()), *Bytes.readable(data), now, *random.source())
 
     def respond(self, exchange: int, response: CoAPMessage, now: int, random: Any) -> None:
         """Answers the request ``exchange`` with the code, options and payload of ``response``:
         piggybacked in the ACK of a Confirmable request not yet acknowledged (§5.2.1), else separately,
         Confirmable for a Confirmable request (§5.2.2), Non-confirmable for a Non-confirmable one.
         Raises ``State`` for an exchange not awaiting its answer."""
-        self.library.call(f"{P}_coap_endpoint_respond", self.handle, exchange, response, now, *random.source())
+        self.library.call("umilib_protocol_coap_coap_endpoint_respond", self.handle, exchange, response, now, *random.source())
+
+    def ignore(self, exchange: int) -> None:
+        """Does not answer the request ``exchange`` (RFC 7967, or a multicast request, RFC 7252 §8.2): it is
+        forgotten, and a Confirmable request not yet acknowledged is acknowledged by an empty ACK. Raises
+        ``State`` for an exchange not awaiting its answer."""
+        self.library.call("umilib_protocol_coap_coap_endpoint_ignore", self.handle, exchange)
 
     def notify(self, peer: IPEndpoint, message: CoAPMessage, now: int, random: Any) -> int:
         """Sends the notification ``message`` of an observation to ``peer`` (RFC 7641 §4.2); its handle,
         to learn of a RST or a timeout, which end the observation (§3.6, §4.5)."""
         return self.library.value(
-            f"{P}_coap_endpoint_notify", ctypes.c_uint64, self.handle, ctypes.byref(peer.to_structure()), message, now,
+            "umilib_protocol_coap_coap_endpoint_notify", ctypes.c_uint64, self.handle, ctypes.byref(peer.to_structure()), message, now,
             *random.source(),
         )  # fmt: skip
 
     def cancel(self, handle: int, now: int) -> None:
         """Stops awaiting the request ``handle`` at ``now``: its observation forgotten, so that
         notifications are rejected (RFC 7641 §3.6), and what waited for it may go."""
-        self.library.call(f"{P}_coap_endpoint_cancel", self.handle, handle, now)
+        self.library.call("umilib_protocol_coap_coap_endpoint_cancel", self.handle, handle, now)
 
     def poll_timeout(self) -> int | None:
         """When :meth:`expire` is next due, in nanoseconds."""
-        return self.library.optional(f"{P}_coap_endpoint_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_coap_coap_endpoint_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
         """Does what is due at ``now``: retransmissions, the end of what is not answered, the empty ACK
         of a request not yet answered (RFC 7252 §4.2, §5.2.2)."""
-        self.library.call(f"{P}_coap_endpoint_expire", self.handle, now)
+        self.library.call("umilib_protocol_coap_coap_endpoint_expire", self.handle, now)
 
     def transmit(self) -> CoAPTransmission | None:
         """The next datagram to send, or ``None``."""
         found = ctypes.c_bool()
         peer = Library.default().type("umilib_protocol_ip_IPEndpoint")()
         buffer = Buffer()
-        self.library.call(f"{P}_coap_endpoint_transmit", self.handle, ctypes.byref(found), ctypes.byref(peer), ctypes.byref(buffer))
+        self.library.call("umilib_protocol_coap_coap_endpoint_transmit", self.handle, ctypes.byref(found), ctypes.byref(peer), ctypes.byref(buffer))
         data = self.library.take(buffer)
         return CoAPTransmission(IPEndpoint.from_structure(peer), data) if found.value else None
 
     def poll_event(self) -> CoAPEvent | None:
         found = ctypes.c_bool()
-        structure = Library.default().type(f"{P}_CoAPEvent")()
+        structure = Library.default().type("umilib_protocol_coap_CoAPEvent")()
         message = ctypes.c_void_p()
-        self.library.call(f"{P}_coap_endpoint_poll_event", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(message))
+        self.library.call("umilib_protocol_coap_coap_endpoint_poll_event", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(message))
         if not found.value:
             return None
         kind = CoAPEventKind(structure.kind)
@@ -732,7 +740,7 @@ class CoAPEndpoint(Handle):
     def is_fresher(freshest: int, at: int, value: int, now: int) -> bool:
         """Whether a notification of Observe ``value`` received at ``now`` was sent after the freshest
         one, of ``freshest`` received at ``at`` (RFC 7641 §3.4)."""
-        return Library.default().value(f"{P}_coap_endpoint_is_fresher", ctypes.c_bool, freshest, at, value, now)
+        return Library.default().value("umilib_protocol_coap_coap_endpoint_is_fresher", ctypes.c_bool, freshest, at, value, now)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -751,36 +759,36 @@ class CoAPObservers(Handle):
     :meth:`handle` is the method of the Rust type, so the object itself, not ``.handle``, is what the
     C functions take."""
 
-    FREE = f"{P}_coap_observers_free"
+    FREE = "umilib_protocol_coap_coap_observers_free"
 
     def __init__(self, pointer: int | None = None) -> None:
-        super().__init__(pointer or Handle.create(f"{P}_coap_observers_new"))
+        super().__init__(pointer or Handle.create("umilib_protocol_coap_coap_observers_new"))
 
     @property
     def confirm_interval(self) -> datetime.timedelta:
         """A notification at least this often is Confirmable (RFC 7641 §4.5: 24 hours)."""
-        milliseconds = self.library.value(f"{P}_coap_observers_confirm_interval", ctypes.c_uint64, self)
+        milliseconds = self.library.value("umilib_protocol_coap_coap_observers_confirm_interval", ctypes.c_uint64, self)
         return datetime.timedelta(milliseconds=milliseconds)
 
     @confirm_interval.setter
     def confirm_interval(self, interval: datetime.timedelta) -> None:
-        self.library.call(f"{P}_coap_observers_set_confirm_interval", self, Nanoseconds.from_timedelta(interval) // 1_000_000)
+        self.library.call("umilib_protocol_coap_coap_observers_set_confirm_interval", self, Nanoseconds.from_timedelta(interval) // 1_000_000)
 
     @property
     def maximum(self) -> int:
         """The most observers kept."""
-        return self.library.value(f"{P}_coap_observers_maximum", ctypes.c_size_t, self)
+        return self.library.value("umilib_protocol_coap_coap_observers_maximum", ctypes.c_size_t, self)
 
     @maximum.setter
     def maximum(self, maximum: int) -> None:
-        self.library.call(f"{P}_coap_observers_set_maximum", self, maximum)
+        self.library.call("umilib_protocol_coap_coap_observers_set_maximum", self, maximum)
 
     def __len__(self) -> int:
-        return self.library.value(f"{P}_coap_observers_count", ctypes.c_size_t, self)
+        return self.library.value("umilib_protocol_coap_coap_observers_count", ctypes.c_size_t, self)
 
     def observer(self, index: int) -> CoAPObserver:
         peer, token = Library.default().type("umilib_protocol_ip_IPEndpoint")(), Buffer()
-        self.library.call(f"{P}_coap_observers_observer", self, index, ctypes.byref(peer), ctypes.byref(token))
+        self.library.call("umilib_protocol_coap_coap_observers_observer", self, index, ctypes.byref(peer), ctypes.byref(token))
         return CoAPObserver(IPEndpoint.from_structure(peer), self.library.take(token))
 
     @property
@@ -791,11 +799,11 @@ class CoAPObservers(Handle):
         """Takes the GET or FETCH ``request`` of ``peer``: with Observe 0 the client observes the
         resource (§4.1); with Observe 1 it stops (§3.6). Whether the response is to carry Observe
         (:meth:`next_value`)."""
-        return self.library.value(f"{P}_coap_observers_register", ctypes.c_bool, self, ctypes.byref(peer.to_structure()), request, now)
+        return self.library.value("umilib_protocol_coap_coap_observers_register", ctypes.c_bool, self, ctypes.byref(peer.to_structure()), request, now)
 
     def next_value(self) -> int:
         """The next Observe value, of 24 bits, strictly increasing (§4.4)."""
-        return self.library.value(f"{P}_coap_observers_next_value", ctypes.c_uint32, self)
+        return self.library.value("umilib_protocol_coap_coap_observers_next_value", ctypes.c_uint32, self)
 
     def notify(self, endpoint: CoAPEndpoint, path: list[str], response: CoAPMessage, confirmable: bool, now: int, random: Any) -> None:
         """Sends the state of the resource at ``path`` (its segments) to its observers through
@@ -803,24 +811,24 @@ class CoAPObservers(Handle):
         if ``confirmable`` or if the observer has not had a Confirmable one for the interval. A response
         of another class than 2 has no Observe, and ends the observations."""
         segments, count, _kept = Text.array(path)
-        self.library.call(f"{P}_coap_observers_notify", self, endpoint, segments, count, response, confirmable, now, *random.source())
+        self.library.call("umilib_protocol_coap_coap_observers_notify", self, endpoint, segments, count, response, confirmable, now, *random.source())
 
     def handle(self, event: CoAPEvent) -> bool:
         """Takes an event of the endpoint: a notification rejected or not acknowledged ends its
         observation (§3.6, §4.5). Whether it was one."""
-        return self.library.value(f"{P}_coap_observers_handle", ctypes.c_bool, self, ctypes.byref(event.to_structure()))
+        return self.library.value("umilib_protocol_coap_coap_observers_handle", ctypes.c_bool, self, ctypes.byref(event.to_structure()))
 
 
 class CoAPBlockwise(Handle):
     """The block-wise transfer of a body (RFC 7959): what a server gives of a body block by block
     (:meth:`respond`), and what a receiver puts together."""
 
-    FREE = f"{P}_coap_blockwise_free"
+    FREE = "umilib_protocol_coap_coap_blockwise_free"
 
     @classmethod
     def new(cls, maximum: int) -> CoAPBlockwise:
         """A receiver of a body of at most ``maximum`` bytes."""
-        return cls(Handle.create(f"{P}_coap_blockwise_new", maximum))
+        return cls(Handle.create("umilib_protocol_coap_coap_blockwise_new", maximum))
 
     @staticmethod
     def respond(request: CoAPMessage, body: bytes, size: int, response: CoAPMessage) -> None:
@@ -828,7 +836,7 @@ class CoAPBlockwise(Handle):
         size ``size``), or the first, as ``response``'s payload with its Block2 option, if the body is
         larger than a block or a block was asked for (§2.4); and Size2 if the request has it (§4).
         Raises ``Option`` for a block past the end, which is 4.02 (§2.4)."""
-        Library.default().call(f"{P}_coap_blockwise_respond", request, *Bytes.readable(body), size, response)
+        Library.default().call("umilib_protocol_coap_coap_blockwise_respond", request, *Bytes.readable(body), size, response)
 
     def receive(self, block: CoAPBlock, payload: bytes, etag: bytes | None = None) -> bool:
         """Takes the block ``block`` of ``payload``, of the message's ETag: in order, each but the last
@@ -836,51 +844,51 @@ class CoAPBlockwise(Handle):
         # An ETag of no bytes is a non-null pointer; no ETag is null.
         etag_data, etag_length = (bytes(etag), len(etag)) if etag is not None else (None, 0)
         return self.library.value(
-            f"{P}_coap_blockwise_receive", ctypes.c_bool, self.handle, block.to_structure(), *Bytes.readable(payload), etag_data,
+            "umilib_protocol_coap_coap_blockwise_receive", ctypes.c_bool, self.handle, block.to_structure(), *Bytes.readable(payload), etag_data,
             etag_length,
         )  # fmt: skip
 
     def next_request(self, options: CoAPOptions, size: int) -> CoAPOptions:
         """The options of the request for the next block: ``options`` with Block2 of the next number
         and ``size``, without Observe (§2.4)."""
-        return CoAPOptions(Handle.create(f"{P}_coap_blockwise_next_request", self.handle, options, size))
+        return CoAPOptions(Handle.create("umilib_protocol_coap_coap_blockwise_next_request", self.handle, options, size))
 
     @property
     def body(self) -> bytes:
         """The body received so far."""
-        return self.library.output(f"{P}_coap_blockwise_body", self.handle)
+        return self.library.output("umilib_protocol_coap_coap_blockwise_body", self.handle)
 
 
 class CoAPLink(Handle):
     """A link of the CoRE Link Format (RFC 6690 §2): its target and its attributes, each with a value
     or none."""
 
-    FREE = f"{P}_coap_link_free"
+    FREE = "umilib_protocol_coap_coap_link_free"
     #: The path of resource discovery (RFC 6690 §4).
     WELL_KNOWN_CORE: ClassVar[str] = "/.well-known/core"
 
     @classmethod
     def new(cls, target: str) -> CoAPLink:
-        return cls(Handle.create(f"{P}_coap_link_new", *Text.encode(target)))
+        return cls(Handle.create("umilib_protocol_coap_coap_link_new", *Text.encode(target)))
 
     def clone(self) -> CoAPLink:
-        return CoAPLink(Handle.create(f"{P}_coap_link_clone", self.handle))
+        return CoAPLink(Handle.create("umilib_protocol_coap_coap_link_clone", self.handle))
 
     def with_(self, name: str, value: str | None = None) -> CoAPLink:
         """Adds the attribute ``name`` of ``value`` (none if ``None``) and returns the link (``with``
         is a keyword of Python)."""
-        self.library.call(f"{P}_coap_link_with", self.handle, *Text.encode(name), *Text.encode(value))
+        self.library.call("umilib_protocol_coap_coap_link_with", self.handle, *Text.encode(name), *Text.encode(value))
         return self
 
     @property
     def target(self) -> str:
-        return self.library.output(f"{P}_coap_link_target", self.handle).decode("utf-8")
+        return self.library.output("umilib_protocol_coap_coap_link_target", self.handle).decode("utf-8")
 
     def lookup(self, name: str) -> tuple[bool, str | None]:
         """Whether the link has an attribute ``name`` (in any case), and the value of the first."""
         found, has_value, buffer = ctypes.c_bool(), ctypes.c_bool(), Buffer()
         self.library.call(
-            f"{P}_coap_link_attribute", self.handle, *Text.encode(name), ctypes.byref(found), ctypes.byref(has_value),
+            "umilib_protocol_coap_coap_link_attribute", self.handle, *Text.encode(name), ctypes.byref(found), ctypes.byref(has_value),
             ctypes.byref(buffer),
         )  # fmt: skip
         value = self.library.take(buffer).decode("utf-8")
@@ -896,12 +904,12 @@ class CoAPLink(Handle):
 
     @property
     def attributes(self) -> list[tuple[str, str | None]]:
-        count = self.library.value(f"{P}_coap_link_attribute_count", ctypes.c_size_t, self.handle)
+        count = self.library.value("umilib_protocol_coap_coap_link_attribute_count", ctypes.c_size_t, self.handle)
         attributes = []
         for index in range(count):
             name, has_value, value = Buffer(), ctypes.c_bool(), Buffer()
             self.library.call(
-                f"{P}_coap_link_attribute_entry", self.handle, index, ctypes.byref(name), ctypes.byref(has_value), ctypes.byref(value),
+                "umilib_protocol_coap_coap_link_attribute_entry", self.handle, index, ctypes.byref(name), ctypes.byref(has_value), ctypes.byref(value),
             )  # fmt: skip
             text = self.library.take(value).decode("utf-8")
             attributes.append((self.library.take(name).decode("utf-8"), text if has_value.value else None))
@@ -911,14 +919,14 @@ class CoAPLink(Handle):
     def parse(text: str) -> list[CoAPLink]:
         """The links of ``text`` (RFC 6690 §2): "<target>;name=value;name=\\"quoted\\",..."; raises
         ``Malformed`` for text not of the link format."""
-        with CoAPLinks(Handle.create(f"{P}_coap_link_parse", *Text.encode(text))) as links:
+        with CoAPLinks(Handle.create("umilib_protocol_coap_coap_link_parse", *Text.encode(text))) as links:
             return links.links()
 
     @staticmethod
     def format(links: list[CoAPLink]) -> str:
         """The text of ``links`` (RFC 6690 §2): values quoted unless they are tokens."""
         with CoAPLinks.of(links) as made:
-            return Library.default().output(f"{P}_coap_link_format", made).decode("utf-8")
+            return Library.default().output("umilib_protocol_coap_coap_link_format", made).decode("utf-8")
 
     def __repr__(self) -> str:
         return f"CoAPLink({self.target!r}, {self.attributes!r})"
@@ -927,10 +935,10 @@ class CoAPLink(Handle):
 class CoAPLinks(Handle):
     """A list of :class:`CoAPLink`, as the C ABI parses and formats them."""
 
-    FREE = f"{P}_coap_links_free"
+    FREE = "umilib_protocol_coap_coap_links_free"
 
     def __init__(self, pointer: int | None = None) -> None:
-        super().__init__(pointer or Handle.create(f"{P}_coap_links_new"))
+        super().__init__(pointer or Handle.create("umilib_protocol_coap_coap_links_new"))
 
     @classmethod
     def of(cls, links: list[CoAPLink]) -> CoAPLinks:
@@ -941,14 +949,14 @@ class CoAPLinks(Handle):
 
     def push(self, link: CoAPLink) -> None:
         """Appends a copy of ``link``."""
-        self.library.call(f"{P}_coap_links_push", self.handle, link)
+        self.library.call("umilib_protocol_coap_coap_links_push", self.handle, link)
 
     def __len__(self) -> int:
-        return self.library.value(f"{P}_coap_links_count", ctypes.c_size_t, self.handle)
+        return self.library.value("umilib_protocol_coap_coap_links_count", ctypes.c_size_t, self.handle)
 
     def get(self, index: int) -> CoAPLink:
         """A copy of the link ``index``; raises ``InvalidArgument`` past the end."""
-        return CoAPLink(Handle.create(f"{P}_coap_links_get", self.handle, index))
+        return CoAPLink(Handle.create("umilib_protocol_coap_coap_links_get", self.handle, index))
 
     def links(self) -> list[CoAPLink]:
         return [self.get(index) for index in range(len(self))]
@@ -958,17 +966,17 @@ class CoAPRule(Handle):
     """The rule of a router that routes CoAP requests by their path (its Uri-Path options, the rule's
     segments first) and, if given, their method."""
 
-    FREE = f"{P}_coap_rule_free"
+    FREE = "umilib_protocol_coap_coap_rule_free"
 
     @classmethod
     def new(cls, path: str) -> CoAPRule:
         """The requests of paths at or below ``path`` ("/sensors/temp")."""
-        return cls(Handle.create(f"{P}_coap_rule_new", *Text.encode(path)))
+        return cls(Handle.create("umilib_protocol_coap_coap_rule_new", *Text.encode(path)))
 
     def with_method(self, method: int) -> CoAPRule:
         """Limits the rule to the requests of ``method`` and returns it."""
-        self.library.call(f"{P}_coap_rule_with_method", self.handle, int(method))
+        self.library.call("umilib_protocol_coap_coap_rule_with_method", self.handle, int(method))
         return self
 
     def matches(self, message: CoAPMessage) -> bool:
-        return self.library.value(f"{P}_coap_rule_matches", ctypes.c_bool, self.handle, message)
+        return self.library.value("umilib_protocol_coap_coap_rule_matches", ctypes.c_bool, self.handle, message)

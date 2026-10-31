@@ -46,6 +46,10 @@ def test_config_fields_round_trip(tmp_path):
     assert config.duration == datetime.timedelta(seconds=2)
     assert config.corpus == str(tmp_path) and config.crashes is None
     assert Fuzzer(config).config().seed == 9
+    assert (config.maximum_corpus_inputs, config.sample_interval) == (1024, 64)
+    config.maximum_corpus_inputs, config.sample_interval = 16, 0
+    assert (config.maximum_corpus_inputs, config.sample_interval) == (16, 0)
+    assert Fuzzer(config).config().sample_interval == 0
     with pytest.raises(TypeError):
         FuzzConfig(unknown=1)
 

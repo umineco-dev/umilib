@@ -17,8 +17,6 @@ from typing import Any, ClassVar
 from umilib.ffi import Buffer, Bytes, Fields, Handle, Library, Text
 from umilib.protocol.dns import DNSClass, DNSError, DNSResolver, DNSResolverConfig, DNSUpstream
 
-P = "umilib_protocol_dns_dnssec"
-
 
 class DNSSECAlgorithm(enum.IntEnum):
     """The algorithms RFC 9904 says to implement for validation."""
@@ -74,10 +72,10 @@ class DNSSECVerified:
 class DNSSECValidator(Handle):
     """A DNSSEC validator (RFC 4035 §5)."""
 
-    FREE = f"{P}_dnssec_validator_free"
+    FREE = "umilib_protocol_dns_dnssec_dnssec_validator_free"
 
     def __init__(self) -> None:
-        super().__init__(Handle.create(f"{P}_dnssec_validator_new"))
+        super().__init__(Handle.create("umilib_protocol_dns_dnssec_dnssec_validator_new"))
 
     @staticmethod
     def raise_bogus(error: DNSError, code: ctypes.c_uint16) -> None:
@@ -87,27 +85,27 @@ class DNSSECValidator(Handle):
     def set_algorithms(self, algorithms: list[int], digests: list[int]) -> None:
         a = (ctypes.c_uint8 * max(len(algorithms), 1))(*algorithms)
         d = (ctypes.c_uint8 * max(len(digests), 1))(*digests)
-        self.library.call(f"{P}_dnssec_validator_set_algorithms", self.handle, a, len(algorithms), d, len(digests))
+        self.library.call("umilib_protocol_dns_dnssec_dnssec_validator_set_algorithms", self.handle, a, len(algorithms), d, len(digests))
 
     @property
     def limits(self) -> DNSSECLimits:
-        structure = self.library.type(f"{P}_DNSSECLimits")()
-        self.library.call(f"{P}_dnssec_validator_limits", self.handle, ctypes.byref(structure))
+        structure = self.library.type("umilib_protocol_dns_dnssec_DNSSECLimits")()
+        self.library.call("umilib_protocol_dns_dnssec_dnssec_validator_limits", self.handle, ctypes.byref(structure))
         return DNSSECLimits(*(getattr(structure, field.name) for field in dataclasses.fields(DNSSECLimits)))
 
     @limits.setter
     def limits(self, limits: DNSSECLimits) -> None:
-        structure = self.library.type(f"{P}_DNSSECLimits")()
+        structure = self.library.type("umilib_protocol_dns_dnssec_DNSSECLimits")()
         for field in dataclasses.fields(limits):
             Fields.assign(structure, field.name, getattr(limits, field.name))
-        self.library.call(f"{P}_dnssec_validator_set_limits", self.handle, structure)
+        self.library.call("umilib_protocol_dns_dnssec_dnssec_validator_set_limits", self.handle, structure)
 
     def verify(self, records: list[str], signatures: list[str], keys: list[str], time: int) -> DNSSECVerified:
         """Verifies the RRset ``records`` with ``signatures`` made by ``keys`` (RFC 4035 §5.3)."""
-        out, encloser, code = self.library.type(f"{P}_DNSSECVerified")(), Buffer(), ctypes.c_uint16()
+        out, encloser, code = self.library.type("umilib_protocol_dns_dnssec_DNSSECVerified")(), Buffer(), ctypes.c_uint16()
         try:
             self.library.call(
-                f"{P}_dnssec_validator_verify", self.handle, *Text.encode("\n".join(records)), *Text.encode("\n".join(signatures)),
+                "umilib_protocol_dns_dnssec_dnssec_validator_verify", self.handle, *Text.encode("\n".join(records)), *Text.encode("\n".join(signatures)),
                 *Text.encode("\n".join(keys)), time, ctypes.byref(out), ctypes.byref(encloser), ctypes.byref(code),
             )  # fmt: skip
         except DNSError as error:
@@ -121,7 +119,7 @@ class DNSSECValidator(Handle):
         secure, code = ctypes.c_bool(), ctypes.c_uint16()
         try:
             self.library.call(
-                f"{P}_dnssec_validator_verify_keys", self.handle, *Text.encode("\n".join(keys)), *Text.encode("\n".join(signatures)),
+                "umilib_protocol_dns_dnssec_dnssec_validator_verify_keys", self.handle, *Text.encode("\n".join(keys)), *Text.encode("\n".join(signatures)),
                 *Text.encode("\n".join(anchors)), time, ctypes.byref(secure), ctypes.byref(code),
             )  # fmt: skip
         except DNSError as error:
@@ -134,7 +132,7 @@ class DNSSECValidator(Handle):
         secure, code = ctypes.c_bool(), ctypes.c_uint16()
         try:
             self.library.call(
-                f"{P}_dnssec_validator_prove", self.handle, int(kind), *Text.encode(name), record_type, *Text.encode(encloser or ""),
+                "umilib_protocol_dns_dnssec_dnssec_validator_prove", self.handle, int(kind), *Text.encode(name), record_type, *Text.encode(encloser or ""),
                 *Text.encode(zone), *Text.encode("\n".join(records)), ctypes.byref(secure), ctypes.byref(code),
             )  # fmt: skip
         except DNSError as error:
@@ -148,18 +146,18 @@ class DNSSECPrivateKey:
     @staticmethod
     def generate(algorithm: DNSSECAlgorithm, random: Any, bits: int = 0) -> str:
         """A new key of ``algorithm`` (an RSA modulus of ``bits``), drawn from ``random``."""
-        return Library.default().output(f"{P}_dnssec_private_key_generate", int(algorithm), bits, *random.source()).decode()
+        return Library.default().output("umilib_protocol_dns_dnssec_dnssec_private_key_generate", int(algorithm), bits, *random.source()).decode()
 
     @staticmethod
     def dnskey(key: str, origin: str, flags: int = 257, ttl: int = 3600) -> str:
         """The DNSKEY record of ``key`` at ``origin``."""
-        return Library.default().output(f"{P}_dnssec_private_key_dnskey", *Text.encode(key), *Text.encode(origin), flags, ttl).decode().strip()
+        return Library.default().output("umilib_protocol_dns_dnssec_dnssec_private_key_dnskey", *Text.encode(key), *Text.encode(origin), flags, ttl).decode().strip()
 
     @staticmethod
     def delegation(key: str, origin: str, flags: int = 257, digest: DNSSECDigest = DNSSECDigest.SHA256, ttl: int = 3600) -> str:
         """The DS record of ``digest`` of that DNSKEY (RFC 4034 §5)."""
         return Library.default().output(
-            f"{P}_dnssec_private_key_delegation", *Text.encode(key), *Text.encode(origin), flags, int(digest), ttl
+            "umilib_protocol_dns_dnssec_dnssec_private_key_delegation", *Text.encode(key), *Text.encode(origin), flags, int(digest), ttl
         ).decode().strip()
 
 
@@ -169,13 +167,13 @@ class DNSSECTrustAnchor:
     @staticmethod
     def root(time: int) -> list[str]:
         """The DS records of the root's anchors valid at ``time``."""
-        return Library.default().output(f"{P}_dnssec_trust_anchor_root", time).decode().splitlines()
+        return Library.default().output("umilib_protocol_dns_dnssec_dnssec_trust_anchor_root", time).decode().splitlines()
 
     @staticmethod
     def parse(xml: str, time: int) -> tuple[str, list[str]]:
         """The zone and the DS records valid at ``time`` of the anchors of ``xml``."""
         zone, out = Buffer(), Buffer()
-        Library.default().call(f"{P}_dnssec_trust_anchor_parse", *Text.encode(xml), time, ctypes.byref(zone), ctypes.byref(out))
+        Library.default().call("umilib_protocol_dns_dnssec_dnssec_trust_anchor_parse", *Text.encode(xml), time, ctypes.byref(zone), ctypes.byref(out))
         return Library.default().take(zone).decode(), Library.default().take(out).decode().splitlines()
 
 
@@ -188,8 +186,8 @@ class DNSSECResolver(DNSResolver):
     """A validating stub resolver (RFC 4035 §4.9.3): it asks with DO and CD and validates every
     answer from a trust anchor down. Its methods take ``time`` (seconds since 1970) too."""
 
-    FREE = f"{P}_dnssec_resolver_free"
-    PREFIX: ClassVar[str] = f"{P}_dnssec_resolver"
+    FREE = "umilib_protocol_dns_dnssec_dnssec_resolver_free"
+    PREFIX: ClassVar[str] = "umilib_protocol_dns_dnssec_dnssec_resolver"
 
     def __init__(
         self,

@@ -17,7 +17,8 @@ pub enum IMAPLiteralMode {
 /// A writer of the productions of RFC 9051 §9. A string is written as an
 /// atom where the production takes one and it is one, quoted where it can
 /// be, and as a literal otherwise; the points where a client must wait for
-/// the server's continuation request are kept in `waits`.
+/// the server's continuation request are kept in `waits`, and where the
+/// line being written begins in `literal_end`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct IMAPWriter {
     pub out: Vec<u8>,
@@ -27,6 +28,9 @@ pub struct IMAPWriter {
     /// The positions of `out` after which a client waits for a continuation request: after
     /// the CRLF of each synchronizing literal's length.
     pub waits: Vec<usize>,
+    /// The position of `out` after the data of the last literal written, 0 before any: where
+    /// the line being written begins for a reader (RFC 9051 §4.3).
+    pub literal_end: usize,
 }
 
 impl IMAPWriter {
@@ -34,7 +38,7 @@ impl IMAPWriter {
     pub const MAXIMUM_QUOTED: usize = 1024;
 
     pub fn new(mode: IMAPLiteralMode, utf8: bool) -> IMAPWriter {
-        IMAPWriter { out: Vec::new(), mode, utf8, waits: Vec::new() }
+        IMAPWriter { out: Vec::new(), mode, utf8, waits: Vec::new(), literal_end: 0 }
     }
 
     pub fn raw(&mut self, bytes: &[u8]) -> &mut IMAPWriter {
@@ -84,7 +88,9 @@ impl IMAPWriter {
                 self.waits.push(self.out.len());
             }
         }
-        self.raw(data)
+        self.raw(data);
+        self.literal_end = self.out.len();
+        self
     }
 
     /// A string: quoted if it can be, a literal otherwise.

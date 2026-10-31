@@ -122,8 +122,12 @@ the documents are read for a few members and passed on as they are.
   confidential client authenticates when it refreshes.
 - The replay check keeps each `jti` until its `iat` is too old to be taken;
   when the table is full, proofs are refused rather than forgotten.
-- Nonces: the current and the previous one are taken, so a rotation does not
-  fail the requests in flight. A verifier that requires nonces but has made
+- Nonces: the current one and the `previous_nonces` before it (1 by
+  default) are taken, so a rotation does not fail the requests in flight.
+  The count was first fixed at one previous nonce; RFC 9449 §8.1 leaves how
+  long a nonce stays valid to the server, and a server that rotates often,
+  or whose clients are slow, needs more, so it is a field of `DPoPConfig`
+  like every limit. A verifier that requires nonces but has made
   none answers `server_error`: `use_dpop_nonce` without a nonce to send would
   refuse every client for good, silently.
 - The PAR endpoint checks a proof too and binds the code to its key
@@ -143,6 +147,25 @@ the documents are read for a few members and passed on as they are.
 - A request without credentials gets one challenge per scheme and no error
   code (RFC 6750 §3.1); a bound token sent as Bearer is refused with a DPoP
   challenge (RFC 9449 §7.2).
+- **Confirmation methods.** `OAuthMembers::confirmation` reads `cnf` for the
+  JWT path and for introspection: absent is an unbound token; an object
+  with a non-empty string `jkt` is bound to that DPoP key, other members
+  ignored; anything else (not an object, no `jkt`, a `jkt` that is not a
+  non-empty string) is refused, `invalid_token` for a JWT and a decoding
+  error for an introspection response. The first version read only
+  `cnf.jkt` and took a token without it as unbound, so a token bound to a
+  client certificate (`x5t#S256`, RFC 8705 §3.1) was accepted as a Bearer
+  token, and the JWT path silently dropped a malformed `cnf` that
+  introspection refused. RFC 7800 §3.1 says that confirmation members not
+  understood are ignored "absent other requirements"; ignoring a member is
+  fine, but treating the token as unbound when nothing is left to check
+  defeats the sender constraint, so a `cnf` must hold a method this module
+  checks. Considered: a type for `cnf` that keeps every member, so that an
+  introspection response with `x5t#S256` decodes and the resource server
+  refuses it with `invalid_token`. Rejected for now: no part of this crate
+  checks certificate binding, the change would reach `OAuthTokenInfo`, the
+  C ABI and Python, and the decoding error already keeps the token out. It
+  becomes the way to go when mTLS binding (RFC 8705) is implemented.
 
 ## `WWW-Authenticate`
 

@@ -5,30 +5,30 @@ pub enum TCPState {
     #[default]
     Closed = 0,
     Listen = 1,
-    SynSent = 2,
-    SynReceived = 3,
+    SYNSent = 2,
+    SYNReceived = 3,
     Established = 4,
-    FinWait1 = 5,
-    FinWait2 = 6,
+    FINWait1 = 5,
+    FINWait2 = 6,
     CloseWait = 7,
     Closing = 8,
-    LastAck = 9,
+    LastACK = 9,
     TimeWait = 10,
 }
 
 impl TCPState {
     /// Whether the state is past the handshake (RFC 9293 §3.5.2).
     pub const fn is_synchronized(self) -> bool {
-        !matches!(self, TCPState::Closed | TCPState::Listen | TCPState::SynSent | TCPState::SynReceived)
+        !matches!(self, TCPState::Closed | TCPState::Listen | TCPState::SYNSent | TCPState::SYNReceived)
     }
 
     /// Whether data may still be sent: the application has not closed.
     pub const fn can_send(self) -> bool {
-        matches!(self, TCPState::SynSent | TCPState::SynReceived | TCPState::Established | TCPState::CloseWait)
+        matches!(self, TCPState::SYNSent | TCPState::SYNReceived | TCPState::Established | TCPState::CloseWait)
     }
 
     /// Whether data may still arrive: no FIN was received.
     pub const fn can_receive(self) -> bool {
-        matches!(self, TCPState::SynReceived | TCPState::Established | TCPState::FinWait1 | TCPState::FinWait2)
+        matches!(self, TCPState::SYNReceived | TCPState::Established | TCPState::FINWait1 | TCPState::FINWait2)
     }
 }

@@ -17,8 +17,6 @@ from typing import Any, ClassVar
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Text
 from umilib.protocol.ip import IPEndpoint, IPEndpointPattern
 
-P = "umilib_protocol_dns"
-
 
 class DNSError(FFIError):
     """An error of DNS: ``Malformed``, ``Syntax``, ``TooLarge``, ``State``, ``Config``, ``Bogus`` or ``Timeout``."""
@@ -132,7 +130,7 @@ class DNSHeader:
         return cls(*(getattr(structure, name) for name in cls.FIELDS))
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DNSHeader")()
+        structure = Library.default().type("umilib_protocol_dns_DNSHeader")()
         for name in self.FIELDS:
             Fields.assign(structure, name, getattr(self, name))
         return structure
@@ -150,71 +148,71 @@ class DNSEDNS:
 class DNSMessage(Handle):
     """A DNS message (RFC 1035 §4.1)."""
 
-    FREE = f"{P}_dns_message_free"
+    FREE = "umilib_protocol_dns_dns_message_free"
     UDP_SIZE: ClassVar[int] = 512
     MAXIMUM_SIZE: ClassVar[int] = 65535
 
     @classmethod
     def query(cls, name: str, kind: int, klass: int = DNSClass.IN, id: int = 0) -> DNSMessage:
         """A query of ``id`` for ``name``, of ``kind`` and ``klass``, with recursion desired."""
-        return cls(Handle.create(f"{P}_dns_message_query", *Text.encode(name), kind, klass, id))
+        return cls(Handle.create("umilib_protocol_dns_dns_message_query", *Text.encode(name), kind, klass, id))
 
     @classmethod
     def decode(cls, data: bytes | bytearray | memoryview) -> DNSMessage:
         """The message of ``data``; raises ``Malformed``."""
-        return cls(Handle.create(f"{P}_dns_message_decode", *Bytes.readable(data)))
+        return cls(Handle.create("umilib_protocol_dns_dns_message_decode", *Bytes.readable(data)))
 
     def encode(self, limit: int = 65535) -> bytes:
         """The message in at most ``limit`` bytes, whole RRsets left out from the end (RFC 2181 §9)."""
-        return self.library.output(f"{P}_dns_message_encode", self.handle, limit)
+        return self.library.output("umilib_protocol_dns_dns_message_encode", self.handle, limit)
 
     @property
     def header(self) -> DNSHeader:
-        structure = self.library.type(f"{P}_DNSHeader")()
-        self.library.call(f"{P}_dns_message_header", self.handle, ctypes.byref(structure))
+        structure = self.library.type("umilib_protocol_dns_DNSHeader")()
+        self.library.call("umilib_protocol_dns_dns_message_header", self.handle, ctypes.byref(structure))
         return DNSHeader.from_structure(structure)
 
     @header.setter
     def header(self, header: DNSHeader) -> None:
-        self.library.call(f"{P}_dns_message_set_header", self.handle, header.to_structure())
+        self.library.call("umilib_protocol_dns_dns_message_set_header", self.handle, header.to_structure())
 
     @property
     def edns(self) -> DNSEDNS | None:
-        structure = self.library.type(f"{P}_DNSEDNS")()
-        self.library.call(f"{P}_dns_message_edns", self.handle, ctypes.byref(structure))
+        structure = self.library.type("umilib_protocol_dns_DNSEDNS")()
+        self.library.call("umilib_protocol_dns_dns_message_edns", self.handle, ctypes.byref(structure))
         return DNSEDNS(structure.udp_size, structure.version, structure.dnssec_ok) if structure.present else None
 
     @edns.setter
     def edns(self, edns: DNSEDNS | None) -> None:
-        structure = self.library.type(f"{P}_DNSEDNS")()
+        structure = self.library.type("umilib_protocol_dns_DNSEDNS")()
         if edns is not None:
             structure.present = True
             Fields.assign(structure, "udp_size", edns.udp_size)
             Fields.assign(structure, "version", edns.version)
             structure.dnssec_ok = edns.dnssec_ok
-        self.library.call(f"{P}_dns_message_set_edns", self.handle, structure)
+        self.library.call("umilib_protocol_dns_dns_message_set_edns", self.handle, structure)
 
     def option(self, code: int) -> bytes | None:
         """The data of the EDNS option ``code``, if there is one."""
-        return self.library.optional(f"{P}_dns_message_option", Buffer, self.handle, code)
+        return self.library.optional("umilib_protocol_dns_dns_message_option", Buffer, self.handle, code)
 
     def set_option(self, code: int, data: bytes) -> None:
         """Sets the option ``code``, the only one of it; adds EDNS if there is none."""
-        self.library.call(f"{P}_dns_message_set_option", self.handle, code, *Bytes.readable(data))
+        self.library.call("umilib_protocol_dns_dns_message_set_option", self.handle, code, *Bytes.readable(data))
 
     @property
     def question(self) -> tuple[str, DNSType, DNSClass] | None:
         """The question: its name, type and class."""
         found, name, kind, klass = ctypes.c_bool(), Buffer(), ctypes.c_uint16(), ctypes.c_uint16()
         self.library.call(
-            f"{P}_dns_message_question", self.handle, ctypes.byref(found), ctypes.byref(name), ctypes.byref(kind), ctypes.byref(klass)
+            "umilib_protocol_dns_dns_message_question", self.handle, ctypes.byref(found), ctypes.byref(name), ctypes.byref(kind), ctypes.byref(klass)
         )
         text = self.library.take(name).decode()
         return (text, DNSType(kind.value), DNSClass(klass.value)) if found.value else None
 
     def records(self, section: DNSSection) -> list[str]:
         """The records of ``section``, each in its presentation format."""
-        return self.library.output(f"{P}_dns_message_records", self.handle, int(section)).decode().splitlines()
+        return self.library.output("umilib_protocol_dns_dns_message_records", self.handle, int(section)).decode().splitlines()
 
     @property
     def answers(self) -> list[str]:
@@ -231,7 +229,7 @@ class DNSMessage(Handle):
     def add_records(self, section: DNSSection, records: str | list[str]) -> None:
         """Adds the records of zone-file text (absolute names; TTL 0 where none) to ``section``; raises ``Syntax``."""
         text = records if isinstance(records, str) else "\n".join(records)
-        self.library.call(f"{P}_dns_message_add_records", self.handle, int(section), *Text.encode(text))
+        self.library.call("umilib_protocol_dns_dns_message_add_records", self.handle, int(section), *Text.encode(text))
 
 
 class DNSZoneFile:
@@ -243,7 +241,7 @@ class DNSZoneFile:
         line, out = ctypes.c_size_t(), Buffer()
         try:
             Library.default().call(
-                f"{P}_dns_zone_file_parse", *Text.encode(text), *Text.encode(origin or ""), default_ttl is not None,
+                "umilib_protocol_dns_dns_zone_file_parse", *Text.encode(text), *Text.encode(origin or ""), default_ttl is not None,
                 default_ttl or 0, ctypes.byref(line), ctypes.byref(out),
             )  # fmt: skip
         except DNSError as error:
@@ -267,7 +265,7 @@ class DNSZone:
         array = (ctypes.c_char_p * max(len(texts), 1))(*texts)
         flags = (ctypes.c_uint16 * max(len(keys), 1))(*(flag for _, flag in keys))
         return Library.default().output(
-            f"{P}_dnssec_dns_zone_sign", *Text.encode(self.origin), *Text.encode(self.text), array, flags, len(keys), inception,
+            "umilib_protocol_dns_dnssec_dns_zone_sign", *Text.encode(self.origin), *Text.encode(self.text), array, flags, len(keys), inception,
             expiration, *random.source(),
         ).decode().splitlines()  # fmt: skip
 
@@ -284,7 +282,7 @@ class DNSAuthorityConfig:
     keepalive: int = 10_000
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DNSAuthorityConfig")()
+        structure = Library.default().type("umilib_protocol_dns_DNSAuthorityConfig")()
         for field in dataclasses.fields(self):
             Fields.assign(structure, field.name, getattr(self, field.name))
         return structure
@@ -293,31 +291,31 @@ class DNSAuthorityConfig:
 class DNSAuthority(Handle):
     """An authoritative name server (RFC 1034 §4.3.2) of the zones added to it."""
 
-    FREE = f"{P}_dns_authority_free"
+    FREE = "umilib_protocol_dns_dns_authority_free"
 
     def __init__(self, config: DNSAuthorityConfig | None = None) -> None:
-        super().__init__(Handle.create(f"{P}_dns_authority_new", (config or DNSAuthorityConfig()).to_structure()))
+        super().__init__(Handle.create("umilib_protocol_dns_dns_authority_new", (config or DNSAuthorityConfig()).to_structure()))
 
     def add_zone(self, origin: str, text: str) -> None:
         """Adds the zone of ``origin`` and the zone-file ``text``; raises ``Syntax`` or ``Config``."""
-        self.library.call(f"{P}_dns_authority_add_zone", self.handle, *Text.encode(origin), *Text.encode(text))
+        self.library.call("umilib_protocol_dns_dns_authority_add_zone", self.handle, *Text.encode(origin), *Text.encode(text))
 
     def set_cookie_secrets(self, secrets: list[bytes]) -> None:
         """The secrets of server cookies (RFC 9018 §5), the first the current one; none ignores cookies."""
         if any(len(secret) != 16 for secret in secrets):
             raise ValueError("a cookie secret is 16 bytes")
-        self.library.call(f"{P}_dns_authority_set_cookie_secrets", self.handle, *Bytes.readable(b"".join(secrets)))
+        self.library.call("umilib_protocol_dns_dns_authority_set_cookie_secrets", self.handle, *Bytes.readable(b"".join(secrets)))
 
     def set_transfers(self, patterns: list[IPEndpointPattern]) -> None:
         """The clients that may transfer zones (RFC 5936)."""
         kind = self.library.type("umilib_protocol_ip_IPEndpointPattern")
         array = (kind * max(len(patterns), 1))(*(pattern.to_structure() for pattern in patterns))
-        self.library.call(f"{P}_dns_authority_set_transfers", self.handle, array, len(patterns))
+        self.library.call("umilib_protocol_dns_dns_authority_set_transfers", self.handle, array, len(patterns))
 
     def respond(self, query: bytes, peer: IPEndpoint, transport: DNSTransport, time: int = 0) -> list[bytes]:
         """The responses to ``query`` from ``peer`` over ``transport``: none to what is not a query,
         several for a zone transfer."""
-        framed = self.library.output(f"{P}_dns_authority_respond", self.handle, *Bytes.readable(query), peer.to_structure(), int(transport), time)
+        framed = self.library.output("umilib_protocol_dns_dns_authority_respond", self.handle, *Bytes.readable(query), peer.to_structure(), int(transport), time)
         responses = []
         while framed:
             length = int.from_bytes(framed[:2], "big")
@@ -348,7 +346,7 @@ class DNSResolverConfig:
     cache_failure_ttl: int = 5
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_DNSResolverConfig")()
+        structure = Library.default().type("umilib_protocol_dns_DNSResolverConfig")()
         for field in dataclasses.fields(self):
             Fields.assign(structure, field.name, getattr(self, field.name))
         return structure
@@ -363,7 +361,7 @@ class DNSUpstream:
 
     @staticmethod
     def array(upstreams: list[DNSUpstream]) -> tuple[Any, int]:
-        kind = Library.default().type(f"{P}_DNSUpstream")
+        kind = Library.default().type("umilib_protocol_dns_DNSUpstream")
         structures = []
         for upstream in upstreams:
             structure = kind()
@@ -387,8 +385,8 @@ class DNSResolver(Handle):
     """A stub resolver without I/O (RFC 1034 §5.3.1): it makes queries, takes responses and the time,
     and tells the answers."""
 
-    FREE = f"{P}_dns_resolver_free"
-    PREFIX: ClassVar[str] = f"{P}_dns_resolver"
+    FREE = "umilib_protocol_dns_dns_resolver_free"
+    PREFIX: ClassVar[str] = "umilib_protocol_dns_dns_resolver"
 
     def __init__(self, upstreams: list[DNSUpstream], random: Any, config: DNSResolverConfig | None = None) -> None:
         """A resolver of ``upstreams``, its cookie secret drawn from ``random``."""
@@ -403,7 +401,7 @@ class DNSResolver(Handle):
 
     def transmit(self) -> DNSTransmission | None:
         """The next query to send, or ``None``."""
-        found, structure, message = ctypes.c_bool(), self.library.type(f"{P}_DNSTransmission")(), Buffer()
+        found, structure, message = ctypes.c_bool(), self.library.type("umilib_protocol_dns_DNSTransmission")(), Buffer()
         self.library.call(f"{self.PREFIX}_transmit", self.handle, ctypes.byref(found), ctypes.byref(structure), ctypes.byref(message))
         data = self.library.take(message)
         return DNSTransmission(structure.query, structure.upstream, DNSTransport(structure.transport), data) if found.value else None

@@ -15,8 +15,6 @@ from typing import Any, ClassVar
 
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Nanoseconds
 
-P = "umilib_protocol_icmp"
-
 
 class ICMPError(FFIError):
     """An error of an ICMP message: ``Length``, ``Checksum``, ``Version``, ``Invalid`` or ``Limit``."""
@@ -32,7 +30,7 @@ class ICMPHeader:
     def to_structure(kind: int, code: int, rest: bytes) -> Any:
         if len(rest) != 4:
             raise ValueError("the rest of the header has 4 bytes")
-        structure = Library.default().type(f"{P}_ICMPHeader")()
+        structure = Library.default().type("umilib_protocol_icmp_ICMPHeader")()
         Fields.assign(structure, "kind", int(kind))
         Fields.assign(structure, "code", code)
         ctypes.memmove(structure.rest, bytes(rest), 4)
@@ -59,7 +57,7 @@ class ICMPExtensionObject:
 
     def encode(self) -> bytes:
         """The bytes of the object; raises ``Length`` unless it is a multiple of 4 bytes."""
-        return Library.default().output(f"{P}_icmp_extension_object_encode", self.class_, self.kind, *Bytes.readable(self.payload))
+        return Library.default().output("umilib_protocol_icmp_icmp_extension_object_encode", self.class_, self.kind, *Bytes.readable(self.payload))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -79,7 +77,7 @@ class ICMPExtensions:
     def decode(cls, data: bytes | bytearray | memoryview) -> ICMPExtensions:
         """The structure that ``data`` is; raises ``Version``, ``Checksum`` or ``Length``."""
         data = bytes(data)
-        checksum = Library.default().value(f"{P}_icmp_extensions_decode", ctypes.c_uint16, data, len(data))
+        checksum = Library.default().value("umilib_protocol_icmp_icmp_extensions_decode", ctypes.c_uint16, data, len(data))
         return cls(checksum, data[ICMPExtensions.HEADER_LENGTH :])
 
     def __iter__(self) -> Iterator[ICMPExtensionObject]:
@@ -89,7 +87,7 @@ class ICMPExtensions:
         index = 0
         while True:
             found, class_, kind, payload = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_uint8(), Buffer()
-            library.call(f"{P}_icmp_extensions_get", unchecked, len(unchecked), index, ctypes.byref(found), ctypes.byref(class_), ctypes.byref(kind), ctypes.byref(payload))
+            library.call("umilib_protocol_icmp_icmp_extensions_get", unchecked, len(unchecked), index, ctypes.byref(found), ctypes.byref(class_), ctypes.byref(kind), ctypes.byref(payload))
             value = library.take(payload)
             if not found.value:
                 return
@@ -101,23 +99,23 @@ class ICMPExtensions:
 
     def check(self) -> None:
         """Raises ``Length`` unless the objects are one or more of whole 32-bit words (RFC 4884 §7, §8)."""
-        Library.default().call(f"{P}_icmp_extensions_check", *Bytes.readable(self.objects))
+        Library.default().call("umilib_protocol_icmp_icmp_extensions_check", *Bytes.readable(self.objects))
 
     @staticmethod
     def check_word(word: int) -> None:
         """Raises ``Invalid`` unless ``word`` is 4 or 8 (RFC 4884 §4)."""
-        Library.default().call(f"{P}_icmp_extensions_check_word", word)
+        Library.default().call("umilib_protocol_icmp_icmp_extensions_check_word", word)
 
     def encode(self) -> bytes:
         """The bytes of the structure, with the checksum of its objects."""
-        return Library.default().output(f"{P}_icmp_extensions_encode", *Bytes.readable(self.objects))
+        return Library.default().output("umilib_protocol_icmp_icmp_extensions_encode", *Bytes.readable(self.objects))
 
     def encode_body(self, original: bytes, word: int) -> tuple[int, bytes]:
         """The body of an extended error message (RFC 4884 §4) and its length attribute: ``original``
         padded to a multiple of ``word`` bytes and to 128, then the structure."""
         attribute, buffer = ctypes.c_uint8(), Buffer()
         library = Library.default()
-        library.call(f"{P}_icmp_extensions_encode_body", *Bytes.readable(self.objects), *Bytes.readable(original), word, ctypes.byref(attribute), ctypes.byref(buffer))
+        library.call("umilib_protocol_icmp_icmp_extensions_encode_body", *Bytes.readable(self.objects), *Bytes.readable(original), word, ctypes.byref(attribute), ctypes.byref(buffer))
         return attribute.value, library.take(buffer)
 
     @staticmethod
@@ -126,7 +124,7 @@ class ICMPExtensions:
         ``word`` bytes, and its extension structure, if any."""
         body = bytes(body)
         original, found = ctypes.c_size_t(), ctypes.c_bool()
-        Library.default().call(f"{P}_icmp_extensions_split_body", body, len(body), attribute, word, ctypes.byref(original), ctypes.byref(found))
+        Library.default().call("umilib_protocol_icmp_icmp_extensions_split_body", body, len(body), attribute, word, ctypes.byref(original), ctypes.byref(found))
         length = original.value
         return body[:length], (ICMPExtensions.decode(body[length:]) if found.value else None)
 
@@ -143,15 +141,15 @@ class ICMPRateLimitConfig:
 class ICMPRateLimiter(Handle):
     """The token bucket that limits the error messages a node originates."""
 
-    FREE = f"{P}_icmp_rate_limiter_free"
+    FREE = "umilib_protocol_icmp_icmp_rate_limiter_free"
 
     def __init__(self, config: ICMPRateLimitConfig, now: int) -> None:
-        super().__init__(Handle.create(f"{P}_icmp_rate_limiter_new", config.burst, Nanoseconds.from_timedelta(config.interval), now))
+        super().__init__(Handle.create("umilib_protocol_icmp_icmp_rate_limiter_new", config.burst, Nanoseconds.from_timedelta(config.interval), now))
         self.config = config
 
     def allow(self, now: int) -> bool:
         """Whether a message may be sent at ``now``; takes its token if so."""
-        return self.library.value(f"{P}_icmp_rate_limiter_allow", ctypes.c_bool, self.handle, now)
+        return self.library.value("umilib_protocol_icmp_icmp_rate_limiter_allow", ctypes.c_bool, self.handle, now)
 
 
 __all__ = ["ICMPError", "ICMPExtensionObject", "ICMPExtensions", "ICMPHeader", "ICMPRateLimitConfig", "ICMPRateLimiter"]

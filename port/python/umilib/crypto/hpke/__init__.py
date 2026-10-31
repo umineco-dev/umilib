@@ -19,8 +19,6 @@ from umilib.crypto import CryptoError, EncodedKey, PrivateKey, PublicKey, Specia
 from umilib.crypto.random import Random
 from umilib.ffi import Bytes, Handle, Library, Marker
 
-P = "umilib_crypto_hpke_hpke"
-
 
 class HPKEExportOnly(Marker):
     """The export-only AEAD of section 7.3 (aead_id 0xFFFF): contexts export secrets and refuse to
@@ -86,7 +84,7 @@ class DHKEM:
         group, hash = Specialization.pair(parameters, "DHKEM")
         identifier = HPKEIdentifiers.kem(group, hash)
         sizes = (ctypes.c_size_t * 3)()
-        Library.default().call(f"{P}_sizes", identifier, sizes)
+        Library.default().call("umilib_crypto_hpke_hpke_sizes", identifier, sizes)
         attributes = {
             "ID": identifier,
             "ENCAPSULATED_SIZE": sizes[0],
@@ -102,7 +100,7 @@ class DHKEM:
         private = PrivateKey.allocate(cls, cls.PRIVATE_KEY_SIZE)
         public = (ctypes.c_uint8 * cls.PUBLIC_KEY_SIZE)()
         with private.writable(handles) as (data, length):
-            Library.default().call(f"{P}_{function}", cls.ID, *arguments, data, length, public, len(public))
+            Library.default().call(f"umilib_crypto_hpke_hpke_{function}", cls.ID, *arguments, data, length, public, len(public))
         return private, PublicKey(cls, bytes(public))
 
     @classmethod
@@ -122,7 +120,7 @@ class DHKEM:
         key.check(cls)
         out = (ctypes.c_uint8 * cls.PUBLIC_KEY_SIZE)()
         with EncodedKey.encodings(key) as [(data, length)]:
-            Library.default().call(f"{P}_public_key", cls.ID, data, length, out, len(out))
+            Library.default().call("umilib_crypto_hpke_hpke_public_key", cls.ID, data, length, out, len(out))
         return PublicKey(cls, bytes(out))
 
     @classmethod
@@ -130,7 +128,7 @@ class DHKEM:
         """DeserializePublicKey (section 7.1.1) with the validation of section 7.1.4; raises ``InvalidKey``."""
         Specialization.require(cls.PARAMETERS, "DHKEM")
         encoded, length = Bytes.readable(data)
-        Library.default().call(f"{P}_check_public_key", cls.ID, encoded, length)
+        Library.default().call("umilib_crypto_hpke_hpke_check_public_key", cls.ID, encoded, length)
         return PublicKey(cls, data)
 
     @classmethod
@@ -143,7 +141,7 @@ class DHKEM:
         """DeserializePrivateKey (section 7.1.2); raises ``InvalidKey`` for an invalid key."""
         Specialization.require(cls.PARAMETERS, "DHKEM")
         key = PrivateKey(cls, data)
-        key.validate(lambda encoded, length: Library.default().call(f"{P}_check_private_key", cls.ID, encoded, length))
+        key.validate(lambda encoded, length: Library.default().call("umilib_crypto_hpke_hpke_check_private_key", cls.ID, encoded, length))
         return key
 
     @classmethod
@@ -155,23 +153,23 @@ class DHKEM:
 class HPKESenderContext(Handle):
     """The context of a sender (section 5.2): it seals and exports, with its own sequence numbers."""
 
-    FREE = f"{P}_sender_context_free"
+    FREE = "umilib_crypto_hpke_hpke_sender_context_free"
 
     def seal(self, associated: bytes | bytearray | memoryview, plaintext: bytes | bytearray | memoryview) -> bytes:
         """ContextS.Seal(aad, pt): the ciphertext with its tag; raises ``InvalidParameter`` for the
         export-only AEAD and ``LimitExceeded`` after the last sequence number."""
         associated_data, associated_length = Bytes.readable(associated)
         data, length = Bytes.readable(plaintext)
-        return self.library.output(f"{P}_sender_context_seal", self.handle, associated_data, associated_length, data, length)
+        return self.library.output("umilib_crypto_hpke_hpke_sender_context_seal", self.handle, associated_data, associated_length, data, length)
 
     def export(self, context: bytes | bytearray | memoryview, out: bytearray) -> None:
         """Context.Export(exporter_context, L) of section 5.3 into ``out`` of L bytes."""
         data, length = Bytes.readable(context)
-        self.library.call(f"{P}_sender_context_export", self.handle, data, length, Bytes.mutable(out), len(out))
+        self.library.call("umilib_crypto_hpke_hpke_sender_context_export", self.handle, data, length, Bytes.mutable(out), len(out))
 
     def sequence(self) -> int:
         """The sequence number of the next message."""
-        return self.library.value(f"{P}_sender_context_sequence", ctypes.c_uint64, self.handle)
+        return self.library.value("umilib_crypto_hpke_hpke_sender_context_sequence", ctypes.c_uint64, self.handle)
 
     def __repr__(self) -> str:
         return "HPKESenderContext(..)"
@@ -180,7 +178,7 @@ class HPKESenderContext(Handle):
 class HPKEReceiverContext(Handle):
     """The context of a receiver (section 5.2): it opens and exports, with its own sequence numbers."""
 
-    FREE = f"{P}_receiver_context_free"
+    FREE = "umilib_crypto_hpke_hpke_receiver_context_free"
 
     def open(self, associated: bytes | bytearray | memoryview, ciphertext: bytes | bytearray | memoryview) -> bytearray:
         """ContextR.Open(aad, ct): the plaintext, a secret to zeroize; raises ``AuthenticationFailed``
@@ -188,17 +186,17 @@ class HPKEReceiverContext(Handle):
         associated_data, associated_length = Bytes.readable(associated)
         data, length = Bytes.readable(ciphertext)
         return self.library.output_secret(
-            f"{P}_receiver_context_open", self.handle, associated_data, associated_length, data, length
+            "umilib_crypto_hpke_hpke_receiver_context_open", self.handle, associated_data, associated_length, data, length
         )
 
     def export(self, context: bytes | bytearray | memoryview, out: bytearray) -> None:
         """Context.Export(exporter_context, L) of section 5.3 into ``out`` of L bytes."""
         data, length = Bytes.readable(context)
-        self.library.call(f"{P}_receiver_context_export", self.handle, data, length, Bytes.mutable(out), len(out))
+        self.library.call("umilib_crypto_hpke_hpke_receiver_context_export", self.handle, data, length, Bytes.mutable(out), len(out))
 
     def sequence(self) -> int:
         """The sequence number of the next message."""
-        return self.library.value(f"{P}_receiver_context_sequence", ctypes.c_uint64, self.handle)
+        return self.library.value("umilib_crypto_hpke_hpke_receiver_context_sequence", ctypes.c_uint64, self.handle)
 
     def __repr__(self) -> str:
         return "HPKEReceiverContext(..)"
@@ -289,7 +287,7 @@ class HPKE:
             sender_data, sender_length = encodings[1] if sender is not None else (None, 0)
             tail = list(random) if random is not None else list(encodings[-1])
             Library.default().call(
-                f"{P}_{function}",
+                f"umilib_crypto_hpke_hpke_{function}",
                 *cls.IDENTIFIERS,
                 recipient_data,
                 recipient_length,
@@ -326,7 +324,7 @@ class HPKE:
             recipient_data, recipient_length = encodings[0]
             sender_data, sender_length = encodings[1] if sender is not None else (None, 0)
             Library.default().call(
-                f"{P}_setup_receiver",
+                "umilib_crypto_hpke_hpke_setup_receiver",
                 *cls.IDENTIFIERS,
                 encapsulated_data,
                 encapsulated_length,

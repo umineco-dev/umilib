@@ -41,8 +41,9 @@ typedef struct umilib_auth_cert_path_PathOutcome umilib_auth_cert_path_PathOutco
 
 /**
  * Writes the defaults at `time` into `out`: the profile of RFC 5280, any policy, no name
- * constraints, at most 8 intermediates, 100 signatures and 2^20 name comparisons, the default
- * key limits, SHA-1 refused, no revocation checking, and no usage, purpose or identity.
+ * constraints, at most 8 intermediates, 100 signatures, 4 nested CRL issuer paths and 2^20
+ * name comparisons, the default key limits, SHA-1 refused, no revocation checking, and no
+ * usage, purpose or identity.
  */
 const umilib_ffi_Status* umilib_auth_cert_path_path_config_new(int64_t time, umilib_auth_cert_path_PathConfig** out);
 
@@ -69,10 +70,10 @@ const umilib_ffi_Status* umilib_auth_cert_path_path_config_set_initial_policy_fl
 const umilib_ffi_Status* umilib_auth_cert_path_path_config_set_initial_name_constraints(umilib_auth_cert_path_PathConfig* config, const uint8_t* data, size_t length);
 
 /**
- * Sets the most intermediate certificates (not counting self-issued ones), signatures and
- * name comparisons.
+ * Sets the most intermediate certificates (not counting self-issued ones), signatures, CRL
+ * issuer paths nested in one another and name comparisons.
  */
-const umilib_ffi_Status* umilib_auth_cert_path_path_config_set_limits(umilib_auth_cert_path_PathConfig* config, size_t maximum_intermediates, size_t maximum_signatures, size_t maximum_name_checks);
+const umilib_ffi_Status* umilib_auth_cert_path_path_config_set_limits(umilib_auth_cert_path_PathConfig* config, size_t maximum_intermediates, size_t maximum_signatures, size_t maximum_nested_signers, size_t maximum_name_checks);
 
 /**
  * Sets the largest RSA modulus and exponent (in bits) accepted.

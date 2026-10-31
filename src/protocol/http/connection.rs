@@ -44,7 +44,10 @@ pub enum HTTPEvent {
     Reset { stream: HTTPStreamID, code: u64 },
     /// More content of `stream` can be written.
     Writable { stream: HTTPStreamID },
-    /// The peer takes no new requests; those after `last` were not processed.
+    /// The peer takes no new requests; those after `last` were not processed,
+    /// and each of them that was under way was reported by a `Reset` before,
+    /// with the version's code for a request refused unprocessed (HTTP/2
+    /// REFUSED_STREAM, HTTP/3 H3_REQUEST_REJECTED), which may be retried.
     GoAway { last: HTTPStreamID },
     /// The connection ended; `error` says why, if not cleanly.
     Closed { error: Option<HTTPError> },

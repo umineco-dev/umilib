@@ -31,6 +31,9 @@ pub enum OCSPError {
     Nonce,
     /// A critical extension this module does not process.
     UnknownCriticalExtension,
+    /// The signatures allowed (`maximum_signatures`, or the budget given)
+    /// ran out before a signer was found.
+    Work,
 }
 
 impl From<X509Error> for OCSPError {
@@ -68,6 +71,7 @@ impl fmt::Display for OCSPError {
             OCSPError::Time => formatter.write_str("the status is not current"),
             OCSPError::Nonce => formatter.write_str("the nonce does not match"),
             OCSPError::UnknownCriticalExtension => formatter.write_str("an unknown critical extension"),
+            OCSPError::Work => formatter.write_str("too many signatures to verify"),
         }
     }
 }

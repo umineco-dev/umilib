@@ -1,5 +1,7 @@
 use core::fmt;
 
+use super::OTPError;
+
 /// A one-time password: a number of a fixed count of decimal digits,
 /// written with leading zeros.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -9,12 +11,23 @@ pub struct OTPCode {
 }
 
 impl OTPCode {
-    /// The most digits of a password.
+    /// The fewest digits of a password (RFC 4226 R4).
+    pub const MINIMUM_DIGITS: usize = 6;
+    /// The most digits of a password: the truncated value of RFC 4226
+    /// §5.3 is below 2^31, so more digits would only add leading zeros.
     pub const MAXIMUM_DIGITS: usize = 10;
 
-    /// The password `value` of `digits` digits (`value` below `10^digits`).
-    pub const fn new(value: u32, digits: u32) -> OTPCode {
-        OTPCode { value, digits }
+    /// The password `value` of `digits` digits; fails with `Digits` unless
+    /// `digits` is from [`OTPCode::MINIMUM_DIGITS`] to
+    /// [`OTPCode::MAXIMUM_DIGITS`] and `value` is below `10^digits`.
+    pub const fn new(value: u32, digits: u32) -> Result<OTPCode, OTPError> {
+        if digits < OTPCode::MINIMUM_DIGITS as u32 || digits > OTPCode::MAXIMUM_DIGITS as u32 {
+            return Err(OTPError::Digits);
+        }
+        if value as u64 >= 10u64.pow(digits) {
+            return Err(OTPError::Digits);
+        }
+        Ok(OTPCode { value, digits })
     }
 
     pub fn value(&self) -> u32 {

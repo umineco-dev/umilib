@@ -712,6 +712,15 @@ crate::ffi_functions! {
         })())
     }
 
+    /// Closes the connection with -ERR and the text at `text`: for shutting down.
+    pub unsafe extern "C" fn umilib_protocol_pop_v3_pop3_server_shutdown(server: *mut POP3Server, text: *const u8, length: usize) -> *const Status {
+        Status::from_result((|| {
+            // SAFETY: the caller passes a valid handle and readable text.
+            let server = unsafe { Pointer::reference_mut(server) }?;
+            server.shutdown(unsafe { Pointer::text(text, length) }?).map_err(|error| error.to_status())
+        })())
+    }
+
     /// Writes what is to be sent into `out`.
     pub unsafe extern "C" fn umilib_protocol_pop_v3_pop3_server_transmit(server: *mut POP3Server, out: *mut Buffer) -> *const Status {
         Status::from_result((|| {

@@ -68,6 +68,16 @@ const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_set_seed(umilib_platfo
 const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_set_maximum_length(umilib_platform_fuzz_FuzzConfig* config, size_t maximum_length);
 
 /**
+ * Sets the number of inputs in memory below which generated inputs are kept as material for mutations.
+ */
+const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_set_maximum_corpus_inputs(umilib_platform_fuzz_FuzzConfig* config, size_t maximum_corpus_inputs);
+
+/**
+ * Keeps about one generated input in `sample_interval` in memory; 0 keeps none.
+ */
+const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_set_sample_interval(umilib_platform_fuzz_FuzzConfig* config, size_t sample_interval);
+
+/**
  * Stops after `iterations` inputs if `has_iterations` is true, or removes the limit.
  */
 const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_set_iterations(umilib_platform_fuzz_FuzzConfig* config, bool has_iterations, uint64_t iterations);
@@ -107,6 +117,16 @@ const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_seed(const umilib_plat
  * Writes the maximum length of a generated input into `out`.
  */
 const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_maximum_length(const umilib_platform_fuzz_FuzzConfig* config, size_t* out);
+
+/**
+ * Writes the number of inputs in memory below which generated inputs are kept into `out`.
+ */
+const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_maximum_corpus_inputs(const umilib_platform_fuzz_FuzzConfig* config, size_t* out);
+
+/**
+ * Writes the interval of the generated inputs kept in memory into `out` (0 keeps none).
+ */
+const umilib_ffi_Status* umilib_platform_fuzz_fuzz_config_sample_interval(const umilib_platform_fuzz_FuzzConfig* config, size_t* out);
 
 /**
  * Writes a copy of the configuration of `fuzzer` into `out`.

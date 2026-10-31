@@ -17,20 +17,18 @@ from umilib.crypto.random import Random
 from umilib.ffi import Bytes, Handle, Library, Text
 from umilib.hash import CryptographicDigest
 
-P = "umilib_crypto_rsa_rsa"
-
 
 class RSAPublicKey(Handle):
     """An RSA public key (n, e) of RFC 8017 section 3.1."""
 
-    FREE = f"{P}_public_key_free"
+    FREE = "umilib_crypto_rsa_rsa_public_key_free"
 
     def __init__(self, n: bytes | bytearray | memoryview, e: bytes | bytearray | memoryview) -> None:
         """The key of the modulus ``n`` and the exponent ``e``; raises ``InvalidKey`` for an even
         modulus, an exponent out of 3..n - 1 or an even one."""
         n_data, n_length = Bytes.readable(n)
         e_data, e_length = Bytes.readable(e)
-        super().__init__(Handle.create(f"{P}_public_key_new", n_data, n_length, e_data, e_length))
+        super().__init__(Handle.create("umilib_crypto_rsa_rsa_public_key_new", n_data, n_length, e_data, e_length))
 
     @classmethod
     def from_pointer(cls, pointer: int) -> RSAPublicKey:
@@ -43,23 +41,23 @@ class RSAPublicKey(Handle):
         return cls(n, e)
 
     def n(self) -> bytes:
-        return self.library.output(f"{P}_public_key_n", self.handle)
+        return self.library.output("umilib_crypto_rsa_rsa_public_key_n", self.handle)
 
     def e(self) -> bytes:
-        return self.library.output(f"{P}_public_key_e", self.handle)
+        return self.library.output("umilib_crypto_rsa_rsa_public_key_e", self.handle)
 
     def size(self) -> int:
         """k, the bytes of the modulus."""
-        return self.library.value(f"{P}_public_key_size", ctypes.c_size_t, self.handle)
+        return self.library.value("umilib_crypto_rsa_rsa_public_key_size", ctypes.c_size_t, self.handle)
 
     @classmethod
     def from_pkcs1_der(cls, der: bytes | bytearray | memoryview) -> RSAPublicKey:
         """The key of the PKCS #1 ``RSAPublicKey`` in DER."""
         data, length = Bytes.readable(der)
-        return cls.from_pointer(Handle.create(f"{P}_public_key_from_pkcs1_der", data, length))
+        return cls.from_pointer(Handle.create("umilib_crypto_rsa_rsa_public_key_from_pkcs1_der", data, length))
 
     def to_pkcs1_der(self) -> bytes:
-        return self.library.output(f"{P}_public_key_to_pkcs1_der", self.handle)
+        return self.library.output("umilib_crypto_rsa_rsa_public_key_to_pkcs1_der", self.handle)
 
     def __repr__(self) -> str:
         return f"RSAPublicKey({8 * self.size()} bits)"
@@ -69,7 +67,7 @@ class RSAPrivateKey(Handle):
     """An RSA private key of RFC 8017 section 3.2, with its primes when they are known; zeroized when
     released."""
 
-    FREE = f"{P}_private_key_free"
+    FREE = "umilib_crypto_rsa_rsa_private_key_free"
 
     def __init__(self, public: RSAPublicKey, d: bytes | bytearray | memoryview) -> None:
         """The key of ``public`` and the private exponent ``d``, without its primes; raises
@@ -77,7 +75,7 @@ class RSAPrivateKey(Handle):
         arguments: list[Any] = []
         for value in (public.n(), public.e(), d):
             arguments.extend(Bytes.readable(value))
-        super().__init__(Handle.create(f"{P}_private_key_new", *arguments))
+        super().__init__(Handle.create("umilib_crypto_rsa_rsa_private_key_new", *arguments))
 
     @classmethod
     def from_pointer(cls, pointer: int) -> RSAPrivateKey:
@@ -97,32 +95,32 @@ class RSAPrivateKey(Handle):
         arguments: list[Any] = []
         for value in (p, q, e):
             arguments.extend(Bytes.readable(value))
-        return cls.from_pointer(Handle.create(f"{P}_private_key_from_primes", *arguments))
+        return cls.from_pointer(Handle.create("umilib_crypto_rsa_rsa_private_key_from_primes", *arguments))
 
     @classmethod
     def generate(cls, bits: int, e: bytes | bytearray | memoryview, random: Random) -> RSAPrivateKey:
         """A key of a modulus of ``bits`` bits (at least 2048, even) with two primes drawn from ``random``."""
         e_data, e_length = Bytes.readable(e)
         handle, name, length = random.source()
-        return cls.from_pointer(Handle.create(f"{P}_private_key_generate", bits, e_data, e_length, handle, name, length))
+        return cls.from_pointer(Handle.create("umilib_crypto_rsa_rsa_private_key_generate", bits, e_data, e_length, handle, name, length))
 
     def public_key(self) -> RSAPublicKey:
-        return RSAPublicKey.from_pointer(Handle.create(f"{P}_private_key_public_key", self.handle))
+        return RSAPublicKey.from_pointer(Handle.create("umilib_crypto_rsa_rsa_private_key_public_key", self.handle))
 
     def d(self) -> bytearray:
         """The private exponent d, big-endian, a secret to zeroize."""
-        return self.library.output_secret(f"{P}_private_key_d", self.handle)
+        return self.library.output_secret("umilib_crypto_rsa_rsa_private_key_d", self.handle)
 
     @classmethod
     def from_pkcs1_der(cls, der: bytes | bytearray | memoryview) -> RSAPrivateKey:
         """The key of the PKCS #1 ``RSAPrivateKey`` (version 0) in DER."""
         data, length = Bytes.readable(der)
-        return cls.from_pointer(Handle.create(f"{P}_private_key_from_pkcs1_der", data, length))
+        return cls.from_pointer(Handle.create("umilib_crypto_rsa_rsa_private_key_from_pkcs1_der", data, length))
 
     def to_pkcs1_der(self) -> bytearray:
         """The PKCS #1 ``RSAPrivateKey`` in DER, a secret to zeroize; raises ``InvalidKey`` for a key
         without its primes."""
-        return self.library.output_secret(f"{P}_private_key_to_pkcs1_der", self.handle)
+        return self.library.output_secret("umilib_crypto_rsa_rsa_private_key_to_pkcs1_der", self.handle)
 
     def __repr__(self) -> str:
         return "RSAPrivateKey(..)"
@@ -167,7 +165,7 @@ class RSAPKCS1v15(RSAScheme):
         out = (ctypes.c_uint8 * size)()
         data, length = Bytes.readable(message)
         handle, name, name_length = random.source()
-        Library.default().call(f"{P}_pkcs1v15_sign", key.handle, *cls.names(False), data, length, handle, name, name_length, out, size)
+        Library.default().call("umilib_crypto_rsa_rsa_pkcs1v15_sign", key.handle, *cls.names(False), data, length, handle, name, name_length, out, size)
         return bytes(out)
 
     @classmethod
@@ -175,7 +173,7 @@ class RSAPKCS1v15(RSAScheme):
         """Returns if ``signature`` is a signature of ``message``; raises ``InvalidSignature`` otherwise."""
         data, length = Bytes.readable(message)
         signature_data, signature_length = Bytes.readable(signature)
-        Library.default().call(f"{P}_pkcs1v15_verify", key.handle, *cls.names(False), data, length, signature_data, signature_length)
+        Library.default().call("umilib_crypto_rsa_rsa_pkcs1v15_verify", key.handle, *cls.names(False), data, length, signature_data, signature_length)
 
 
 class RSAPSS(RSAScheme):
@@ -192,7 +190,7 @@ class RSAPSS(RSAScheme):
         data, length = Bytes.readable(message)
         handle, name, name_length = random.source()
         Library.default().call(
-            f"{P}_pss_sign", key.handle, *cls.names(True), salt_length, data, length, handle, name, name_length, out, size
+            "umilib_crypto_rsa_rsa_pss_sign", key.handle, *cls.names(True), salt_length, data, length, handle, name, name_length, out, size
         )
         return bytes(out)
 
@@ -209,7 +207,7 @@ class RSAPSS(RSAScheme):
         data, length = Bytes.readable(message)
         signature_data, signature_length = Bytes.readable(signature)
         Library.default().call(
-            f"{P}_pss_verify", key.handle, *cls.names(True), salt_length, data, length, signature_data, signature_length
+            "umilib_crypto_rsa_rsa_pss_verify", key.handle, *cls.names(True), salt_length, data, length, signature_data, signature_length
         )
 
 
@@ -237,7 +235,7 @@ class RSAOAEP(RSAScheme):
         data, length = Bytes.readable(message)
         handle, name, name_length = random.source()
         Library.default().call(
-            f"{P}_oaep_encrypt", key.handle, *cls.names(True), label_data, label_length, data, length, handle, name, name_length, out, size
+            "umilib_crypto_rsa_rsa_oaep_encrypt", key.handle, *cls.names(True), label_data, label_length, data, length, handle, name, name_length, out, size
         )
         return bytes(out)
 
@@ -251,7 +249,7 @@ class RSAOAEP(RSAScheme):
         data, length = Bytes.readable(ciphertext)
         handle, name, name_length = random.source()
         return Library.default().output_secret(
-            f"{P}_oaep_decrypt", key.handle, *cls.names(True), label_data, label_length, data, length, handle, name, name_length
+            "umilib_crypto_rsa_rsa_oaep_decrypt", key.handle, *cls.names(True), label_data, label_length, data, length, handle, name, name_length
         )
 
 

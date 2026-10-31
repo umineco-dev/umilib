@@ -7,7 +7,7 @@ use crate::protocol::jwt::{JWKSet, JWSAlgorithm, JWSConfig, JWT, JWTValidation};
 
 use super::{
     DPoPConfig, DPoPTarget, DPoPVerifier, OAuthEndpointRequest, OAuthError, OAuthErrorCode, OAuthErrorResponse,
-    OAuthHTTPResponse, OAuthIntrospectionResponse, OAuthMetadata, OAuthMetadataKind, OAuthScope,
+    OAuthHTTPResponse, OAuthIntrospectionResponse, OAuthMembers, OAuthMetadata, OAuthMetadataKind, OAuthScope,
 };
 
 /// How an access token is presented in the `Authorization` header.
@@ -297,7 +297,8 @@ pub struct OAuthTokenInfo {
     pub scope: OAuthScope,
     pub audience: Vec<String>,
     pub expires: Option<i64>,
-    /// The thumbprint of the DPoP key the token is bound to (`cnf.jkt`).
+    /// The thumbprint of the DPoP key the token is bound to (`cnf.jkt`, read by
+    /// [`OAuthMembers::confirmation`]).
     pub confirmation: Option<String>,
     /// `auth_time` (RFC 9470 §4).
     pub authentication_time: Option<i64>,
@@ -512,9 +513,13 @@ impl OAuthResourceServer {
         };
         let claims = &jwt.claims;
         let string = |name| claims.string(name).ok().flatten().map(str::to_string);
-        let confirmation = match claims.get("cnf") {
-            Some(JSONValue::Object(cnf)) => cnf.get("jkt").and_then(JSONValue::as_str).map(str::to_string),
-            _ => None,
+        // A `cnf` this resource cannot check would otherwise make a bound token a bearer token.
+        let Ok(confirmation) = (OAuthMembers { object: &claims.claims }).confirmation() else {
+            return Err(self.refuse_with(
+                OAuthErrorCode::InvalidToken,
+                "the access token is bound by a confirmation method the resource does not check",
+                Some(presented.scheme),
+            ));
         };
         let info = OAuthTokenInfo {
             client_id: string("client_id"),

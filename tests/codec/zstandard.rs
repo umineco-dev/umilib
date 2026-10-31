@@ -1,86 +1,25 @@
-//! Zstandard (RFC 8878): the decoding tables of Appendix A, the Huffman
+//! Zstandard (RFC 8878): the predefined distributions, the Huffman
 //! example of section 4.2.2, the frames of the zstd tool, and round trips.
 
 use umilib::codec::zstandard::{
-    FSEDecodingTable, FSEDistribution, ZstandardCompressor, ZstandardConfig, ZstandardDecompressor,
-    ZstandardDecompressorConfig, ZstandardDictionary, ZstandardFormat, ZstandardHuffman, ZstandardOffsets,
+    ZstandardCompressor, ZstandardConfig, ZstandardDecompressor, ZstandardDecompressorConfig, ZstandardDictionary,
+    ZstandardFormat, ZstandardHuffman, ZstandardOffsets,
 };
 use umilib::codec::{CompressionError, Compressor, Decompressor};
 
 use crate::Vectors;
 use crate::compression::{Ending, Samples, Streaming};
-
-/// The rows (state, symbol, bits, base) of each table of Appendix A, without the first row.
-fn appendix_tables() -> Vec<Vec<(usize, u8, u8, u16)>> {
-    let text = Vectors::read("codec/zstandard/rfc8878-appendix-a.txt");
-    let mut tables: Vec<Vec<(usize, u8, u8, u16)>> = Vec::new();
-    for line in text.lines() {
-        if line.contains("| State |") {
-            tables.push(Vec::new());
-            continue;
-        }
-        let fields: Vec<&str> = line.split('|').map(str::trim).filter(|field| !field.is_empty()).collect();
-        if fields.len() == 4 && fields.iter().all(|field| field.parse::<u32>().is_ok()) {
-            let values: Vec<u32> = fields.iter().map(|field| field.parse().unwrap()).collect();
-            tables.last_mut().unwrap().push((values[0] as usize, values[1] as u8, values[2] as u8, values[3] as u16));
-        }
-    }
-    tables.into_iter().map(|table| table[1..].to_vec()).collect()
-}
+use crate::fse::RFC8878;
 
 #[test]
-fn predefined_tables_follow_appendix_a() {
-    let tables = appendix_tables();
+fn predefined_distributions_follow_section_3_1_1_3_2_2() {
+    // The distributions whose decoding tables are those of Appendix A (see `crate::fse`).
     let defaults: [(&[i16], u32); 3] = [
         (&ZstandardFormat::LITERALS_LENGTH_DEFAULT, ZstandardFormat::LITERALS_LENGTH_DEFAULT_LOG),
         (&ZstandardFormat::MATCH_LENGTH_DEFAULT, ZstandardFormat::MATCH_LENGTH_DEFAULT_LOG),
         (&ZstandardFormat::OFFSET_DEFAULT, ZstandardFormat::OFFSET_DEFAULT_LOG),
     ];
-    assert_eq!(tables.len(), 3);
-    for (rows, (probabilities, log)) in tables.iter().zip(defaults) {
-        let table =
-            FSEDecodingTable::new(&FSEDistribution { accuracy_log: log, probabilities: probabilities.to_vec() });
-        assert_eq!(rows.len(), 1 << log);
-        for (state, symbol, bits, base) in rows {
-            let entry = table.entries[*state];
-            assert_eq!(
-                (entry.symbol, entry.bits, entry.baseline),
-                (*symbol, *bits, *base),
-                "state {state} of the table of log {log}"
-            );
-        }
-    }
-}
-
-#[test]
-fn table_descriptions_round_trip() {
-    let mut samples = Samples::new(8);
-    for round in 0..200 {
-        let symbols = 2 + samples.below(50) as usize;
-        let counts: Vec<u32> = (0..symbols)
-            .map(|_| if samples.below(4) == 0 { 0 } else { 1 + samples.below(1 << (round % 12)) as u32 })
-            .collect();
-        if counts.iter().filter(|count| **count > 0).count() < 2 {
-            continue;
-        }
-        let log = (5 + samples.below(5) as u32).max(64 - (symbols as u64).leading_zeros());
-        let distribution = FSEDistribution::normalize(&counts, log);
-        let total: i32 = distribution
-            .probabilities
-            .iter()
-            .map(|probability| if *probability == -1 { 1 } else { *probability as i32 })
-            .sum();
-        assert_eq!(total, 1 << log);
-        let mut bytes = Vec::new();
-        distribution.write(&mut bytes);
-        bytes.push(0xAA);
-        let (read, used) = FSEDistribution::read(&bytes, 9, 64).unwrap();
-        assert_eq!(read, distribution);
-        assert_eq!(used, bytes.len() - 1);
-    }
-    // An accuracy log above the limit, a total above the scale.
-    assert!(FSEDistribution::read(&[0x0F], 9, 64).is_err());
-    assert!(FSEDistribution::read(&[], 9, 64).is_err());
+    assert_eq!(defaults, RFC8878::PREDEFINED);
 }
 
 #[test]
@@ -244,6 +183,21 @@ fn zstandard_decompressors_check_frames() {
         invalid("block larger than the maximum")
     );
     let _ = text;
+}
+
+#[test]
+fn zstandard_decompressors_refuse_bitstreams_read_past_their_start() {
+    // Sections 4.1.1 and 4.2.2: a backward bitstream holds exactly the bits of its symbols; one
+    // that ends first is corrupted. The sequences section of the first frame (raw empty literals,
+    // one sequence of the predefined tables) has only the final bit of its bitstream; the
+    // literals of the second frame (one Huffman stream of 100 symbols) have a stream of one byte.
+    for frame in [
+        &[0x28, 0xB5, 0x2F, 0xFD, 0x20, 0x10, 0x25, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01][..],
+        &[0x28, 0xB5, 0x2F, 0xFD, 0x20, 0x64, 0x3D, 0x00, 0x00, 0x42, 0xC6, 0x00, 0x80, 0x10, 0x01, 0x00][..],
+    ] {
+        let result = ZstandardDecompressor::default().decompress_to_vec(frame, 1 << 16);
+        assert!(matches!(result, Err(CompressionError::InvalidData { .. })), "{frame:02X?}: {result:?}");
+    }
 }
 
 #[test]

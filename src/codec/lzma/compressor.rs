@@ -52,6 +52,12 @@ impl LZMACompressor {
     }
 }
 
+impl Default for LZMACompressor {
+    fn default() -> LZMACompressor {
+        LZMACompressor::new(LZMAConfig::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for LZMACompressor {
     /// LZMA streams cannot be flushed without ending them, so [`Flush::Sync`]
     /// fails with `InvalidParameter`.

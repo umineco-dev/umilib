@@ -18,8 +18,6 @@ from umilib.ffi import Bytes, Fields, Handle, Library, Text
 from umilib.hash import CryptographicDigest
 from umilib.math.ec import WeierstrassCurve
 
-P = "umilib_crypto_dragonfly_dragonfly"
-
 
 @dataclass(frozen=True)
 class DragonflyConfig:
@@ -31,7 +29,7 @@ class DragonflyConfig:
     @classmethod
     def default(cls) -> DragonflyConfig:
         """40 rounds."""
-        return cls(Library.default().function(f"{P}_config_default")().iterations)
+        return cls(Library.default().function("umilib_crypto_dragonfly_dragonfly_config_default")().iterations)
 
     def structure(self) -> Any:
         structure = Library.default().type("umilib_crypto_dragonfly_DragonflyConfig")()
@@ -43,7 +41,7 @@ class DragonflyPeer(Handle):
     """A peer of an exchange on the curve and with the hash function of ``DragonflyPeer[C, H]``;
     its secrets are zeroized when it is released."""
 
-    FREE = f"{P}_peer_free"
+    FREE = "umilib_crypto_dragonfly_dragonfly_peer_free"
     PARAMETERS: tuple[Any, ...] | None = None
 
     def __class_getitem__(cls, parameters: Any) -> Any:
@@ -69,7 +67,7 @@ class DragonflyPeer(Handle):
         for value in (identity, peer_identity, password):
             arguments.extend(Bytes.readable(value))
         handle, name, length = random.source()
-        super().__init__(Handle.create(f"{P}_peer_new", *arguments, handle, name, length))
+        super().__init__(Handle.create("umilib_crypto_dragonfly_dragonfly_peer_new", *arguments, handle, name, length))
 
     @classmethod
     def new(
@@ -84,19 +82,19 @@ class DragonflyPeer(Handle):
 
     def commit(self) -> bytes:
         """The peer's commit, scalar || element, to send to the other peer."""
-        return self.library.output(f"{P}_peer_commit", self.handle)
+        return self.library.output("umilib_crypto_dragonfly_dragonfly_peer_commit", self.handle)
 
     def process(self, commit: bytes | bytearray | memoryview) -> bytes:
         """Processes the commit of the other peer (section 3.4) and returns the peer's confirm; raises
         ``InvalidKey`` for a commit that is invalid or a reflection of the peer's own."""
         data, length = Bytes.readable(commit)
-        return self.library.output(f"{P}_peer_process", self.handle, data, length)
+        return self.library.output("umilib_crypto_dragonfly_dragonfly_peer_process", self.handle, data, length)
 
     def finish(self, confirm: bytes | bytearray | memoryview) -> bytearray:
         """Checks the confirm of the other peer and returns the master key, a secret to zeroize; raises
         ``AuthenticationFailed`` for a wrong confirm and ``InvalidParameter`` before :meth:`process`."""
         data, length = Bytes.readable(confirm)
-        return self.library.output_secret(f"{P}_peer_finish", self.handle, data, length)
+        return self.library.output_secret("umilib_crypto_dragonfly_dragonfly_peer_finish", self.handle, data, length)
 
     def __repr__(self) -> str:
         return "DragonflyPeer(..)"

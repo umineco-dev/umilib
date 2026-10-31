@@ -36,13 +36,14 @@ panic handler. `platform` and its children use `std`.
 
 | Feature | Contents |
 | --- | --- |
-| `bytes` | `Reader`, `Writer`, `Buffer`, `SliceWriter`, `Integer`, `BytesError`, `BitReader`, `BitWriter`, `BitQueue` |
+| `bytes` | `Reader`, `Writer`, `Buffer`, `SliceWriter`, `Integer`, `BytesError`, `BitReader`, `BitWriter`, `BitQueue`, `BackwardBitReader`, `BackwardBitWriter` |
 | `calendar` | `Date`: the proleptic Gregorian calendar ([calendar.md](calendar.md)) |
 | `codec-asn1-der`, `codec-asn1-ber` | ASN.1 DER and BER ([codec-asn1.md](codec-asn1.md)) |
 | `codec-base-base16`, `-base32`, `-base58`, `-base64`, `-base85` | Binary-to-text encodings ([codec-base.md](codec-base.md)) |
 | `codec-brotli` | Brotli (RFC 7932) with its static dictionary ([codec-brotli.md](codec-brotli.md)) |
 | `codec-filter-delta`, `codec-filter-bcj` | Delta and BCJ filters ([codec-filter.md](codec-filter.md)) |
 | `codec-deflate`, `codec-zlib`, `codec-gzip` | Deflate (RFC 1951), zlib (RFC 1950) and gzip (RFC 1952) ([codec-deflate.md](codec-deflate.md)) |
+| `codec-fse` | Finite State Entropy (tANS, RFC 8878 section 4.1) ([codec-fse.md](codec-fse.md)) |
 | `codec-huffman-canonical`, `codec-huffman-adaptive` | Canonical and adaptive Huffman coding ([codec-huffman.md](codec-huffman.md), [codec-compression.md](codec-compression.md)) |
 | `codec-json` | JSON ([codec-json.md](codec-json.md)) |
 | `codec-lz4` | LZ4 blocks and frames ([codec-lz4.md](codec-lz4.md)) |

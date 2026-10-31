@@ -1,5 +1,5 @@
 use std::cell::Cell;
-use std::collections::VecDeque;
+use std::collections::{TryReserveError, VecDeque};
 use std::future::Future;
 use std::io;
 use std::panic::{AssertUnwindSafe, catch_unwind};
@@ -226,16 +226,27 @@ impl ThreadPool {
             0 => std::thread::available_parallelism().map_or(1, usize::from),
             threads => threads,
         };
+        // The count may come from a caller (the C ABI): memory for an
+        // impossible one is a failure, not an abort.
+        let out_of_memory =
+            |_: TryReserveError| io::Error::new(io::ErrorKind::OutOfMemory, "no memory for the thread pool's workers");
+        let mut locals = Vec::new();
+        locals.try_reserve_exact(threads).map_err(out_of_memory)?;
+        locals.extend((0..threads).map(|_| Mutex::new(VecDeque::new())));
+        let mut notified = Vec::new();
+        notified.try_reserve_exact(threads).map_err(out_of_memory)?;
+        notified.extend((0..threads).map(|_| AtomicBool::new(false)));
+        let mut handles = Vec::new();
+        handles.try_reserve_exact(threads).map_err(out_of_memory)?;
         let shared = Arc::new(PoolShared {
             injector: Mutex::new(VecDeque::new()),
-            locals: (0..threads).map(|_| Mutex::new(VecDeque::new())).collect(),
+            locals,
             sleepers: Mutex::new(Vec::new()),
-            notified: (0..threads).map(|_| AtomicBool::new(false)).collect(),
+            notified,
             threads: OnceLock::new(),
             stopping: AtomicBool::new(false),
             registry: TaskRegistry::new(),
         });
-        let mut handles = Vec::with_capacity(threads);
         for index in 0..threads {
             let mut builder = std::thread::Builder::new().name(std::format!("{}{index}", config.name));
             if let Some(size) = config.stack_size {

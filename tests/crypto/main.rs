@@ -139,4 +139,4 @@ mod ec_checks;
 #[path = "../common/vectors.rs"]
 mod vectors;
 
-pub use vectors::{GMT, Json, Nessie, RFC, Record, Vectors, Wycheproof};
+pub use vectors::{GMT, JSON, Nessie, RFC, Record, Vectors, Wycheproof};

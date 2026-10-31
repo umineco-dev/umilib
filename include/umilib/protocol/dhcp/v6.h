@@ -101,7 +101,9 @@ typedef struct umilib_protocol_dhcp_v6_DHCPv6Client umilib_protocol_dhcp_v6_DHCP
 
 /**
  * What a DHCPv6 server leases and delegates, but its DUID and options: lifetimes, T1 and T2
- * in seconds (0xFFFFFFFF for infinity; T1 and T2 of 0 let the client choose).
+ * in seconds (0xFFFFFFFF for infinity; T1 and T2 of 0 let the client choose), how long a
+ * declined address is not leased in milliseconds (UINT64_MAX for ever), the most IAs of a
+ * message given addresses or prefixes, and the most bindings kept.
  */
 typedef struct umilib_protocol_dhcp_v6_DHCPv6ServerConfig {
     umilib_protocol_ip_IPv6Address first;
@@ -117,6 +119,9 @@ typedef struct umilib_protocol_dhcp_v6_DHCPv6ServerConfig {
     uint32_t valid;
     uint32_t t1;
     uint32_t t2;
+    uint64_t decline_time;
+    size_t maximum_ias;
+    size_t maximum_bindings;
 } umilib_protocol_dhcp_v6_DHCPv6ServerConfig;
 
 /**

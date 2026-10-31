@@ -1595,6 +1595,7 @@ pub const DHCP_V6: umilib::platform::fuzz::FuzzFunction<fn(&[u8])> =
             preference: 0,
             rapid_commit: true,
             options: DHCPv6Options::new(),
+            ..DHCPv6ServerConfig::new(duid.clone())
         })
         .unwrap();
         if let Some(reply) = server.receive(data, Instant::ZERO) {

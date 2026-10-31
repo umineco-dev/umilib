@@ -38,6 +38,7 @@ class TOTPConfig:
 class OTPCode:
     """The constants of passwords."""
 
+    MINIMUM_DIGITS = 6
     MAXIMUM_DIGITS = 10
 
 

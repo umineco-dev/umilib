@@ -149,6 +149,7 @@ impl Targets {
                     duration: arguments.duration,
                     corpus: Some(Targets::directory("corpus").join(name)),
                     crashes: Some(Targets::directory("crashes")),
+                    ..defaults
                 };
                 match Fuzzer::new(config).run(target) {
                     Ok(report) => {

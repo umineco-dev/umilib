@@ -102,3 +102,27 @@ fn timer_parks_drive_the_timers_of_block_on() {
     executor.block_on(timer.sleep(Duration::from_millis(30)));
     assert!(start.elapsed() >= Duration::from_millis(30));
 }
+
+#[test]
+fn removed_timers_leave_the_queue_at_once() {
+    let mut queue = TimerQueue::new();
+    // Timers that would never come up are removed entirely, not left until their deadline.
+    let keys: Vec<_> = (0..1000).map(|_| queue.insert(Instant::MAX, None)).collect();
+    let kept = queue.insert(Instant::from_nanos(50), None);
+    let earliest = queue.insert(Instant::from_nanos(20), None);
+    for key in &keys {
+        assert!(queue.remove(*key));
+    }
+    assert_eq!(queue.len(), 2);
+    assert_eq!(queue.next_deadline(), Some(Instant::from_nanos(20)));
+    assert!(queue.remove(earliest));
+    assert_eq!(queue.next_deadline(), Some(Instant::from_nanos(50)));
+    // Timers of one deadline are kept and fired separately.
+    let same = queue.insert(Instant::from_nanos(50), None);
+    assert!(queue.remove(kept));
+    assert_eq!(queue.next_deadline(), Some(Instant::from_nanos(50)));
+    assert!(queue.contains(same));
+    assert_eq!(queue.fire(Instant::MAX), 1);
+    assert_eq!(queue.next_deadline(), None);
+    assert!(queue.is_empty());
+}

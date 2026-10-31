@@ -189,10 +189,10 @@ fn rfc9180_test_vectors() {
 #[test]
 fn modes_and_inputs() {
     type Suite = HPKE<DHKEM<X25519, SHA256>, SHA256, ChaCha20Poly1305>;
-    type Kem = DHKEM<X25519, SHA256>;
+    type KEM = DHKEM<X25519, SHA256>;
     let mut random = HMACDRBG::<SHA256>::new(&[7; 32], &[8; 16], b"hpke").unwrap();
-    let (recipient, recipient_public) = Kem::generate_key_pair(&mut random).unwrap();
-    let (sender, sender_public) = Kem::generate_key_pair(&mut random).unwrap();
+    let (recipient, recipient_public) = KEM::generate_key_pair(&mut random).unwrap();
+    let (sender, sender_public) = KEM::generate_key_pair(&mut random).unwrap();
     let psk = (&[1u8; 32][..], &b"id"[..]);
     for (psk, auth) in [(None, false), (Some(psk), false), (None, true), (Some(psk), true)] {
         let sender_key = auth.then_some(&sender);
@@ -217,9 +217,9 @@ fn modes_and_inputs() {
     );
     // The export-only AEAD neither seals nor opens.
     let (_, mut context) =
-        HPKE::<Kem, SHA256, HPKEExportOnly>::setup_sender(&recipient_public, b"", None, None, &mut random).unwrap();
+        HPKE::<KEM, SHA256, HPKEExportOnly>::setup_sender(&recipient_public, b"", None, None, &mut random).unwrap();
     assert_eq!(context.seal(b"", b"m"), Err(CryptoError::InvalidParameter));
     // A public key of another length is refused (section 7.1.1).
-    assert_eq!(Kem::deserialize_public_key(&[9; 31]).err(), Some(CryptoError::InvalidKey));
+    assert_eq!(KEM::deserialize_public_key(&[9; 31]).err(), Some(CryptoError::InvalidKey));
     assert_eq!(<DHKEM<ECDH<P256>, SHA256>>::deserialize_public_key(&[2; 33]).err(), Some(CryptoError::InvalidKey));
 }

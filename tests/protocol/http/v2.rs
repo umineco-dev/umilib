@@ -519,6 +519,8 @@ fn going_away() {
     pair.run();
     let events = Pair::events(&mut pair.client);
     assert!(events.contains(&HTTPEvent::GoAway { last: served }), "{events:?}");
+    // §8.7: the request not processed is refused, and may be retried.
+    assert!(events.contains(&HTTPEvent::Reset { stream: late, code: 0x7 }), "{events:?}");
     assert!(!pair.client.streams.contains_key(&(late.0 as u32)));
     assert!(pair.client.send_request(&request("/after"), true).is_err());
     // The stream under way still finishes; then both close.
@@ -554,6 +556,17 @@ fn resets_and_floods() {
             H2Frame::ResetStream { stream, code: H2ErrorCode::CANCEL }.encode(out);
         }
     });
+    assert_eq!(goaway(&frames), Some(H2ErrorCode::ENHANCE_YOUR_CALM));
+    // Requests the server is made to reset with frames that are stream errors (a WINDOW_UPDATE
+    // of 0, §6.9), too many of them: the same limit (CVE-2025-8671).
+    let config = H2Config { maximum_resets: 10, ..H2Config::default() };
+    let (_, frames) = raw(config, |encoder, out| {
+        for stream in (1..40).step_by(2) {
+            headers(encoder, stream, &GET, false, out);
+            H2Frame::write(H2FrameType::WINDOW_UPDATE, 0, stream, &[0; 4], out);
+        }
+    });
+    assert_eq!(reset(&frames, 1), Some(H2ErrorCode::PROTOCOL_ERROR));
     assert_eq!(goaway(&frames), Some(H2ErrorCode::ENHANCE_YOUR_CALM));
     // PINGs without reading the answers: ENHANCE_YOUR_CALM (§10.5).
     let (_, frames) = raw(H2Config::default(), |_, out| {

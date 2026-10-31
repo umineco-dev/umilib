@@ -114,6 +114,18 @@ requires LOGINDISABLED when LOGIN is refused.
 - **`-0000` is kept.** `MailDate::zone_unknown` holds a local time not
   known (§3.3), and the military zones that §4.3 says SHOULD be taken so;
   it is written back as `-0000`, not `+0000`.
+- **Two bounds are constants, not configuration.**
+  `MailReader::MAXIMUM_COMMENT_DEPTH` (64) and
+  `MIMEParameterSection::MAXIMUM_NUMBER` (999) bound no resource: comments
+  are read with a counter, not recursion, and a section number costs
+  nothing; what a field costs is bounded by `maximum_field_length` and
+  `maximum_fields` of `MailConfig`. 999 is also the most sections the
+  writer makes, so that what it writes is read back. The readers of field
+  values (`MailAddress::parse`, `MIMEContentType::parse`, ...) take no
+  `MailConfig`, and giving them one for these was rejected: it would change
+  every parser and the C ABI for no bound gained. RFC 5322 §3.2.2 and RFC
+  2231 §3 and §7 set no such limit (999 is not of the grammar, whose
+  `other-sections` has any number of digits).
 - **From is an address-list, Sender an address** (RFC 6854), so an empty
   group is a valid From.
 - **Ambiguity is refused.** A parameter given twice, an RFC 2231
@@ -137,6 +149,26 @@ requires LOGINDISABLED when LOGIN is refused.
   or a NUL, or does not read back; IMAP's client reads what it wrote back;
   FTP's encode refuses line breaks. A review found that a path or a domain
   of a line break, from a web form, became commands of its own.
+- **So is what a server says on its own.** `shutdown(text)` of the four
+  servers checks its reply or response as `reply`, `respond` and `greet`
+  do, and fails (`Syntax`) without writing: a review found that
+  `shutdown("bye\r\n250 OK")` added a reply. Taking the text out of the
+  signature (a fixed text) was considered; the text is the application's
+  to say why it closes, as in RFC 5321 §3.8's example. Removing the line
+  breaks silently was rejected: it would send a text the application did
+  not write.
+- **The replies a server makes itself take constant text.** `answer` of the
+  SMTP, FTP and POP3 servers and SMTP's `refuse` write their text
+  unchecked, as every reply the servers make themselves has a fixed text;
+  they are public, so an application could have passed text it received.
+  Their text is `&'static str`: text received or made at run time cannot be
+  passed without leaking it on purpose, and such text goes through `reply`,
+  which checks it. Rejected alternative: checking in `answer` and
+  returning a `Result`, which about a hundred calls of fixed texts would
+  have to ignore. The two replies of the servers whose text is not a
+  constant (FTP's SYST of the configured system type, which
+  `FTPServerConfig::check` refuses with a line break, and STAT during a
+  transfer, of a verb this module knows) encode their reply directly.
 - **Replies are timed from the one before.** A command's deadline is set
   when it becomes the oldest waiting, not when it is sent; with pipelining,
   13 replies 30 seconds apart closed the session at 300 seconds before.
@@ -175,6 +207,17 @@ requires LOGINDISABLED when LOGIN is refused.
 - **Response codes only with RESP-CODES**: the server drops them otherwise,
   so a client of RFC 1939 alone never sees one.
 - **The autologout timer closes without a response** (RFC 1939 §3).
+- **`shutdown` answers -ERR [SYS/TEMP]**, as the SMTP, IMAP and FTP
+  servers answer 421 or BYE. RFC 1939 has no response for a server that
+  ends a session; -ERR is what a client takes for a failure in any state,
+  and SYS/TEMP (RFC 3206 §4) tells it that the failure is the system's and
+  likely to pass. It does not enter the UPDATE state (RFC 1939 §6: only
+  QUIT from TRANSACTION does). While a multi-line response is being sent,
+  the connection is closed without a response, as the autologout timer
+  does: a -ERR there would be read as a line of the message, and ending
+  the response with its period would make the part sent look whole.
+  Waiting for `end_data` was rejected: a server that shuts down cannot
+  count on the rest of the message coming.
 - **APOP is behind `hash-md-v5` and `secret`** and compares in constant
   time. It is MD5, so it is for servers that have nothing better, under TLS.
 
@@ -204,6 +247,16 @@ requires LOGINDISABLED when LOGIN is refused.
   is a string there, `]` ends a section but not an atom elsewhere), so
   `IMAPReader` and `IMAPWriter` have a method per production of RFC 9051
   §9 rather than one generic parse tree that every user would interpret.
+- **No literal but the writer's.** The client refuses a command whose last
+  line ends as the length of a literal (`{n}`, `{n+}`, `~{n}`, §4.3) that
+  `IMAPWriter` did not write: an `Other` command's arguments are written as
+  they are, and the server would wait for n octets, or take the commands
+  after it as them. The writer keeps where its last literal ends
+  (`literal_end`), which is where the last line begins: searching the
+  written bytes for the last CRLF was rejected, as the octets of a literal
+  (an APPEND's message) may end in braces and are no line. Reading the
+  command back with `IMAPLineReader` was rejected too: it applies the
+  limits of the configuration, which are for reading, to what is sent.
 - **Logical lines.** `IMAPLineReader` joins a line and its literals; a
   literal too large is refused before it is sent if synchronizing (NO
   [LIMIT]) and dropped if not (BAD [LIMIT]), so its octets are never taken

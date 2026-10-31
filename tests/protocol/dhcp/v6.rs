@@ -5,9 +5,9 @@ use core::time::Duration;
 
 use umilib::protocol::dhcp::DHCPDUID;
 use umilib::protocol::dhcp::v6::{
-    DHCPv6Client, DHCPv6ClientConfig, DHCPv6ClientEvent, DHCPv6ClientState, DHCPv6IA, DHCPv6IAAddress, DHCPv6IAPrefix,
-    DHCPv6Message, DHCPv6MessageType, DHCPv6OptionCode, DHCPv6Options, DHCPv6RelayMessage, DHCPv6Retransmission,
-    DHCPv6Server, DHCPv6ServerConfig, DHCPv6StatusCode,
+    DHCPv6Binding, DHCPv6Client, DHCPv6ClientConfig, DHCPv6ClientEvent, DHCPv6ClientState, DHCPv6IA, DHCPv6IAAddress,
+    DHCPv6IAPrefix, DHCPv6Message, DHCPv6MessageType, DHCPv6OptionCode, DHCPv6Options, DHCPv6RelayMessage,
+    DHCPv6Retransmission, DHCPv6Server, DHCPv6ServerConfig, DHCPv6StatusCode,
 };
 use umilib::protocol::ip::IPv6Address;
 
@@ -43,6 +43,7 @@ fn server_config() -> DHCPv6ServerConfig {
         preference: 0,
         rapid_commit: false,
         options,
+        ..DHCPv6ServerConfig::new(server_duid())
     }
 }
 
@@ -528,4 +529,169 @@ fn what_a_client_keeps_of_a_reply() {
     let reply = reply_of(&mut client, &[ia_of(5000, 100, &[(100, 3600, 7200)])]);
     client.receive(&reply, client.started, &mut random);
     assert_eq!(client.lease.as_ref().unwrap().ias.len(), before.unwrap().ias.len());
+}
+
+/// A message of `kind` from the client of DUID `last` with an empty IA of
+/// each kind and IAID of `ias`, naming the server unless it is a Solicit.
+fn message_of_ias(kind: DHCPv6MessageType, last: u8, ias: &[(DHCPv6OptionCode, u32)]) -> DHCPv6Message {
+    let mut message = DHCPv6Message::new(kind, 9);
+    message.options.push(DHCPv6OptionCode::CLIENT_ID, client_duid(last).encode().unwrap());
+    if kind != DHCPv6MessageType::SOLICIT {
+        message.options.push(DHCPv6OptionCode::SERVER_ID, server_duid().encode().unwrap());
+    }
+    for (code, iaid) in ias {
+        message.options.entries.push(DHCPv6IA::new(*code, *iaid).encode().unwrap());
+    }
+    message
+}
+
+/// The addresses or prefixes of each IA of `code` of `reply`, and its status.
+fn given(reply: &DHCPv6Message, code: DHCPv6OptionCode) -> Vec<(Vec<IPv6Address>, u16)> {
+    let ias = reply.options.ias(code);
+    ias.iter()
+        .map(|ia| {
+            let held = match code {
+                DHCPv6OptionCode::IA_PD => ia.prefixes().iter().map(|prefix| prefix.prefix).collect(),
+                _ => ia.addresses().iter().map(|address| address.address).collect(),
+            };
+            (held, ia.options.status().unwrap().code)
+        })
+        .collect()
+}
+
+fn pool_address(index: u128) -> IPv6Address {
+    IPv6Address((u128::from_be_bytes(address(0).0) + index).to_be_bytes())
+}
+
+#[test]
+fn many_identity_associations() {
+    // §18.3.9: every IA of the message is answered, with the status NoAddrsAvail when the server gives
+    // it nothing. A server bounds the IAs of a message it gives addresses to (`maximum_ias`), so that a
+    // message of thousands of IAs costs no more than one of a few.
+    let config = DHCPv6ServerConfig {
+        addresses: Some((pool_address(0), pool_address(u128::from(u32::MAX)))),
+        ..server_config()
+    };
+    let maximum = config.maximum_ias;
+    let mut server = DHCPv6Server::new(config).unwrap();
+    let ias: Vec<(DHCPv6OptionCode, u32)> = (0..4000).map(|iaid| (DHCPv6OptionCode::IA_NA, iaid)).collect();
+    for kind in [DHCPv6MessageType::SOLICIT, DHCPv6MessageType::REQUEST] {
+        let reply = server.answer(&message_of_ias(kind, 1, &ias), at(0)).unwrap();
+        let answers = given(&reply, DHCPv6OptionCode::IA_NA);
+        let iaids: Vec<u32> = reply.options.ias(DHCPv6OptionCode::IA_NA).iter().map(|ia| ia.iaid).collect();
+        assert_eq!(iaids, (0..4000).collect::<Vec<u32>>(), "{kind:?}");
+        let mut addresses: Vec<IPv6Address> = answers[..maximum].iter().flat_map(|(held, _)| held.clone()).collect();
+        assert_eq!(addresses.len(), maximum, "{kind:?}");
+        addresses.sort();
+        addresses.dedup();
+        assert_eq!(addresses.len(), maximum, "{kind:?}: each IA has addresses of its own (§12)");
+        assert!(
+            answers[maximum..]
+                .iter()
+                .all(|(held, status)| held.is_empty() && *status == DHCPv6StatusCode::NO_ADDRS_AVAIL)
+        );
+    }
+    assert_eq!(server.bindings.len(), maximum);
+    // A Renew of them extends the first `maximum_ias` and no more.
+    let reply = server.answer(&message_of_ias(DHCPv6MessageType::RENEW, 1, &ias), at(1)).unwrap();
+    let answers = given(&reply, DHCPv6OptionCode::IA_NA);
+    assert_eq!(answers.len(), 4000);
+    assert!(answers[..maximum].iter().all(|(held, _)| held.len() == 1));
+    assert!(answers[maximum..].iter().all(|(held, status)| held.is_empty() && *status != DHCPv6StatusCode::SUCCESS));
+}
+
+#[test]
+fn the_whole_pool_is_leased() {
+    // An address or a prefix past the first 65536 of a pool is given once those are taken: every
+    // address of the pool the configuration names is the server's to lease.
+    let mut base = [0u8; 16];
+    base[..4].copy_from_slice(&[0x20, 0x01, 0x0d, 0xb8]);
+    let base = u128::from_be_bytes(base);
+    let config = DHCPv6ServerConfig {
+        addresses: Some((pool_address(0), pool_address(1 << 20))),
+        prefixes: Some((IPv6Address(base.to_be_bytes()), 32, 64)),
+        maximum_bindings: 1 << 20,
+        ..server_config()
+    };
+    let mut server = DHCPv6Server::new(config).unwrap();
+    let other = client_duid(2).encode().unwrap();
+    for index in 0..70_000u128 {
+        for (kind, key) in [
+            (DHCPv6OptionCode::IA_NA, (pool_address(index), None)),
+            (DHCPv6OptionCode::IA_PD, (IPv6Address((base + (index << 64)).to_be_bytes()), Some(64))),
+        ] {
+            let binding = DHCPv6Binding {
+                client: other.clone(),
+                kind,
+                iaid: index as u32,
+                address: key.0,
+                length: key.1,
+                expires: None,
+                declined: false,
+            };
+            server.bindings.insert(key, binding);
+        }
+    }
+    let solicit =
+        message_of_ias(DHCPv6MessageType::SOLICIT, 1, &[(DHCPv6OptionCode::IA_NA, 1), (DHCPv6OptionCode::IA_PD, 1)]);
+    let reply = server.answer(&solicit, at(0)).unwrap();
+    assert_eq!(given(&reply, DHCPv6OptionCode::IA_NA), [(vec![pool_address(70_000)], DHCPv6StatusCode::SUCCESS)]);
+    let prefix = IPv6Address((base + (70_000u128 << 64)).to_be_bytes());
+    assert_eq!(given(&reply, DHCPv6OptionCode::IA_PD), [(vec![prefix], DHCPv6StatusCode::SUCCESS)]);
+    // A prefix of bits past its length names no pool of prefixes.
+    let mut stray = base.to_be_bytes();
+    stray[15] = 1;
+    let config = DHCPv6ServerConfig { prefixes: Some((IPv6Address(stray), 32, 64)), ..server_config() };
+    assert!(DHCPv6Server::new(config).is_err());
+}
+
+#[test]
+fn bindings_kept_and_declined() {
+    // No more bindings kept than `maximum_bindings`: past it, no address is given (NoAddrsAvail, §18.3.9),
+    // in an Advertise as in a Reply, until the ended ones are forgotten.
+    let config = DHCPv6ServerConfig {
+        addresses: Some((pool_address(0), pool_address(1000))),
+        maximum_bindings: 2,
+        ..server_config()
+    };
+    let mut server = DHCPv6Server::new(config).unwrap();
+    let three = [(DHCPv6OptionCode::IA_NA, 1), (DHCPv6OptionCode::IA_NA, 2), (DHCPv6OptionCode::IA_NA, 3)];
+    for kind in [DHCPv6MessageType::SOLICIT, DHCPv6MessageType::REQUEST] {
+        let reply = server.answer(&message_of_ias(kind, 1, &three), at(0)).unwrap();
+        let statuses: Vec<u16> = given(&reply, DHCPv6OptionCode::IA_NA).iter().map(|(_, status)| *status).collect();
+        let (success, none) = (DHCPv6StatusCode::SUCCESS, DHCPv6StatusCode::NO_ADDRS_AVAIL);
+        assert_eq!(statuses, [success, success, none], "{kind:?}");
+    }
+    assert_eq!(server.bindings.len(), 2);
+    let one = [(DHCPv6OptionCode::IA_NA, 1)];
+    let reply = server.answer(&message_of_ias(DHCPv6MessageType::SOLICIT, 2, &one), at(1)).unwrap();
+    assert_eq!(given(&reply, DHCPv6OptionCode::IA_NA), [(vec![], DHCPv6StatusCode::NO_ADDRS_AVAIL)]);
+    server.expire(at(4000));
+    assert!(server.bindings.is_empty());
+    let reply = server.answer(&message_of_ias(DHCPv6MessageType::SOLICIT, 2, &one), at(4000)).unwrap();
+    assert_eq!(given(&reply, DHCPv6OptionCode::IA_NA)[0].1, DHCPv6StatusCode::SUCCESS);
+    // §18.3.8: an address declined is not leased to another client for `decline_time`, then it is.
+    let config = DHCPv6ServerConfig {
+        addresses: Some((address(100), address(100))),
+        decline_time: Duration::from_secs(100),
+        ..server_config()
+    };
+    let mut server = DHCPv6Server::new(config).unwrap();
+    let reply = server.answer(&message_of_ias(DHCPv6MessageType::REQUEST, 1, &one), at(0)).unwrap();
+    assert_eq!(given(&reply, DHCPv6OptionCode::IA_NA), [(vec![address(100)], DHCPv6StatusCode::SUCCESS)]);
+    let mut decline = message_of_ias(DHCPv6MessageType::DECLINE, 1, &[]);
+    let mut ia = DHCPv6IA::new(DHCPv6OptionCode::IA_NA, 1);
+    let held = DHCPv6IAAddress { address: address(100), preferred: 0, valid: 0, options: DHCPv6Options::new() };
+    ia.options.push(DHCPv6OptionCode::IAADDR, held.encode().unwrap());
+    decline.options.entries.push(ia.encode().unwrap());
+    server.answer(&decline, at(10)).unwrap();
+    for now in [10, 50, 109] {
+        server.expire(at(now));
+        let reply = server.answer(&message_of_ias(DHCPv6MessageType::SOLICIT, 2, &one), at(now)).unwrap();
+        assert_eq!(given(&reply, DHCPv6OptionCode::IA_NA), [(vec![], DHCPv6StatusCode::NO_ADDRS_AVAIL)], "{now}");
+    }
+    server.expire(at(110));
+    assert!(server.bindings.is_empty());
+    let reply = server.answer(&message_of_ias(DHCPv6MessageType::SOLICIT, 2, &one), at(110)).unwrap();
+    assert_eq!(given(&reply, DHCPv6OptionCode::IA_NA), [(vec![address(100)], DHCPv6StatusCode::SUCCESS)]);
 }

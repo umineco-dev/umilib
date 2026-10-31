@@ -100,6 +100,18 @@ fn timer_queues_and_channels_through_the_c_abi() {
         assert_eq!(expired, 1);
         Check::ok(umilib_runtime_timer_queue_next_deadline(queue, &mut has, &mut deadline));
         assert!(!has);
+        // Both outputs are checked before either is written.
+        has = true;
+        Check::fails(umilib_runtime_timer_queue_next_deadline(queue, &mut has, ptr::null_mut()), "ffi", "NullPointer");
+        assert!(has);
+        let mut shared = 7u64;
+        let shared_pointer: *mut u64 = &mut shared;
+        Check::fails(
+            umilib_runtime_timer_queue_next_deadline(queue, shared_pointer.cast(), shared_pointer),
+            "ffi",
+            "InvalidArgument",
+        );
+        assert_eq!(shared, 7);
         umilib_runtime_timer_queue_free(queue);
 
         let (mut sender, mut receiver): (*mut Sender<Vec<u8>>, *mut Receiver<Vec<u8>>) =

@@ -65,8 +65,13 @@ pub struct DNSNAPTR {
 }
 
 /// The data of a resource record, by its type. A type this crate does not
-/// know, or data of a known one that it cannot read, is
-/// [`DNSData::Unknown`]: kept as it is (RFC 3597).
+/// know is [`DNSData::Unknown`]: kept as it is (RFC 3597). So is data of a
+/// known type not of its type's format, when its bytes are the same in
+/// every message and in the canonical form: no name in them may be
+/// compressed (RFC 3597 §4) nor is lowercased (RFC 4034 §6.2). Such a
+/// record is malformed and is to be ignored, not the message it came in
+/// (RFC 9460 §2.2 says so of SVCB); [`DNSData::decode`] gives it as bytes,
+/// which a reader of the type does not take. Other malformed data is an error.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum DNSData {
     A(IPv4Address),
@@ -139,12 +144,53 @@ pub enum DNSData {
 
 impl DNSData {
     /// The data of type `kind` in `message[start..end]`, the RDATA of a
-    /// record. Names are decompressed for the types RFC 3597 §4 says
-    /// ([`DNSType::decompresses_names`]), and kept uncompressed in the data
-    /// of the types kept as bytes; the data must be read whole.
+    /// record, as [`DNSData::decode_strict`] reads it; data of a known type
+    /// that it refuses is [`DNSData::Unknown`] if no name in the type's data
+    /// is compressed or lowercased ([`DNSType::decompresses_names`],
+    /// [`DNSType::lowercases_names`]), since its bytes are then the record
+    /// whole, in any message and in the canonical form.
     pub fn decode(kind: DNSType, message: &[u8], start: usize, end: usize) -> Result<DNSData, DNSError> {
-        let malformed = DNSError::Malformed("RDATA of another length than its type's");
         let mut reader = DNSReader { message, position: start, end, compressed: kind.decompresses_names() };
+        DNSData::read_tolerant(kind, &mut reader)
+    }
+
+    /// The data of type `kind` of the RDATA `data` alone, as [`DNSData::decode`]
+    /// reads it but with no name compressed: the generic form `\#` (RFC 3597
+    /// §5) is the RDATA uncompressed, whatever the type, so a compression
+    /// pointer in it is refused instead of followed within the data.
+    pub fn decode_uncompressed(kind: DNSType, data: &[u8]) -> Result<DNSData, DNSError> {
+        let mut reader = DNSReader { message: data, position: 0, end: data.len(), compressed: false };
+        DNSData::read_tolerant(kind, &mut reader)
+    }
+
+    /// [`DNSData::read`] of `reader`, with the fallback of [`DNSData::decode`]
+    /// to [`DNSData::Unknown`] for the types whose names are neither
+    /// compressed nor lowercased.
+    pub fn read_tolerant(kind: DNSType, reader: &mut DNSReader<'_>) -> Result<DNSData, DNSError> {
+        let (start, end) = (reader.position, reader.end);
+        match DNSData::read(kind, reader) {
+            Err(_) if !kind.decompresses_names() && !kind.lowercases_names() && start <= end => {
+                let data = reader.message.get(start..end).ok_or(DNSError::Malformed("RDATA cut short"))?;
+                Ok(DNSData::Unknown(data.to_vec()))
+            }
+            result => result,
+        }
+    }
+
+    /// The data of type `kind` in `message[start..end]`, the RDATA of a
+    /// record, of its type's format or an error. Names are decompressed for
+    /// the types RFC 3597 §4 says ([`DNSType::decompresses_names`]), and
+    /// kept uncompressed in the data of the types kept as bytes; the data
+    /// must be read whole.
+    pub fn decode_strict(kind: DNSType, message: &[u8], start: usize, end: usize) -> Result<DNSData, DNSError> {
+        let mut reader = DNSReader { message, position: start, end, compressed: kind.decompresses_names() };
+        DNSData::read(kind, &mut reader)
+    }
+
+    /// The data of type `kind` from `reader` up to its end, of its type's
+    /// format or an error; names compressed only if `reader.compressed`.
+    pub fn read(kind: DNSType, reader: &mut DNSReader<'_>) -> Result<DNSData, DNSError> {
+        let malformed = DNSError::Malformed("RDATA of another length than its type's");
         let value = match kind {
             DNSType::A => DNSData::A(IPv4Address(reader.rest().try_into().map_err(|_| malformed)?)),
             DNSType::AAAA => DNSData::AAAA(IPv6Address(reader.rest().try_into().map_err(|_| malformed)?)),
@@ -247,7 +293,7 @@ impl DNSData {
                 DNSData::SVCB(Box::new(DNSServiceBinding::decode_params(priority, target, reader.rest())?))
             }
             _ => DNSData::Unknown(match DNSField::of(kind) {
-                Some(fields) => DNSField::read(fields, &mut reader)?,
+                Some(fields) => DNSField::read(fields, reader)?,
                 None => reader.rest().to_vec(),
             }),
         };
@@ -384,7 +430,8 @@ impl DNSData {
 
     /// The data of type `kind` of the presentation format's `tokens` (RFC
     /// 1035 §5.1 and the RFC of each type), relative names under `origin`;
-    /// `\# length hex` for any type (RFC 3597 §5).
+    /// `\# length hex` for any type (RFC 3597 §5), read as
+    /// [`DNSData::decode`] reads the same bytes in a message.
     pub fn parse(kind: DNSType, tokens: &[DNSToken], origin: Option<&DNSName>) -> Result<DNSData, DNSError> {
         let syntax = DNSError::Syntax;
         if tokens.first().is_some_and(|token| !token.quoted && token.text == b"\\#") {
@@ -394,9 +441,7 @@ impl DNSData {
             if data.len() != length {
                 return Err(syntax("\\# of another length than its data"));
             }
-            let mut message = Vec::new();
-            message.extend_from_slice(&data);
-            return DNSData::decode(kind, &message, 0, message.len()).or(Ok(DNSData::Unknown(data)));
+            return DNSData::decode_uncompressed(kind, &data);
         }
         let mut tokens = DNSTokens { tokens, origin };
         let value = match kind {

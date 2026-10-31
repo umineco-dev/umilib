@@ -508,6 +508,47 @@ pub const BROTLI: FuzzFunction<fn(&[u8])> = FuzzFunction::new("codec-brotli", br
 pub const DEFLATE: FuzzFunction<fn(&[u8])> = FuzzFunction::new("codec-deflate", deflate::round_trips);
 #[cfg(umilib_feature = "codec-filter")]
 pub const FILTER: FuzzFunction<fn(&[u8])> = FuzzFunction::new("codec-filter", filter::round_trips);
+/// FSE table descriptions read without panicking, and what reads writes a
+/// description of the same distribution; the rest of the input, decoded with the tables
+/// as a backward bitstream, decodes without panicking, and a stream read
+/// exactly is what the encoder writes for its symbols from the decoder's
+/// last state.
+#[cfg(umilib_feature = "codec-fse")]
+pub const FSE: FuzzFunction<fn(&[u8])> = FuzzFunction::new("codec-fse", |data| {
+    use umilib::bytes::{BackwardBitReader, BackwardBitWriter};
+    use umilib::codec::fse::{FSEDecodingTable, FSEDistribution, FSEEncodingTable};
+    let Ok((distribution, used)) = FSEDistribution::read(data, 15, 256) else { return };
+    let mut description = Vec::new();
+    distribution.write(&mut description).expect("a description that reads writes");
+    // Descriptions are not unique (a 0 may follow the repeat flags of another), but the written
+    // one is never longer and reads back to the same distribution.
+    assert!(description.len() <= used);
+    assert_eq!(FSEDistribution::read(&description, 15, 256), Ok((distribution.clone(), description.len())));
+    let Some(mut reader) = BackwardBitReader::new(&data[used..]) else { return };
+    let decoding = FSEDecodingTable::new(&distribution);
+    let mut state = decoding.initial_state(&mut reader);
+    let mut symbols = Vec::new();
+    while !reader.overflowed() && symbols.len() < 4096 {
+        symbols.push(decoding.entries[state].symbol as usize);
+        if reader.remaining() == 0 {
+            break;
+        }
+        state = decoding.next_state(state, &mut reader);
+    }
+    if !reader.is_finished() {
+        return;
+    }
+    // A stream read exactly is the encoding of its symbols from the final state.
+    let encoding = FSEEncodingTable::new(&distribution);
+    let size = 1u32 << distribution.accuracy_log;
+    let mut writer = BackwardBitWriter::new();
+    let mut state = state as u32 + size;
+    for symbol in symbols[..symbols.len() - 1].iter().rev() {
+        state = encoding.encode(state, *symbol, &mut writer);
+    }
+    encoding.flush(state, &mut writer);
+    assert_eq!(writer.finish(), data[used..], "decoding and encoding are inverse");
+});
 /// HPACK field blocks decode without panicking, block after block on one
 /// table; what decodes encodes, with and without Huffman, to blocks a fresh
 /// decoder reads back to the same fields; Huffman strings round-trip.
@@ -678,6 +719,8 @@ pub const TARGETS: &[&dyn FuzzTarget] = &[
     &DEFLATE,
     #[cfg(umilib_feature = "codec-filter")]
     &FILTER,
+    #[cfg(umilib_feature = "codec-fse")]
+    &FSE,
     #[cfg(umilib_feature = "codec-hpack")]
     &HPACK,
     #[cfg(all(umilib_feature = "codec-huffman-adaptive", umilib_feature = "codec-huffman-canonical"))]

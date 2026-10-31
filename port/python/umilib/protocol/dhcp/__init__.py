@@ -14,8 +14,6 @@ from typing import Any, ClassVar
 
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Library
 
-P = "umilib_protocol_dhcp"
-
 
 class DHCPError(FFIError):
     """An error of DHCP: ``Malformed``, ``TooLarge``, ``State`` (not possible in the client's state),
@@ -88,7 +86,7 @@ class DHCPDUID:
 
     def to_structure(self) -> Any:
         """The C structure; raises ``OverflowError`` for a field that does not fit."""
-        structure = Library.default().type(f"{P}_DHCPDUID")()
+        structure = Library.default().type("umilib_protocol_dhcp_DHCPDUID")()
         for name in ("kind", "hardware", "time", "enterprise"):
             Fields.assign(structure, name, getattr(self, name))
         return structure
@@ -97,20 +95,20 @@ class DHCPDUID:
     def decode(cls, data: bytes | bytearray | memoryview) -> DHCPDUID:
         """The DUID of ``data``; raises ``Malformed`` for one of fewer than 3 or more than 130 bytes, or of a
         known type shorter than its fixed fields."""
-        structure, buffer = Library.default().type(f"{P}_DHCPDUID")(), Buffer()
-        Library.default().call(f"{P}_dhcp_duid_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
+        structure, buffer = Library.default().type("umilib_protocol_dhcp_DHCPDUID")(), Buffer()
+        Library.default().call("umilib_protocol_dhcp_dhcp_duid_decode", *Bytes.readable(data), ctypes.byref(structure), ctypes.byref(buffer))
         variable = Library.default().take(buffer)
         return cls(structure.kind, variable, structure.hardware, structure.time, structure.enterprise)
 
     def encode(self) -> bytes:
         """Its bytes; raises ``Malformed`` for one that :meth:`decode` would refuse."""
-        return Library.default().output(f"{P}_dhcp_duid_encode", self.to_structure(), *Bytes.readable(self.data))
+        return Library.default().output("umilib_protocol_dhcp_dhcp_duid_encode", self.to_structure(), *Bytes.readable(self.data))
 
     @staticmethod
     def time_of(unix: int) -> int:
         """The time of a DUID-LLT made at ``unix`` seconds since 1970: seconds since 2000-01-01 UTC, modulo
         2^32 (§11.2). It is ``DHCPDUID::time`` of Rust, renamed beside the field ``time``."""
-        return Library.default().function(f"{P}_dhcp_duid_time")(unix)
+        return Library.default().function("umilib_protocol_dhcp_dhcp_duid_time")(unix)
 
 
 __all__ = ["DHCPDUID", "DHCPError", "DHCPTime"]

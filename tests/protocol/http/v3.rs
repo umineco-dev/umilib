@@ -205,6 +205,23 @@ fn qpack_tables_carry_repeated_fields() {
 }
 
 #[test]
+fn going_away_before_any_request() {
+    // RFC 9114 §5.2: a GOAWAY of 0 says no request was processed; the request under way is
+    // rejected (H3_REQUEST_REJECTED, §4.1.1), so it may be retried.
+    // This crate's server closes at once when it has no request, so the GOAWAY is given to the
+    // client as a server that keeps the connection open would send it.
+    let mut pair = Pair::default();
+    pair.run();
+    let first = pair.client().send_request(&request("/1"), true).unwrap();
+    pair.client().receive_goaway(0).unwrap();
+    let events_seen = drain(&mut pair.client());
+    let reset = events_seen.iter().position(|event| *event == HTTPEvent::Reset { stream: first, code: 0x10B });
+    let goaway = events_seen.iter().position(|event| matches!(event, HTTPEvent::GoAway { .. }));
+    assert!(reset.is_some() && reset < goaway, "{events_seen:?}");
+    assert!(pair.client().send_request(&request("/late"), true).is_err());
+}
+
+#[test]
 fn going_away() {
     // RFC 9114 §5.2: GOAWAY names the first request not processed; the
     // ones before finish; no new requests; then the connection closes.

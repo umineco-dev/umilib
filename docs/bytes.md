@@ -56,6 +56,21 @@ significant bit first.
 
 Each operation takes at most 56 bits (`MAXIMUM_BITS`).
 
+The backward bitstreams of Finite State Entropy and Zstandard (RFC 8878
+sections 4.1 and 4.2.2) are read from the end towards the start: the last
+byte ends with a 1 bit followed by zero padding, and a value of several
+bits has the first bit read as its most significant.
+
+- `BackwardBitReader<'a>::new(bytes)` finds the final 1 bit (`None` for an
+  empty slice or a last byte of 0); `peek` and `read` take up to 32 bits.
+  Reading past the start gives zero bits, as decoders of these formats
+  expect at their last symbols, and sets `overflowed`; the position stays
+  at the start. `is_finished` holds when every bit was read, exactly, so a
+  decoder checks that its stream held the bits of its symbols and no more.
+- `BackwardBitWriter` appends values least significant bit first, in the
+  reverse of the order they will be read (`write(value, count)`, up to 32
+  bits); `finish` adds the final 1 bit and the padding.
+
 ## Lines
 
 `LineBuffer` holds received bytes not yet read, for the line protocols

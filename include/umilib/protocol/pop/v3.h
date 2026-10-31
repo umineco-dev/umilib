@@ -276,6 +276,11 @@ const umilib_ffi_Status* umilib_protocol_pop_v3_pop3_server_end_data(umilib_prot
 const umilib_ffi_Status* umilib_protocol_pop_v3_pop3_server_auth_challenge(umilib_protocol_pop_v3_POP3Server* server, const uint8_t* challenge, size_t length, uint64_t now);
 
 /**
+ * Closes the connection with -ERR and the text at `text`: for shutting down.
+ */
+const umilib_ffi_Status* umilib_protocol_pop_v3_pop3_server_shutdown(umilib_protocol_pop_v3_POP3Server* server, const uint8_t* text, size_t length);
+
+/**
  * Writes what is to be sent into `out`.
  */
 const umilib_ffi_Status* umilib_protocol_pop_v3_pop3_server_transmit(umilib_protocol_pop_v3_POP3Server* server, umilib_ffi_Buffer* out);

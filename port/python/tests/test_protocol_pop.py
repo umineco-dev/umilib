@@ -156,6 +156,16 @@ def test_rules_and_timeouts():
     assert events(server)[-1].kind == POP3ServerEventKind.CLOSED and server.transmit() == b""
     config = POP3Config.default()
     assert POP3Config.from_structure(config.to_structure()) == config
+    # Shutting down: -ERR (RFC 1939 §3), SYS/TEMP where response codes are announced (RFC 3206 §4).
+    server = POP3Server.new(None, None, False)
+    server.greet(POP3Response.positive("ready"), 0)
+    server.transmit()
+    with pytest.raises(POP3Error) as raised:
+        server.shutdown("bye\r\n+OK")
+    assert raised.value.name == "Syntax" and server.transmit() == b"" and server.is_open()
+    server.shutdown("shutting down")
+    assert server.transmit() == b"-ERR [SYS/TEMP] shutting down\r\n"
+    assert not server.is_open() and events(server)[-1].kind == POP3ServerEventKind.CLOSED
 
 
 MAILDROP = [b"Subject: one\r\n\r\nfirst\r\n.leading period\r\n", b"Subject: two\r\n\r\nsecond\r\n"]

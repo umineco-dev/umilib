@@ -1,4 +1,4 @@
-use alloc::collections::BTreeMap;
+use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::vec::Vec;
 use core::time::Duration;
 
@@ -17,7 +17,9 @@ pub struct DHCPv6ServerConfig {
     pub duid: DHCPDUID,
     /// The first and last addresses it leases in IA_NA.
     pub addresses: Option<(IPv6Address, IPv6Address)>,
-    /// The prefix it delegates from, its length, and the length of each delegated prefix (IA_PD).
+    /// The prefix it delegates from (no bit set past its length), its
+    /// length, and the length of each delegated prefix (IA_PD), at most 32
+    /// bits longer.
     pub prefixes: Option<(IPv6Address, u8, u8)>,
     /// The lifetimes it gives, in seconds (0xFFFFFFFF for infinity), and T1
     /// and T2 (0: half and four fifths of the preferred lifetime, RFC 9915 §21.4).
@@ -31,11 +33,22 @@ pub struct DHCPv6ServerConfig {
     pub rapid_commit: bool,
     /// The options it gives (DNS servers, domains…), each to a client that asks for it.
     pub options: DHCPv6Options,
+    /// How long a declined address or prefix is not leased (§18.3.8).
+    pub decline_time: Duration,
+    /// The most IAs of a message given addresses or prefixes; the others
+    /// are answered NoAddrsAvail or NoPrefixAvail (§18.3.9).
+    pub maximum_ias: usize,
+    /// The most bindings kept, declined ones and ended ones not yet
+    /// forgotten by [`DHCPv6Server::expire`] among them; when full, no new
+    /// address or prefix is given.
+    pub maximum_bindings: usize,
 }
 
 impl DHCPv6ServerConfig {
     /// A server of `duid` leasing nothing yet, of lifetimes of a day
-    /// preferred and two valid, T1 and T2 derived, giving no options.
+    /// preferred and two valid, T1 and T2 derived, giving no options; a
+    /// declined address not leased for an hour, 16 IAs of a message
+    /// answered, and 65536 bindings kept.
     pub fn new(duid: DHCPDUID) -> DHCPv6ServerConfig {
         DHCPv6ServerConfig {
             duid,
@@ -48,6 +61,9 @@ impl DHCPv6ServerConfig {
             preference: 0,
             rapid_commit: false,
             options: DHCPv6Options::new(),
+            decline_time: Duration::from_secs(3600),
+            maximum_ias: 16,
+            maximum_bindings: 65_536,
         }
     }
 }
@@ -61,9 +77,21 @@ pub struct DHCPv6Binding {
     pub address: IPv6Address,
     /// None for an address, the length for a prefix.
     pub length: Option<u8>,
-    /// None: declined, not leased again (§18.3.8).
+    /// When it ends (None: never): its valid lifetime, or, declined, the
+    /// end of `decline_time` (§18.3.8).
     pub expires: Option<Instant>,
     pub declined: bool,
+}
+
+impl DHCPv6Binding {
+    /// Whether it keeps its address or prefix from the IA `ia` of `client`
+    /// at `now`: declined, or held by another IA, until it ends. Each IA
+    /// has addresses of its own (§12, §21.4).
+    pub fn blocks(&self, client: &[u8], ia: &DHCPv6IA, now: Instant) -> bool {
+        let own = self.client == client && self.kind == ia.kind && self.iaid == ia.iaid;
+        let live = self.expires.is_none_or(|expires| now < expires);
+        live && (self.declined || !own)
+    }
 }
 
 /// A DHCPv6 server (RFC 9915 §18.3), Sans-I/O: it answers each client
@@ -76,14 +104,21 @@ pub struct DHCPv6Server {
 }
 
 impl DHCPv6Server {
+    /// A server of `config`; fails for a pool whose first address is after
+    /// its last, or prefixes of bits set past their length, longer than
+    /// their delegated length, or more than 32 bits shorter.
     pub fn new(config: DHCPv6ServerConfig) -> Result<DHCPv6Server, DHCPError> {
         if let Some((first, last)) = config.addresses
             && first.0 > last.0
         {
             return Err(DHCPError::Config);
         }
-        if let Some((_, length, delegated)) = config.prefixes
-            && (length > delegated || delegated == 0 || delegated > 128 || delegated - length > 32)
+        if let Some((base, length, delegated)) = config.prefixes
+            && (length > delegated
+                || delegated == 0
+                || delegated > 128
+                || delegated - length > 32
+                || u128::from_be_bytes(base.0).checked_shl(u32::from(length)).unwrap_or(0) != 0)
         {
             return Err(DHCPError::Config);
         }
@@ -177,23 +212,27 @@ impl DHCPv6Server {
                 self.extend(message, &mut reply, &client, known, now);
             }
             Kind::RELEASE | Kind::DECLINE => {
-                // §18.3.7, §18.3.8: the bindings named end; a declined address is not leased again.
+                // §18.3.7, §18.3.8: the bindings named end; a declined address
+                // is not leased for `decline_time`.
+                let declined = now.saturating_add(self.config.decline_time);
                 for ia in DHCPv6Server::ias(&message.options) {
-                    for held in ia
+                    let keys = ia
                         .addresses()
                         .iter()
-                        .map(|address| address.address)
-                        .chain(ia.prefixes().iter().map(|prefix| prefix.prefix))
-                    {
-                        for binding in self.bindings.values_mut().filter(|binding| {
-                            binding.client == client && binding.iaid == ia.iaid && binding.address == held
-                        }) {
-                            if message.kind == Kind::DECLINE {
-                                binding.declined = true;
-                                binding.client.clear();
-                            } else {
-                                binding.expires = Some(now);
-                            }
+                        .map(|address| (address.address, None))
+                        .chain(ia.prefixes().iter().map(|prefix| (prefix.prefix, Some(prefix.length))))
+                        .collect::<Vec<_>>();
+                    for key in keys {
+                        let Some(binding) = self.bindings.get_mut(&key) else { continue };
+                        if binding.client != client || binding.kind != ia.kind || binding.iaid != ia.iaid {
+                            continue;
+                        }
+                        if message.kind == Kind::DECLINE {
+                            binding.declined = true;
+                            binding.client.clear();
+                            binding.expires = Some(declined);
+                        } else {
+                            binding.expires = Some(now);
                         }
                     }
                 }
@@ -240,9 +279,8 @@ impl DHCPv6Server {
         self.config.addresses.is_some_and(|(first, last)| first.0 <= address.0 && address.0 <= last.0)
     }
 
-    /// Whether `address` (or the prefix of `length` there) is declined, or
-    /// held at `now` by another IA than `ia` of `client`: each IA has
-    /// addresses of its own (§12, §21.4).
+    /// Whether `address` (or the prefix of `length` there) is kept from
+    /// the IA `ia` of `client` at `now` ([`DHCPv6Binding::blocks`]).
     pub fn is_taken(
         &self,
         address: &IPv6Address,
@@ -251,44 +289,67 @@ impl DHCPv6Server {
         ia: &DHCPv6IA,
         now: Instant,
     ) -> bool {
-        self.bindings.get(&(*address, length)).is_some_and(|binding| {
-            let own = binding.client == client && binding.kind == ia.kind && binding.iaid == ia.iaid;
-            binding.declined || (!own && binding.expires.is_none_or(|expires| now < expires))
-        })
+        self.bindings.get(&(*address, length)).is_some_and(|binding| binding.blocks(client, ia, now))
     }
 
-    /// A free address of the pool, or a free prefix, for the IA `ia` of
-    /// `client`, but none of `chosen` (those given to its other IAs).
+    /// The first free address of the pool, or free prefix, for the IA `ia`
+    /// of `client`, but none of `chosen` (those given to its other IAs).
+    /// The whole pool is searched, in a time of the bindings in it and of
+    /// `chosen`, not of its size: every candidate passed over is a binding
+    /// or one of `chosen`.
     pub fn allocate(
         &self,
         ia: &DHCPv6IA,
         client: &[u8],
-        chosen: &[(IPv6Address, Option<u8>)],
+        chosen: &BTreeSet<(IPv6Address, Option<u8>)>,
         now: Instant,
     ) -> Option<(IPv6Address, Option<u8>)> {
-        let free = |candidate: &(IPv6Address, Option<u8>)| {
-            !chosen.contains(candidate) && !self.is_taken(&candidate.0, candidate.1, client, ia, now)
-        };
-        match ia.kind {
+        // The candidates are start + (index << shift), for index from 0 to last.
+        let (start, shift, last, length) = match ia.kind {
             DHCPv6OptionCode::IA_NA => {
                 let (first, last) = self.config.addresses?;
                 let (first, last) = (u128::from_be_bytes(first.0), u128::from_be_bytes(last.0));
-                (first..=last.min(first.saturating_add(65_535)))
-                    .map(|value| (IPv6Address(value.to_be_bytes()), None))
-                    .find(free)
+                (first, 0, last.checked_sub(first)?, None)
             }
             DHCPv6OptionCode::IA_PD => {
                 let (base, length, delegated) = self.config.prefixes?;
-                let count = 1u64 << (delegated.saturating_sub(length)).min(16);
-                let base = u128::from_be_bytes(base.0);
-                let step = 128 - u32::from(delegated);
-                (0..count)
-                    .filter_map(|index| u128::from(index).checked_shl(step))
-                    .map(|offset| (IPv6Address((base | offset).to_be_bytes()), Some(delegated)))
-                    .find(free)
+                // A configuration changed after DHCPv6Server::new is checked again, to never overflow.
+                let bits = delegated.checked_sub(length).filter(|bits| *bits <= 32 && delegated <= 128)?;
+                (u128::from_be_bytes(base.0), 128 - u32::from(delegated), (1u128 << bits) - 1, Some(delegated))
             }
-            _ => None,
+            _ => return None,
+        };
+        let end = start.checked_add(last << shift)?;
+        let candidate = |index: u128| (IPv6Address((start + (index << shift)).to_be_bytes()), length);
+        let mut index = 0u128;
+        for (key, binding) in
+            self.bindings.range((IPv6Address(start.to_be_bytes()), length)..=(IPv6Address(end.to_be_bytes()), length))
+        {
+            let offset = u128::from_be_bytes(key.0.0) - start;
+            if key.1 != length || offset & ((1u128 << shift) - 1) != 0 {
+                continue;
+            }
+            let found = offset >> shift;
+            while index < found {
+                if !chosen.contains(&candidate(index)) {
+                    return Some(candidate(index));
+                }
+                index += 1;
+            }
+            if index == found {
+                if !binding.blocks(client, ia, now) && !chosen.contains(&candidate(index)) {
+                    return Some(candidate(index));
+                }
+                index = index.checked_add(1)?;
+            }
         }
+        while index <= last {
+            if !chosen.contains(&candidate(index)) {
+                return Some(candidate(index));
+            }
+            index = index.checked_add(1)?;
+        }
+        None
     }
 
     /// The addresses or prefixes the bindings of `client` give its IA `ia`.
@@ -302,9 +363,22 @@ impl DHCPv6Server {
             .collect()
     }
 
-    /// The IAs of a reply: for each IA of the request, the client's
-    /// bindings of it, or new ones (if `commit` binds them), or the status
-    /// of none available (§18.3.1, §18.3.9).
+    /// The answer to an IA given nothing: the status NoPrefixAvail for an
+    /// IA_PD, NoAddrsAvail for others (§18.3.1, §18.3.9).
+    pub fn unavailable(ia: &DHCPv6IA) -> DHCPv6IA {
+        let code = match ia.kind {
+            DHCPv6OptionCode::IA_PD => DHCPv6StatusCode::NO_PREFIX_AVAIL,
+            _ => DHCPv6StatusCode::NO_ADDRS_AVAIL,
+        };
+        let mut answer = DHCPv6IA::new(ia.kind, ia.iaid);
+        answer.options.push(DHCPv6OptionCode::STATUS_CODE, DHCPv6StatusCode::new(code, "").encode());
+        answer
+    }
+
+    /// The IAs of a reply: for each of the first `maximum_ias` IAs of the
+    /// request, the client's bindings of it, or a new one (if `commit`
+    /// binds it) while fewer than `maximum_bindings` are kept; for an IA
+    /// given nothing, [`DHCPv6Server::unavailable`] (§18.3.1, §18.3.9).
     pub fn assign(
         &mut self,
         request: &DHCPv6Message,
@@ -313,23 +387,31 @@ impl DHCPv6Server {
         commit: bool,
         now: Instant,
     ) {
-        let mut chosen: Vec<(IPv6Address, Option<u8>)> = Vec::new();
-        for ia in DHCPv6Server::ias(&request.options) {
+        let mut chosen: BTreeSet<(IPv6Address, Option<u8>)> = BTreeSet::new();
+        // The bindings this message adds, counted whether bound or not, so
+        // that an Advertise offers what a Request would get.
+        let mut added = 0usize;
+        for (position, ia) in DHCPv6Server::ias(&request.options).into_iter().enumerate() {
+            if position >= self.config.maximum_ias {
+                if let Ok(option) = DHCPv6Server::unavailable(&ia).encode() {
+                    reply.options.entries.push(option);
+                }
+                continue;
+            }
             let mut held = self.held(client, &ia);
             if held.is_empty()
+                && self.bindings.len().saturating_add(added) < self.config.maximum_bindings
                 && let Some(new) = self.allocate(&ia, client, &chosen, now)
             {
+                if !commit && !self.bindings.contains_key(&new) {
+                    added += 1;
+                }
                 held.push(new);
             }
-            chosen.extend_from_slice(&held);
+            chosen.extend(held.iter().copied());
             let mut answer = DHCPv6IA::new(ia.kind, ia.iaid);
             if held.is_empty() {
-                let code = if ia.kind == DHCPv6OptionCode::IA_PD {
-                    DHCPv6StatusCode::NO_PREFIX_AVAIL
-                } else {
-                    DHCPv6StatusCode::NO_ADDRS_AVAIL
-                };
-                answer.options.push(DHCPv6OptionCode::STATUS_CODE, DHCPv6StatusCode::new(code, "").encode());
+                answer = DHCPv6Server::unavailable(&ia);
             } else {
                 self.fill(&mut answer, &held);
                 if commit {
@@ -346,7 +428,8 @@ impl DHCPv6Server {
 
     /// Request, Renew and Rebind (§18.3.2, §18.3.4, §18.3.5): bindings
     /// made or extended; for Renew and Rebind, an IA the server has no
-    /// binding of has the status NoBinding.
+    /// binding of has the status NoBinding, and an IA past the first
+    /// `maximum_ias` is extended no more ([`DHCPv6Server::unavailable`]).
     pub fn extend(
         &mut self,
         request: &DHCPv6Message,
@@ -359,7 +442,13 @@ impl DHCPv6Server {
             self.assign(request, reply, client, true, now);
             return;
         }
-        for ia in DHCPv6Server::ias(&request.options) {
+        for (position, ia) in DHCPv6Server::ias(&request.options).into_iter().enumerate() {
+            if position >= self.config.maximum_ias {
+                if let Ok(option) = DHCPv6Server::unavailable(&ia).encode() {
+                    reply.options.entries.push(option);
+                }
+                continue;
+            }
             let held = self.held(client, &ia);
             let mut answer = DHCPv6IA::new(ia.kind, ia.iaid);
             if held.is_empty() {
@@ -425,8 +514,9 @@ impl DHCPv6Server {
         self.bindings.insert((address, length), binding);
     }
 
-    /// Forgets the bindings expired at `now`.
+    /// Forgets the bindings ended at `now`: leases past their valid
+    /// lifetime, declined ones past `decline_time`.
     pub fn expire(&mut self, now: Instant) {
-        self.bindings.retain(|_, binding| binding.declined || binding.expires.is_none_or(|expires| now < expires));
+        self.bindings.retain(|_, binding| binding.expires.is_none_or(|expires| now < expires));
     }
 }

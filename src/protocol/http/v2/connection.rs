@@ -68,7 +68,7 @@ pub struct H2Connection {
     pub error: Option<HTTPError>,
     /// Acknowledgments owed and not yet written.
     pub pending_control: usize,
-    /// The streams the peer reset since `resets_since`.
+    /// The streams the peer reset, or caused this end to reset, since `resets_since`.
     pub resets: u32,
     pub resets_since: Instant,
     pub idle_since: Instant,
@@ -218,7 +218,14 @@ impl H2Connection {
             offset = end;
             if let Err(error) = self.receive_frame(&header, &payload, now) {
                 match error {
-                    H2Error::Stream { stream, code, .. } => self.reset_stream(stream, code),
+                    // A stream error the peer caused frees a stream as its own
+                    // RST_STREAM does, so it counts against the same budget.
+                    H2Error::Stream { stream, code, .. } => {
+                        self.reset_stream(stream, code);
+                        if let Err(error) = self.count_reset(now) {
+                            break Err(error);
+                        }
+                    }
                     connection => break Err(connection),
                 }
             }
@@ -573,14 +580,7 @@ impl H2Connection {
         if self.is_idle(stream) {
             return Err(H2Error::protocol("RST_STREAM on a stream never opened"));
         }
-        if now.saturating_duration_since(self.resets_since) > self.config.reset_window {
-            self.resets = 0;
-            self.resets_since = now;
-        }
-        self.resets += 1;
-        if self.resets > self.config.maximum_resets {
-            return Err(H2Error::connection(H2ErrorCode::ENHANCE_YOUR_CALM, "too many streams reset"));
-        }
+        self.count_reset(now)?;
         let id = HTTPStreamID(u64::from(stream));
         // A response that arrived whole stays for the application: NO_ERROR
         // only stops the request's upload (RFC 9113 §8.1).
@@ -657,8 +657,12 @@ impl H2Connection {
         }
         let unprocessed: Vec<u32> =
             self.streams.keys().copied().filter(|id| !self.is_peer_stream(*id) && *id > last).collect();
+        // Each stream the peer did not process is told apart, as refused: it
+        // may be retried on another connection (§8.7).
         for stream in unprocessed {
             self.streams.remove(&stream);
+            let code = u64::from(H2ErrorCode::REFUSED_STREAM.0);
+            self.push_event(HTTPEvent::Reset { stream: HTTPStreamID(u64::from(stream)), code });
         }
         if code != H2ErrorCode::NO_ERROR {
             self.error = Some(HTTPError::Protocol { code: u64::from(code.0), reason: "the peer closed with an error" });
@@ -871,6 +875,22 @@ impl H2Connection {
             self.state = H2State::Closed;
             self.push_event(HTTPEvent::Closed { error: self.error });
         }
+    }
+
+    /// Counts a stream reset by the peer, or by this end because of a frame
+    /// of the peer; a peer that causes more than `maximum_resets` in
+    /// `reset_window` is closed with ENHANCE_YOUR_CALM (CVE-2023-44487,
+    /// CVE-2025-8671).
+    pub fn count_reset(&mut self, now: Instant) -> Result<(), H2Error> {
+        if now.saturating_duration_since(self.resets_since) > self.config.reset_window {
+            self.resets = 0;
+            self.resets_since = now;
+        }
+        self.resets = self.resets.saturating_add(1);
+        if self.resets > self.config.maximum_resets {
+            return Err(H2Error::connection(H2ErrorCode::ENHANCE_YOUR_CALM, "too many streams reset"));
+        }
+        Ok(())
     }
 
     /// Resets `stream` with `code` (RFC 9113 §6.4): unread content is credited back.

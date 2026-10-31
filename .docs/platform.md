@@ -21,6 +21,36 @@ struct of constants. The constants and structure layouts were taken from:
   `ws2def.h`, `ws2ipdef.h`, `minwinbase.h`. `FIONBIO` is
   `_IOW('f', 126, u_long)` = 0x8004667E; `WSAPROTOCOL_INFOW` is 628 bytes.
 
+On Linux the constants are those of the kernel's generic headers
+(`asm-generic/socket.h`, `asm-generic/fcntl.h`, `asm-generic/errno.h`, and
+`SOCK_STREAM` 1, `SOCK_DGRAM` 2 of `linux/net.h`). Most architectures use
+them: x86, x86-64, ARM, AArch64, RISC-V, LoongArch64 and s390x have no
+header of their own for them, and PowerPC's `asm/socket.h` and
+`asm/fcntl.h` change only options umilib does not use (`SO_RCVLOWAT` to
+`SO_PEERCRED`, `O_DIRECTORY` to `O_DIRECT`) before including the generic
+ones (checked against the kernel's sources). MIPS has its own
+(`SOCK_DGRAM` 1, `SOCK_STREAM` 2, `SOL_SOCKET` 0xFFFF, BSD-style `SO_*`
+numbers, `O_NONBLOCK` 0x80, `ENOSYS` 89), and so do SPARC (`SOL_SOCKET`
+0xFFFF, `O_NONBLOCK` 0x4000, `O_CLOEXEC` 0x400000), Alpha and PA-RISC.
+`unix::sys` and `linux::sys` refuse to compile (`compile_error!`) on any
+architecture outside the verified list. Per-architecture values for MIPS
+and SPARC were rejected for now: no such target can be run here or in CI
+(Rust's MIPS targets are tier 3, without std builds), and values never run
+are the kind of mistake that corrupts system calls silently. Adding one
+means taking every constant of both modules from its headers and running
+the platform tests on it. `TUNSETIFF` still names the MIPS and SPARC
+number for that day.
+
+Darwin's `struct timespec` is `{ long tv_sec; long tv_nsec; }`
+(`__darwin_time_t` is `long`), so `TimeSpec` uses `c_long`: 32 bits on
+arm64_32 and armv7k (watchOS) and i686. Fixed `i64` fields made the kernel
+read a different layout there.
+
+`SocketDuplicate` (`WSAPROTOCOL_INFOW`, 628 bytes) is aligned to 4, the
+alignment of the C structure (its widest fields are `DWORD` and `int`),
+because Winsock reads and writes it in place through a typed pointer. As
+a plain byte array it had alignment 1.
+
 `getrandom` is called through `syscall` with the number of each
 architecture (the system call ABI is stable; the C library's `getrandom`
 needs glibc 2.25 or Android API 28). The test
@@ -261,6 +291,24 @@ The review of this module found these problems; each has a test:
   kill fails. Listeners on descriptors 0 to 2 are refused.
 - **Windows UDP.** `SIO_UDP_CONNRESET` is turned off, and `WSAEMSGSIZE`
   (a truncated datagram) gives the bytes that fit, as on Unix.
+- **Limits fixed in the code.** The pollers' 256 events per wait, the
+  completion port's 256 completions, the reactor's 10 ms pause after a
+  failed wait and the fuzzer's sampling (1024 inputs, one in 64) were
+  constants. They are now `ReactorConfig::maximum_events` and
+  `retry_delay` (passed to `Poller::with_maximum_events` and
+  `CompletionPort::with_maximum_completions`) and
+  `FuzzConfig::maximum_corpus_inputs` and `sample_interval`, with the old
+  values as defaults. The waits allocate their buffer of system events per
+  call (`try_reserve_exact`, so a failure is an error), because a poller
+  is shared by threads and may be waited on by several at once: a buffer
+  kept in the poller would need a lock that serialized those waits.
+- **Sizes and times from the caller.** `ThreadPool::new` built its
+  per-thread vectors with `collect`, so a huge `threads` (reachable through
+  `umilib_platform_runtime_thread_pool_new`) aborted the process; it now
+  reserves with `try_reserve_exact` and fails with `OutOfMemory`.
+  `Supervisor::stop` added `stop_timeout` to `Instant::now()`, which panics
+  on overflow (also from `Drop`); a deadline the clock cannot hold is now
+  no deadline.
 - **Cancellation of completed reads on Windows.** A dropped operation's
   data is lost, which is inherent to owned buffers on completion ports;
   it is documented rather than fixed.

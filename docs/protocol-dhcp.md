@@ -101,6 +101,25 @@ prefix. It checks every message as §16 says, answers a Relay-forward
 inside a Relay-reply (§19.3), and gives each client the options it asks
 for. `DHCPv6ServerConfig::new(duid)` is a server leasing nothing, of
 lifetimes of a day preferred and two valid, T1 and T2 derived (§21.4).
+Every address of the range, and every prefix of the delegated length in the
+prefix, is leased: the server takes the first free one, in a time of the
+bindings it keeps rather than of the size of the pool. The prefix may have
+no bit set past its length, and is at most 32 bits shorter than the
+delegated prefixes.
+
+The server bounds its work and its memory, each limit a field of
+`DHCPv6ServerConfig`:
+
+- `maximum_ias` (16): the most IAs of one message given addresses or
+  prefixes. The others are answered NoAddrsAvail or NoPrefixAvail, as
+  §18.3.9 says of an IA the server gives nothing.
+- `maximum_bindings` (65536): the most bindings kept, declined ones and
+  ended ones not yet forgotten among them. When full, no new address or
+  prefix is given until `expire` forgets the ended ones; call `expire`
+  regularly.
+- `decline_time` (an hour): how long an address or a prefix a client
+  declined (§18.3.8) is not leased; then `expire` forgets it and it is
+  leased again. `Duration::MAX` keeps it out for ever.
 
 ## Trying it
 
@@ -113,8 +132,8 @@ namespaces, against ISC dhclient, BusyBox udhcpc, dnsmasq and themselves.
 The C ABI (`include/umilib/protocol/dhcp*.h`) and `umilib.protocol.dhcp`
 mirror the types above. DHCPv4 options cross as an options area, DHCPv6
 options as their bytes, durations as milliseconds (`u64::MAX` for
-infinity). A function that needs randomness takes a generator of
-`crypto::random`, as in Rust.
+infinity), `decline_time` of the DHCPv6 server included. A function that
+needs randomness takes a generator of `crypto::random`, as in Rust.
 
 ## Not implemented
 

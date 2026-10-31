@@ -15,8 +15,6 @@ from umilib.protocol.icmp import ICMPExtensions, ICMPHeader
 from umilib.protocol.ip import IPv4Address
 from umilib.protocol.ip.v4 import IPv4Header
 
-P = "umilib_protocol_icmp_v4"
-
 
 class ICMPv4Type(int):
     """The type of an ICMP message (the IANA registry "ICMP Type Numbers")."""
@@ -41,15 +39,15 @@ class ICMPv4Type(int):
         return super().__new__(cls, value)
 
     def is_error(self) -> bool:
-        return bool(Library.default().function(f"{P}_icmpv4_type_is_error")(int(self)))
+        return bool(Library.default().function("umilib_protocol_icmp_v4_icmpv4_type_is_error")(int(self)))
 
     def is_deprecated(self) -> bool:
         """Whether the type is deprecated (RFC 6633, RFC 6918)."""
-        return bool(Library.default().function(f"{P}_icmpv4_type_is_deprecated")(int(self)))
+        return bool(Library.default().function("umilib_protocol_icmp_v4_icmpv4_type_is_deprecated")(int(self)))
 
     def is_extensible(self) -> bool:
         """Whether an error of this type carries the length attribute of RFC 4884."""
-        return bool(Library.default().function(f"{P}_icmpv4_type_is_extensible")(int(self)))
+        return bool(Library.default().function("umilib_protocol_icmp_v4_icmpv4_type_is_extensible")(int(self)))
 
     def __repr__(self) -> str:
         return f"ICMPv4Type({int(self)})"
@@ -122,29 +120,29 @@ class ICMPv4Message:
         """The message that ``data`` is; raises ``Length`` or ``Checksum``."""
         data = bytes(data)
         structure = Library.default().type("umilib_protocol_icmp_ICMPHeader")()
-        Library.default().call(f"{P}_icmpv4_message_decode", data, len(data), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_icmp_v4_icmpv4_message_decode", data, len(data), ctypes.byref(structure))
         return cls.from_structure(structure, data[ICMPv4Message.HEADER_LENGTH :])
 
     def encode(self) -> bytes:
-        return Library.default().output(f"{P}_icmpv4_message_encode", self.header_structure(), *Bytes.readable(self.body))
+        return Library.default().output("umilib_protocol_icmp_v4_icmpv4_message_encode", self.header_structure(), *Bytes.readable(self.body))
 
     def length(self) -> int:
         return ICMPv4Message.HEADER_LENGTH + len(self.body)
 
     @classmethod
     def echo_request(cls, identifier: int, sequence: int, data: bytes = b"") -> ICMPv4Message:
-        return cls.from_structure(Library.default().function(f"{P}_icmpv4_message_echo_request")(identifier, sequence), bytes(data))
+        return cls.from_structure(Library.default().function("umilib_protocol_icmp_v4_icmpv4_message_echo_request")(identifier, sequence), bytes(data))
 
     def echo_reply(self) -> ICMPv4Message | None:
         """The Echo Reply to this Echo Request."""
         found = ctypes.c_bool()
         structure = Library.default().type("umilib_protocol_icmp_ICMPHeader")()
-        Library.default().call(f"{P}_icmpv4_message_echo_reply", self.header_structure(), ctypes.byref(found), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_icmp_v4_icmpv4_message_echo_reply", self.header_structure(), ctypes.byref(found), ctypes.byref(structure))
         return ICMPv4Message.from_structure(structure, self.body) if found.value else None
 
     def query(self) -> tuple[int, int] | None:
         found, identifier, sequence = ctypes.c_bool(), ctypes.c_uint16(), ctypes.c_uint16()
-        Library.default().call(f"{P}_icmpv4_message_query", self.header_structure(), ctypes.byref(found), ctypes.byref(identifier), ctypes.byref(sequence))
+        Library.default().call("umilib_protocol_icmp_v4_icmpv4_message_query", self.header_structure(), ctypes.byref(found), ctypes.byref(identifier), ctypes.byref(sequence))
         return (identifier.value, sequence.value) if found.value else None
 
     def is_query(self) -> bool:
@@ -162,26 +160,26 @@ class ICMPv4Message:
     def timestamps(self) -> tuple[int, int, int] | None:
         """The originate, receive and transmit timestamps of a Timestamp or Timestamp Reply."""
         found, out = ctypes.c_bool(), (ctypes.c_uint32 * 3)()
-        Library.default().call(f"{P}_icmpv4_message_timestamps", self.header_structure(), *Bytes.readable(self.body), ctypes.byref(found), out)
+        Library.default().call("umilib_protocol_icmp_v4_icmpv4_message_timestamps", self.header_structure(), *Bytes.readable(self.body), ctypes.byref(found), out)
         return (out[0], out[1], out[2]) if found.value else None
 
     def next_hop_mtu(self) -> int | None:
         """The MTU of the next hop of a Fragmentation Needed message (RFC 1191 §4)."""
-        return Library.default().optional(f"{P}_icmpv4_message_next_hop_mtu", ctypes.c_uint16, self.header_structure())
+        return Library.default().optional("umilib_protocol_icmp_v4_icmpv4_message_next_hop_mtu", ctypes.c_uint16, self.header_structure())
 
     def pointer(self) -> int | None:
-        return Library.default().optional(f"{P}_icmpv4_message_pointer", ctypes.c_uint8, self.header_structure())
+        return Library.default().optional("umilib_protocol_icmp_v4_icmpv4_message_pointer", ctypes.c_uint8, self.header_structure())
 
     def gateway(self) -> IPv4Address | None:
         found = ctypes.c_bool()
         structure = Library.default().type("umilib_protocol_ip_IPv4Address")()
-        Library.default().call(f"{P}_icmpv4_message_gateway", self.header_structure(), ctypes.byref(found), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_icmp_v4_icmpv4_message_gateway", self.header_structure(), ctypes.byref(found), ctypes.byref(structure))
         return IPv4Address.from_structure(structure) if found.value else None
 
     def original(self) -> tuple[bytes, ICMPExtensions | None]:
         """The original datagram an error quotes and its extension structure (RFC 4884), if any."""
         length, found = ctypes.c_size_t(), ctypes.c_bool()
-        Library.default().call(f"{P}_icmpv4_message_original", self.header_structure(), *Bytes.readable(self.body), ctypes.byref(length), ctypes.byref(found))
+        Library.default().call("umilib_protocol_icmp_v4_icmpv4_message_original", self.header_structure(), *Bytes.readable(self.body), ctypes.byref(length), ctypes.byref(found))
         original = self.body[: length.value]
         return original, (ICMPExtensions.decode(self.body[length.value :]) if found.value else None)
 
@@ -202,7 +200,7 @@ class ICMPv4Message:
 
     @staticmethod
     def quote_length(length: int, header_length: int) -> int:
-        return Library.default().function(f"{P}_icmpv4_message_quote_length")(length, header_length)
+        return Library.default().function("umilib_protocol_icmp_v4_icmpv4_message_quote_length")(length, header_length)
 
     @staticmethod
     def quote(datagram: bytes, header_length: int) -> bytes:
@@ -212,7 +210,7 @@ class ICMPv4Message:
     @staticmethod
     def may_report(header: IPv4Header, payload: bytes, broadcast: bool) -> bool:
         """Whether an error may be sent about a datagram (RFC 1122 §3.2.2)."""
-        return Library.default().value(f"{P}_icmpv4_message_may_report", ctypes.c_bool, ctypes.byref(header.to_structure()), *Bytes.readable(payload), broadcast)
+        return Library.default().value("umilib_protocol_icmp_v4_icmpv4_message_may_report", ctypes.c_bool, ctypes.byref(header.to_structure()), *Bytes.readable(payload), broadcast)
 
 
 __all__ = ["ICMPv4Code", "ICMPv4Message", "ICMPv4Type"]

@@ -42,4 +42,4 @@ mod websocket;
 #[path = "../common/vectors.rs"]
 mod vectors;
 
-pub use vectors::{Capture, Json, RFC, Vectors, Wycheproof};
+pub use vectors::{Capture, JSON, RFC, Vectors, Wycheproof};

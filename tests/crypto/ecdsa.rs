@@ -10,7 +10,7 @@ use umilib::hash::sha::v2::{SHA224, SHA256, SHA384, SHA512};
 use umilib::hash::{CryptographicDigest, Digest};
 use umilib::math::ec::{PrimeField, WeierstrassCurve};
 
-use crate::{Json, RFC, Vectors, Wycheproof};
+use crate::{JSON, RFC, Vectors, Wycheproof};
 
 /// What every signature scheme must do: signatures verify under the key that
 /// made them and fail under any change; keys survive their encodings.
@@ -190,7 +190,7 @@ fn check_wycheproof_files<C: WeierstrassCurve>(prefix: &str) {
     files.sort();
     assert!(!files.is_empty(), "{prefix}");
     for file in &files {
-        let count = Json::read(&format!("crypto/ecdsa/{file}"))
+        let count = JSON::read(&format!("crypto/ecdsa/{file}"))
             .field("testGroups")
             .items()
             .iter()

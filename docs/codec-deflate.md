@@ -71,7 +71,10 @@ ends with its input, so call `finish` (as `decompress_to_vec` does). With
 `multiple_members: false` it reads one member and leaves what follows. It
 checks the magic, the method, the reserved flags, the header CRC and the
 trailer (`ChecksumMismatch`), and bounds the optional fields by
-`maximum_field` (64 KiB by default; `LimitExceeded`). `header()` gives the
+`maximum_field` (64 KiB by default; `LimitExceeded`). Its `deflate` field
+sets the window kept, as for zlib: gzip does not announce the window a
+member uses, so a window below the default 32 KiB saves memory but fails
+members whose matches reach farther (`LimitExceeded`). `header()` gives the
 header of the member read, `members()` the number of members.
 
 ## C and Python
@@ -82,7 +85,7 @@ window_bits)`, `_deflate_decompressor_new(window_bits)` and their
 window_bits, dictionary, length)` and `_zlib_decompressor_new(window_bits,
 dictionary, length)`, a null dictionary meaning none;
 `umilib_codec_gzip_gzip_compressor_new` with the fields of the header and
-`_gzip_decompressor_new(multiple_members, maximum_field)`, whose header is
+`_gzip_decompressor_new(multiple_members, maximum_field, window_bits)`, whose header is
 read with `_gzip_decompressor_header` and `_header_field` (0 extra, 1 name,
 2 comment). Python mirrors them with `DeflateConfig`,
 `DeflateDecompressorConfig`, `GzipHeader`, `GzipConfig` and

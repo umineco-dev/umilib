@@ -138,6 +138,32 @@ fn reactor_timers_wake_their_tasks_on_time() {
     assert!(timed.is_err());
 }
 
+#[test]
+fn pools_refuse_a_number_of_threads_beyond_memory() {
+    let config = ThreadPoolConfig { threads: usize::MAX, ..ThreadPoolConfig::default() };
+    let error = ThreadPool::new(&config).err().expect("a pool of usize::MAX threads");
+    assert_eq!(error.kind(), std::io::ErrorKind::OutOfMemory);
+}
+
+#[test]
+fn reactors_take_their_limits_from_the_config() {
+    let defaults = ReactorConfig::default();
+    assert_eq!((defaults.maximum_events, defaults.retry_delay), (256, Duration::from_millis(10)));
+    let none = ReactorConfig { maximum_events: 0, ..ReactorConfig::default() };
+    assert_eq!(Reactor::new(&none).expect_err("a reactor of no events").kind(), std::io::ErrorKind::InvalidInput);
+    // A reactor taking one event per wait still serves its timers.
+    let reactor = Reactor::new(&ReactorConfig { maximum_events: 1, ..ReactorConfig::default() }).unwrap();
+    let pool = pool(1);
+    let timer = reactor.timer();
+    let sleeps: Vec<_> = (0..4u64)
+        .map(|milliseconds| {
+            let timer = timer.clone();
+            pool.spawn(async move { timer.sleep(Duration::from_millis(milliseconds)).await })
+        })
+        .collect();
+    assert!(pool.block_on(JoinAll::new(sleeps)).iter().all(Result::is_ok));
+}
+
 #[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple", windows))]
 mod sockets {
     use std::time::Duration;
@@ -412,6 +438,15 @@ mod supervisor {
             check_interval: Duration::from_millis(10),
             ..SupervisorConfig::default()
         }
+    }
+
+    /// A stop timeout past what the clock can represent waits without limit instead of panicking.
+    #[test]
+    fn stop_timeouts_beyond_the_clock_mean_no_limit() {
+        let config = SupervisorConfig { workers: 1, stop_timeout: Duration::MAX, ..SupervisorConfig::default() };
+        let mut supervisor = Supervisor::new(config, Vec::new());
+        supervisor.stop().unwrap();
+        drop(supervisor);
     }
 
     #[test]

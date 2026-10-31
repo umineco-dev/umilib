@@ -130,8 +130,7 @@ impl<H: CryptographicDigest + Default, G: CryptographicDigest + Default> RSAPSS<
             return Err(CryptoError::InvalidSignature);
         }
         let data_length = length - H::OUTPUT_SIZE - 1;
-        let unused = 0xFFu8 << (8 - (8 * length as u32 - bits));
-        let unused = if 8 * length as u32 == bits { 0 } else { unused };
+        let unused = !(0xFFu8 >> (8 * length as u32 - bits));
         if encoded[0] & unused != 0 {
             return Err(CryptoError::InvalidSignature);
         }

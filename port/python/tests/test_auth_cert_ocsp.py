@@ -164,6 +164,19 @@ def test_responses_are_revocation_sources_of_path_validation():
     with pytest.raises(PathError) as error:
         PathValidator(config, anchors, sources=[response("unauthorized")]).validate(certificate("good"))
     assert error.value.name == "InvalidResponse"
+    # The responses' signatures are spent from the budget of the validation: two for the delegated
+    # responder (its certificate's and the response's) beyond those of the path itself.
+    def validates(revocation: RevocationConfig, signatures: int) -> bool:
+        try:
+            PathValidator(PathConfig(JANUARY_2027, revocation=revocation, maximum_signatures=signatures), anchors, sources=[response("delegated")]).validate(certificate("good"))
+            return True
+        except PathError as error:
+            assert error.name == "Work"
+            return False
+
+    path_signatures = next(n for n in range(config.maximum_signatures) if validates(RevocationConfig.NONE, n))
+    assert validates(RevocationConfig.REQUIRED, path_signatures + 2)
+    assert not validates(RevocationConfig.REQUIRED, path_signatures + 1)
     # A basic response is a source too, and a response that is not successful says nothing.
     PathValidator(config, anchors, sources=[response("delegated").basic()]).validate(certificate("good"))
     with pytest.raises(PathError) as error:

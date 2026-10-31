@@ -685,6 +685,11 @@ impl IMAPResponse {
             IMAPResponse::Continuation(text) if text.iter().any(|byte| matches!(byte, b'\r' | b'\n' | 0)) => {
                 return invalid("a line break in a continuation request");
             }
+            IMAPResponse::Fetch { items, .. }
+                if items.iter().any(|item| matches!(item, IMAPFetchItem::InternalDate(date) if !date.is_valid())) =>
+            {
+                return invalid("an INTERNALDATE that date-time cannot write");
+            }
             _ => {}
         }
         if let IMAPResponse::Status { text, code, .. } = self {
@@ -696,6 +701,11 @@ impl IMAPResponse {
                 || code_text.contains(&b']')
             {
                 return invalid("a line break in a response");
+            }
+            // resp-text (RFC 9051 §9): text after the condition that begins with "[" is read as a
+            // response code, so without one it would be read back as a code the server never meant.
+            if code.is_none() && text.starts_with('[') {
+                return invalid("a text that would be read as a response code");
             }
         }
         Ok(())

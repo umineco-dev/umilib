@@ -34,7 +34,8 @@ if let Some(step) = totp.verify(entered.as_bytes(), now, 1, 1)? {
 
 The generator works as follows:
 
-- `generate(counter)` gives the `OTPCode` of a counter: HMAC of the key
+- `generate(counter)` gives the `OTPCode` of a counter (a `Result`, as for
+  TOTP; it cannot fail for the digits `new` took): HMAC of the key
   over the counter (8 bytes, big-endian), dynamically truncated to 31 bits
   (`HOTP::truncate`), reduced to its last `digits` digits.
 - `verify(code, counter, look_ahead)` returns the first counter from
@@ -44,6 +45,9 @@ The generator works as follows:
 
 An `OTPCode` has `value`, `digits` and `to_ascii`, and `Display` writes it
 with leading zeros. Its `Debug` output does not print the password.
+`OTPCode::new(value, digits)` fails with `OTPError::Digits` unless `digits`
+is from 6 to 10 (`OTPCode::MINIMUM_DIGITS`, `OTPCode::MAXIMUM_DIGITS`) and
+`value` is below 10^`digits`, so every code can be written.
 
 ## TOTP
 

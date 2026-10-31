@@ -5,7 +5,7 @@ use umilib::crypto::hmac::HMAC;
 use umilib::hash::sha::v2::{SHA224, SHA512};
 use umilib::hash::sha::v3::SHA3_512;
 
-use crate::Json;
+use crate::JSON;
 
 /// The derived keying material of `length` bytes for the auxiliary function `name` of ACVP.
 fn derive(name: &str, salt: &[u8], z: &[u8], fixed_info: &[u8], length: usize) -> Option<Vec<u8>> {
@@ -25,7 +25,7 @@ fn derive(name: &str, salt: &[u8], z: &[u8], fixed_info: &[u8], length: usize) -
 }
 
 /// The party information of ACVP: the party identifier, then the ephemeral data if any.
-fn party(party: &Json) -> Vec<u8> {
+fn party(party: &JSON) -> Vec<u8> {
     let mut info = party.bytes("partyId");
     if party.get("ephemeralData").is_some() {
         info.extend(party.bytes("ephemeralData"));
@@ -35,7 +35,7 @@ fn party(party: &Json) -> Vec<u8> {
 
 #[test]
 fn kda_one_step_of_nist_acvp() {
-    let file = Json::read("crypto/concatkdf/KDA-OneStep-Sp800-56Cr2.json");
+    let file = JSON::read("crypto/concatkdf/KDA-OneStep-Sp800-56Cr2.json");
     let mut checked = 0;
     for group in file.field("testGroups").items() {
         let configuration = group.field("kdfConfiguration");
@@ -58,7 +58,7 @@ fn kda_one_step_of_nist_acvp() {
             let Some(derived) = derive(name, &salt, &parameter.bytes("z"), &fixed_info, bits / 8) else { continue };
             let expected = test.bytes("dkm");
             if validation {
-                let passed = matches!(test.field("testPassed"), Json::Bool(true));
+                let passed = matches!(test.field("testPassed"), JSON::Bool(true));
                 assert_eq!(derived == expected, passed, "{name} {}", test.field("tcId").as_usize());
             } else {
                 assert_eq!(derived, expected, "{name} {}", test.field("tcId").as_usize());

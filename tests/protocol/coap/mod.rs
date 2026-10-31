@@ -727,3 +727,88 @@ fn a_response_that_cannot_be_written() {
     pair.run(at(0));
     assert_eq!(pair.responses().len(), 1);
 }
+
+#[test]
+fn requests_left_unanswered() {
+    let mut random = random(13);
+    let sent = |endpoint: &mut CoAPEndpoint| -> Vec<CoAPMessage> {
+        std::iter::from_fn(|| endpoint.transmit()).map(|sent| CoAPMessage::decode(&sent.message).unwrap()).collect()
+    };
+    let requests = |endpoint: &mut CoAPEndpoint| -> Vec<u64> {
+        std::iter::from_fn(|| endpoint.poll_event())
+            .filter_map(|event| match event {
+                CoAPEvent::Request { exchange, .. } => Some(exchange),
+                _ => None,
+            })
+            .collect()
+    };
+    let config = CoAPConfig::default();
+    // RFC 7967 §2, RFC 7252 §8.2: a server may choose not to respond. A Confirmable request it does not
+    // answer is acknowledged by an empty ACK, so that its client stops retransmitting it (§4.2); a
+    // Non-confirmable one gets nothing.
+    let mut server = CoAPEndpoint::new(config, &mut random).unwrap();
+    let mut confirmable = get("/a", CoAPType::Confirmable);
+    confirmable.id = 1;
+    confirmable.token = vec![1];
+    let mut non = get("/a", CoAPType::NonConfirmable);
+    non.id = 2;
+    non.token = vec![2];
+    server.receive(client_address(), &confirmable.encode().unwrap(), at(0), &mut random);
+    server.receive(client_address(), &non.encode().unwrap(), at(0), &mut random);
+    let exchanges = requests(&mut server);
+    assert_eq!(exchanges.len(), 2);
+    server.ignore(exchanges[0]).unwrap();
+    let acks = sent(&mut server);
+    assert_eq!(acks.len(), 1);
+    assert_eq!((acks[0].kind, acks[0].code, acks[0].id), (CoAPType::Acknowledgement, CoAPCode::EMPTY, 1));
+    // §4.5: a duplicate gets the same reply.
+    server.receive(client_address(), &confirmable.encode().unwrap(), at(1), &mut random);
+    assert_eq!(sent(&mut server), acks);
+    server.ignore(exchanges[1]).unwrap();
+    assert!(sent(&mut server).is_empty());
+    let unknown = CoAPMessage::new(CoAPType::Acknowledgement, CoAPCode::CONTENT, 0);
+    assert!(server.respond(exchanges[0], unknown.clone(), at(2), &mut random).is_err());
+    assert!(server.ignore(exchanges[0]).is_err());
+    assert!(server.incoming.is_empty());
+    // §4.8.2: a client waits for a response at most EXCHANGE_LIFETIME (Confirmable) or NON_LIFETIME
+    // (Non-confirmable); a request still unanswered then is forgotten.
+    let mut server = CoAPEndpoint::new(config, &mut random).unwrap();
+    server.receive(client_address(), &confirmable.encode().unwrap(), at(0), &mut random);
+    server.receive(client_address(), &non.encode().unwrap(), at(0), &mut random);
+    let exchanges = requests(&mut server);
+    let milliseconds = |duration: Duration| duration.as_millis() as u64;
+    let (exchange_lifetime, non_lifetime) = (milliseconds(config.exchange_lifetime), milliseconds(config.non_lifetime));
+    server.expire(at(non_lifetime - 1));
+    assert_eq!(server.incoming.len(), 2);
+    server.expire(at(non_lifetime));
+    assert_eq!(server.incoming.len(), 1);
+    assert!(server.respond(exchanges[1], unknown.clone(), at(non_lifetime), &mut random).is_err());
+    assert!(server.poll_timeout().is_some_and(|due| due <= at(exchange_lifetime)));
+    server.expire(at(exchange_lifetime));
+    assert!(server.incoming.is_empty());
+    assert!(server.respond(exchanges[0], unknown, at(exchange_lifetime), &mut random).is_err());
+    // No more requests awaiting an answer than configured: past it, a Confirmable request is answered
+    // 5.03 Service Unavailable (§5.9.3.4) and a Non-confirmable one is ignored (§4.3 needs no reply).
+    let config = CoAPConfig { maximum_incoming: 2, ..CoAPConfig::default() };
+    let mut server = CoAPEndpoint::new(config, &mut random).unwrap();
+    for id in 10..13u16 {
+        let mut request = get("/a", CoAPType::NonConfirmable);
+        request.id = id;
+        request.token = vec![id as u8];
+        server.receive(client_address(), &request.encode().unwrap(), at(0), &mut random);
+    }
+    assert_eq!((requests(&mut server).len(), server.incoming.len()), (2, 2));
+    assert!(sent(&mut server).is_empty());
+    let mut request = get("/a", CoAPType::Confirmable);
+    request.id = 20;
+    request.token = vec![20];
+    server.receive(client_address(), &request.encode().unwrap(), at(0), &mut random);
+    assert!(requests(&mut server).is_empty());
+    let refusal = sent(&mut server);
+    assert_eq!(refusal.len(), 1);
+    assert_eq!(
+        (refusal[0].kind, refusal[0].code, refusal[0].id, refusal[0].token.as_slice()),
+        (CoAPType::Acknowledgement, CoAPCode::SERVICE_UNAVAILABLE, 20, &[20u8][..])
+    );
+    assert_eq!(server.incoming.len(), 2);
+}

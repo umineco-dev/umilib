@@ -22,7 +22,7 @@ from umilib.ffi import Buffer, Bytes, FFIError, Handle, Library
 
 class OCSPStatusError(FFIError):
     """An error of a request or a response: ``Version``, ``Status``, ``ResponseType``, ``Algorithm``,
-    ``Signer``, ``NotFound``, ``Time``, ``Nonce`` or ``UnknownCriticalExtension``."""
+    ``Signer``, ``NotFound``, ``Time``, ``Nonce``, ``UnknownCriticalExtension`` or ``Work``."""
 
 
 Library.register_error("auth.cert.ocsp", OCSPStatusError)

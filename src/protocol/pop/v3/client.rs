@@ -245,7 +245,7 @@ impl POP3Client {
                 // RFC 2595 §4: what was known before TLS is forgotten, an accepted USER too.
                 self.user_accepted = false;
             }
-            POP3Command::Utf8 if ok => self.utf8 = true,
+            POP3Command::UTF8 if ok => self.utf8 = true,
             POP3Command::Quit if self.state == POP3State::Transaction => self.state = POP3State::Update,
             _ => {}
         }
@@ -326,7 +326,7 @@ impl POP3Client {
             return state("a password as it is without TLS (RFC 2595 §2.3)");
         }
         match command {
-            POP3Command::User(_) | POP3Command::Apop { .. } | POP3Command::Utf8 if !authorization => {
+            POP3Command::User(_) | POP3Command::Apop { .. } | POP3Command::UTF8 if !authorization => {
                 state("only in the AUTHORIZATION state")
             }
             POP3Command::Pass(_) if !authorization || !self.user_accepted => state("PASS only after an accepted USER"),
@@ -346,7 +346,7 @@ impl POP3Client {
                 }
                 Ok(())
             }
-            POP3Command::Utf8 if !capability("UTF8") => state("UTF8 not announced"),
+            POP3Command::UTF8 if !capability("UTF8") => state("UTF8 not announced"),
             POP3Command::Lang(_) if !capability("LANG") => state("LANG not announced"),
             POP3Command::Stat
             | POP3Command::List(_)
@@ -407,7 +407,7 @@ impl POP3Client {
                             | POP3Command::User(_)
                             | POP3Command::Pass(_)
                             | POP3Command::Apop { .. }
-                            | POP3Command::Utf8
+                            | POP3Command::UTF8
                             | POP3Command::Quit
                             | POP3Command::Capa
                     );

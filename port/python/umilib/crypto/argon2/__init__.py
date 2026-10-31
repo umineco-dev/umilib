@@ -8,8 +8,6 @@ import enum
 from umilib.crypto import Primitive
 from umilib.ffi import Bytes, Handle, Library
 
-P = "umilib_crypto_argon2_argon2"
-
 
 class Argon2Type(enum.IntEnum):
     """The type y of Argon2 (section 3.1); section 4 recommends Argon2id."""
@@ -23,22 +21,22 @@ class Argon2(Primitive):
     """Argon2 of a type with ``memory`` KiB, ``passes`` passes and ``lanes`` lanes, checked when it is
     created (section 3.1); the memory is allocated for each derivation and zeroized after it."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_argon2_argon2"
     MINIMUM_TAG = 4
 
     def __init__(self, variant: Argon2Type, memory: int, passes: int, lanes: int) -> None:
-        super().__init__(Handle.create(f"{P}_new", int(variant), memory, passes, lanes))
+        super().__init__(Handle.create("umilib_crypto_argon2_argon2_new", int(variant), memory, passes, lanes))
 
     def variant(self) -> Argon2Type:
-        return Argon2Type(self.library.value(f"{P}_variant", ctypes.c_uint32, self.handle))
+        return Argon2Type(self.library.value("umilib_crypto_argon2_argon2_variant", ctypes.c_uint32, self.handle))
 
     def blocks(self) -> int:
         """m' = 4p × ⌊m / 4p⌋, the number of blocks of memory."""
-        return self.library.value(f"{P}_blocks", ctypes.c_uint32, self.handle)
+        return self.library.value("umilib_crypto_argon2_argon2_blocks", ctypes.c_uint32, self.handle)
 
     def memory_bytes(self) -> int:
         """The bytes of memory a derivation allocates."""
-        return self.library.value(f"{P}_memory_bytes", ctypes.c_uint64, self.handle)
+        return self.library.value("umilib_crypto_argon2_argon2_memory_bytes", ctypes.c_uint64, self.handle)
 
     def derive(
         self,
@@ -54,7 +52,7 @@ class Argon2(Primitive):
         for data in (password, salt, secret, associated):
             arguments.extend(Bytes.readable(data))
         out = (ctypes.c_uint8 * length)()
-        self.library.call(f"{P}_derive", self.handle, *arguments, out, length)
+        self.library.call("umilib_crypto_argon2_argon2_derive", self.handle, *arguments, out, length)
         return bytes(out)
 
     @staticmethod
@@ -62,7 +60,7 @@ class Argon2(Primitive):
         """H' of the concatenation of ``inputs``, ``length`` bytes long (section 3.3)."""
         pointers, lengths, count, kept = Bytes.array(inputs)
         out = (ctypes.c_uint8 * length)()
-        Library.default().call(f"{P}_variable_hash", pointers, lengths, count, out, length)
+        Library.default().call("umilib_crypto_argon2_argon2_variable_hash", pointers, lengths, count, out, length)
         del kept
         return bytes(out)
 

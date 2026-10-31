@@ -11,7 +11,9 @@ must keep true. The user-facing interface is in
 | `Compressor`, `Decompressor`, `Flush`, `Progress`, `CompressionError` | `src/codec/*.rs` | The interface of every format |
 | `PendingOutput` | `src/codec/pending_output.rs` | Bytes made but not yet delivered (a compressed block, a decoded match) |
 | `BitReader`, `BitWriter`, `BitQueue` | `src/bytes/` | LSB-first bit I/O: slices, vectors, and streaming input |
+| `BackwardBitReader`, `BackwardBitWriter` | `src/bytes/` | The backward bitstreams of FSE and Zstandard |
 | `HuffmanCode`, `HuffmanTable` | `src/codec/huffman/canonical/` | Canonical codes of every Huffman-based format |
+| `FSEDistribution`, `FSEDecodingTable`, `FSEEncodingTable` | `src/codec/fse/` | Finite State Entropy (tANS), used by Zstandard |
 | `LZ77Window`, `LZ77MatchFinder` | `src/codec/lz77/` | The history of LZ77 decompressors and the match search of their compressors |
 
 Each format module depends on these, never on another format, unless the
@@ -121,6 +123,57 @@ The BCJ conversions follow liblzma's code (XZ Utils, 0BSD), the de facto
 definition the specification refers to; the RISC-V filter's encoder and
 decoder differ (its special AUIPC format), the others share one function
 with a direction flag.
+
+## Finite State Entropy and backward bitstreams
+
+FSE and the backward bitstreams were written inside the Zstandard module,
+with the tables taking `ZstandardBitReader` and `ZstandardBitWriter`. FSE
+is not Zstandard's: it is Yann Collet's implementation of Jarek Duda's
+tabled ANS, a library of its own that other formats use, and the backward
+bitstream (read from the end, ended by a 1 bit and zero padding) is that
+library's `BIT_DStream`. Under the rule that no part exists only for
+another module, both became general parts:
+
+- `bytes::BackwardBitReader` and `bytes::BackwardBitWriter`, next to the
+  other bit readers. Their constructor returns `Option`, because
+  `bytes` cannot use `CompressionError` and a `BytesError` variant would
+  be the only one about bits; callers map `None` to their own error
+  (Zstandard: `InvalidData`, "bitstream without its final bit").
+  Reading past the start saturates: it gives zero bits, keeps the position
+  at the start and sets `overflowed`. An earlier version let the position
+  wrap below zero and derived `overflowed` from the wrapped value;
+  saturating keeps every later read and `is_finished` well defined.
+- `codec::fse` (feature `codec-fse`, which `codec-zstandard` depends on):
+  `FSEDistribution` (validated by `new`, read and written in the table
+  description format of RFC 8878 section 4.1.1, which is also the FSE
+  library's `FSE_readNCount`, normalized from counts),
+  `FSEDecodingTable` and `FSEEncodingTable`. The tables drive the backward
+  bitstreams (`initial_state`, `next_state`, `encode`, `flush`) and expose
+  each step without them (`FSEDecodingEntry::next_state`,
+  `FSEEncodingTable::transition`), so another bit source or the C ABI can
+  drive them. The accuracy log is limited to 15 (`MAXIMUM_LOG`, the FSE
+  library's hard limit), which keeps states in 16 bits and probabilities in
+  `i16`, and symbols to 256 (`MAXIMUM_SYMBOLS`); `read` applies these limits
+  whatever the caller passes. Errors stay `CompressionError` (`InvalidData`
+  for descriptions, `InvalidParameter` for parameters): an FSE description
+  is compressed data, and a separate `FSEError` would only be converted
+  back by every caller.
+
+Rejected: keeping the types in `zstandard` and re-exporting them from a
+general module (two paths for one type, and the general module would
+depend on a format); making FSE generic over a bit reader trait (one
+implementation exists, and the per-step methods already serve other
+sources); re-exporting the old names from `zstandard` (the crate is
+unreleased, and duplicate names contradict one module per feature).
+
+`ZstandardHuffman` keeps its own decoding table instead of
+`huffman::canonical::HuffmanTable`: Zstandard assigns prefix codes from the
+lowest weight (the longest codes) up, the longest codes numerically
+smallest (RFC 8878 section 4.2.1.3), while `HuffmanCode` is the canonical
+code of RFC 1951 with the shortest codes smallest. Building a
+`HuffmanTable` would need the codes of another assignment, which
+`HuffmanCode` cannot express without a new constructor, for a table that is
+already a single lookup of `maximum_bits` (at most 11) bits.
 
 ## Tests
 

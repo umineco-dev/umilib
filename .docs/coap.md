@@ -64,6 +64,20 @@ How `protocol::coap` is built and why. The user's view is `docs/protocol-coap.md
   the message remembered for the shortest time left is forgotten.
 - **An exchange stays until its response is written,** so that a response
   that cannot be encoded can be replaced by another rather than lost.
+- **An exchange also ends unanswered** (audit finding). A server need not
+  answer every request: a multicast request it has nothing for (§8.2.1),
+  a request with No-Response (RFC 7967). Exchanges were removed only by
+  `respond`, so such requests stayed for ever and an endpoint's memory grew
+  with every one. Now the application ends an exchange with `ignore` (an
+  empty ACK for a Confirmable request not yet acknowledged, so that the
+  client stops retransmitting, §4.2), `expire` forgets an exchange after
+  EXCHANGE_LIFETIME or NON_LIFETIME (its client no longer waits for a
+  response then, §4.8.2), and at most `maximum_incoming` (1024) wait. Past
+  the limit a Confirmable request is answered 5.03 (piggybacked, so nothing
+  stays) and a Non-confirmable one is ignored (§4.3 needs no reply). Evicting
+  the oldest exchange, as `maximum_seen` does, was rejected: it would drop a
+  request the application is still working on without telling it, whereas
+  refusing the new one tells the client at once.
 - **Blocks are tracked by offset, not by count** (`CoAPBlockwise`). A
   receiver may ask for smaller blocks as it goes (RFC 7959 §2.4), and the
   next block's number is the body so far divided by the size asked for.

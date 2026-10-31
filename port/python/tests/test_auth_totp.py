@@ -2,7 +2,7 @@
 
 import pytest
 
-from umilib.auth.totp import HOTP, TOTP, OTPStatusError, TOTPConfig
+from umilib.auth.totp import HOTP, TOTP, OTPCode, OTPStatusError, TOTPConfig
 from umilib.hash.md.v5 import MD5
 from umilib.hash.sha.v1 import SHA1
 from umilib.hash.sha.v2 import SHA256, SHA512
@@ -38,6 +38,11 @@ def test_rfc6238_appendix_b():
     assert generators[0].counter(1111111109) == 0x23523EC
     assert generators[0].verify("07081804", 1111111111, behind=1, ahead=0) == 0x23523EC
     assert generators[0].verify("07081804", 1111111111, behind=0, ahead=0) is None
+
+
+def test_digits():
+    # RFC 4226 R4 and §5.3: 6 to 10 digits.
+    assert (OTPCode.MINIMUM_DIGITS, OTPCode.MAXIMUM_DIGITS) == (6, 10)
 
 
 def test_errors():

@@ -20,7 +20,6 @@ from umilib.auth.cert.key import PrivateKey
 from umilib.auth.cert.path import TrustAnchor
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Text, Words
 
-P = "umilib_protocol_tls"
 
 __all__ = [
     "TLSAlertDescription",
@@ -279,7 +278,7 @@ class TLSStructures:
     @staticmethod
     def structure(name: str, value: Any) -> Any:
         """The structure ``name`` of the fields of ``value``."""
-        structure = Library.default().type(f"{P}_{name}")()
+        structure = Library.default().type(f"umilib_protocol_tls_{name}")()
         for field in value.FIELDS:
             item = getattr(value, field)
             Fields.assign(structure, field, int(item) if isinstance(item, enum.Enum) else item)
@@ -297,42 +296,42 @@ class TLSConfig(Handle):
     """What both ends configure: versions, cipher suites, groups, signature schemes, application
     protocols and limits, most preferred first; every one compiled in by default."""
 
-    FREE = f"{P}_tls_config_free"
+    FREE = "umilib_protocol_tls_tls_config_free"
 
     def __init__(self, pointer: int | None = None) -> None:
-        super().__init__(pointer or Handle.create(f"{P}_tls_config_new"))
+        super().__init__(pointer or Handle.create("umilib_protocol_tls_tls_config_new"))
 
     def set_versions(self, versions: list[int]) -> None:
-        self.library.call(f"{P}_tls_config_set_versions", self.handle, *TLSStructures.numbers(versions))
+        self.library.call("umilib_protocol_tls_tls_config_set_versions", self.handle, *TLSStructures.numbers(versions))
 
     def set_cipher_suites(self, suites: list[int]) -> None:
-        self.library.call(f"{P}_tls_config_set_cipher_suites", self.handle, *TLSStructures.numbers(suites))
+        self.library.call("umilib_protocol_tls_tls_config_set_cipher_suites", self.handle, *TLSStructures.numbers(suites))
 
     def set_groups(self, groups: list[int]) -> None:
-        self.library.call(f"{P}_tls_config_set_groups", self.handle, *TLSStructures.numbers(groups))
+        self.library.call("umilib_protocol_tls_tls_config_set_groups", self.handle, *TLSStructures.numbers(groups))
 
     def set_signature_schemes(self, schemes: list[int]) -> None:
-        self.library.call(f"{P}_tls_config_set_signature_schemes", self.handle, *TLSStructures.numbers(schemes))
+        self.library.call("umilib_protocol_tls_tls_config_set_signature_schemes", self.handle, *TLSStructures.numbers(schemes))
 
     def set_protocols(self, protocols: list[bytes]) -> None:
         pointers, lengths, count, _kept = Bytes.array(protocols)
-        self.library.call(f"{P}_tls_config_set_protocols", self.handle, pointers, lengths, count)
+        self.library.call("umilib_protocol_tls_tls_config_set_protocols", self.handle, pointers, lengths, count)
 
     @property
     def limits(self) -> TLSLimits:
-        structure = Library.default().type(f"{P}_TLSLimits")()
-        self.library.call(f"{P}_tls_config_limits", self.handle, ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_tls_TLSLimits")()
+        self.library.call("umilib_protocol_tls_tls_config_limits", self.handle, ctypes.byref(structure))
         return TLSLimits(**{field: getattr(structure, field) for field in TLSLimits.FIELDS})
 
     @limits.setter
     def limits(self, limits: TLSLimits) -> None:
-        self.library.call(f"{P}_tls_config_set_limits", self.handle, ctypes.byref(TLSStructures.structure("TLSLimits", limits)))
+        self.library.call("umilib_protocol_tls_tls_config_set_limits", self.handle, ctypes.byref(TLSStructures.structure("TLSLimits", limits)))
 
 
 class TLSPathVerifier(Handle):
     """Path validation of peers' certificates to trust anchors (RFC 5280, RFC 9525)."""
 
-    FREE = f"{P}_tls_path_verifier_free"
+    FREE = "umilib_protocol_tls_tls_path_verifier_free"
 
     @staticmethod
     def anchors(anchors: list[TrustAnchor]) -> Any:
@@ -345,12 +344,12 @@ class TLSPathVerifier(Handle):
     @classmethod
     def servers(cls, anchors: list[TrustAnchor]) -> TLSPathVerifier:
         """The verification of servers: the Web PKI profile, ``id-kp-serverAuth``."""
-        return cls.of(f"{P}_tls_path_verifier_servers", anchors)
+        return cls.of("umilib_protocol_tls_tls_path_verifier_servers", anchors)
 
     @classmethod
     def clients(cls, anchors: list[TrustAnchor]) -> TLSPathVerifier:
         """The verification of clients: the profile of RFC 5280, ``id-kp-clientAuth``."""
-        return cls.of(f"{P}_tls_path_verifier_clients", anchors)
+        return cls.of("umilib_protocol_tls_tls_path_verifier_clients", anchors)
 
     @classmethod
     def of(cls, name: str, anchors: list[TrustAnchor]) -> TLSPathVerifier:
@@ -365,7 +364,7 @@ class TLSCertifiedKey(Handle):
     """A certificate chain (DER, the end-entity certificate first) and the private key of its first
     certificate, with an OCSP response to staple."""
 
-    FREE = f"{P}_tls_certified_key_free"
+    FREE = "umilib_protocol_tls_tls_certified_key_free"
 
     @classmethod
     def new(cls, chain: list[bytes], key: PrivateKey, ocsp: bytes | None = None) -> TLSCertifiedKey:
@@ -373,7 +372,7 @@ class TLSCertifiedKey(Handle):
         pointers, lengths, count, _kept = Bytes.array(chain)
         with key.locked():
             out = ctypes.c_void_p()
-            Library.default().call(f"{P}_tls_certified_key_new", pointers, lengths, count, key.pointer, *Bytes.readable(ocsp or b""), ctypes.byref(out))
+            Library.default().call("umilib_protocol_tls_tls_certified_key_new", pointers, lengths, count, key.pointer, *Bytes.readable(ocsp or b""), ctypes.byref(out))
             key.consumed()
         return cls(out.value)
 
@@ -394,7 +393,7 @@ TLSECHCipherSuite.MANDATORY = TLSECHCipherSuite(0x0001, 0x0001)
 class TLSECHKey(Handle):
     """An ECH configuration and its private key, which a client-facing server holds (RFC 9849 §7)."""
 
-    FREE = f"{P}_tls_ech_key_free"
+    FREE = "umilib_protocol_tls_tls_ech_key_free"
     DHKEM_P256: ClassVar[int] = 0x0010
     DHKEM_X25519: ClassVar[int] = 0x0020
 
@@ -414,85 +413,85 @@ class TLSECHKey(Handle):
         numbers = [number for suite in suites for number in (suite.kdf_id, suite.aead_id)]
         pairs = Words.array(ctypes.c_uint16, numbers, len(numbers))
         return cls(Handle.create(
-            f"{P}_tls_ech_key_generate", config_id, kem_id, pairs, len(suites), maximum_name_length, *Text.encode(public_name),
+            "umilib_protocol_tls_tls_ech_key_generate", config_id, kem_id, pairs, len(suites), maximum_name_length, *Text.encode(public_name),
             retry, *Bytes.readable(seed or os.urandom(48)),
         ))  # fmt: skip
 
     @classmethod
     def new(cls, config_list: bytes, private_key: bytes, retry: bool = True) -> TLSECHKey:
         """The key of the first configuration of ``config_list`` and the KEM's serialized ``private_key``."""
-        return cls(Handle.create(f"{P}_tls_ech_key_new", *Bytes.readable(config_list), *Bytes.readable(private_key), retry))
+        return cls(Handle.create("umilib_protocol_tls_tls_ech_key_new", *Bytes.readable(config_list), *Bytes.readable(private_key), retry))
 
     @property
     def config_list(self) -> bytes:
         """The ``ECHConfigList`` of the configuration, which clients are given."""
-        return self.library.output(f"{P}_tls_ech_key_config_list", self.handle)
+        return self.library.output("umilib_protocol_tls_tls_ech_key_config_list", self.handle)
 
     @property
     def private_key(self) -> bytearray:
-        return self.library.output_secret(f"{P}_tls_ech_key_private_key", self.handle)
+        return self.library.output_secret("umilib_protocol_tls_tls_ech_key_private_key", self.handle)
 
 
 class TLSClientConfig(Handle):
     """The configuration of clients: a :class:`TLSConfig` and what checks servers."""
 
-    FREE = f"{P}_tls_client_config_free"
+    FREE = "umilib_protocol_tls_tls_client_config_free"
 
     @classmethod
     def new(cls, config: TLSConfig, verifier: TLSPathVerifier) -> TLSClientConfig:
-        return cls(Handle.create(f"{P}_tls_client_config_new", config, verifier))
+        return cls(Handle.create("umilib_protocol_tls_tls_client_config_new", config, verifier))
 
     def set_options(self, options: TLSClientOptions) -> None:
-        self.library.call(f"{P}_tls_client_config_set_options", self.handle, ctypes.byref(TLSStructures.structure("TLSClientOptions", options)))
+        self.library.call("umilib_protocol_tls_tls_client_config_set_options", self.handle, ctypes.byref(TLSStructures.structure("TLSClientOptions", options)))
 
     def set_key_share_groups(self, groups: list[int]) -> None:
-        self.library.call(f"{P}_tls_client_config_set_key_share_groups", self.handle, *TLSStructures.numbers(groups))
+        self.library.call("umilib_protocol_tls_tls_client_config_set_key_share_groups", self.handle, *TLSStructures.numbers(groups))
 
     def set_certificate(self, key: TLSCertifiedKey | None) -> None:
-        self.library.call(f"{P}_tls_client_config_set_certificate", self.handle, key)
+        self.library.call("umilib_protocol_tls_tls_client_config_set_certificate", self.handle, key)
 
     def set_session_cache(self, capacity: int) -> None:
         """Keeps up to ``capacity`` tickets of servers to resume their sessions; none for 0."""
-        self.library.call(f"{P}_tls_client_config_set_session_cache", self.handle, capacity)
+        self.library.call("umilib_protocol_tls_tls_client_config_set_session_cache", self.handle, capacity)
 
     def set_ech_configs(self, config_list: bytes) -> None:
         """Encrypts the ClientHello with the first usable configuration of the ``ECHConfigList``."""
-        self.library.call(f"{P}_tls_client_config_set_ech_configs", self.handle, *Bytes.readable(config_list))
+        self.library.call("umilib_protocol_tls_tls_client_config_set_ech_configs", self.handle, *Bytes.readable(config_list))
 
 
 class TLSServerConfig(Handle):
     """The configuration of servers: a :class:`TLSConfig`, the certificates to present, and what
     makes tickets, refuses replays and decrypts ClientHellos."""
 
-    FREE = f"{P}_tls_server_config_free"
+    FREE = "umilib_protocol_tls_tls_server_config_free"
 
     @classmethod
     def new(cls, config: TLSConfig, certificates: list[TLSCertifiedKey]) -> TLSServerConfig:
-        server = cls(Handle.create(f"{P}_tls_server_config_new", config))
+        server = cls(Handle.create("umilib_protocol_tls_tls_server_config_new", config))
         for certificate in certificates:
             server.add_certificate(certificate)
         return server
 
     def add_certificate(self, key: TLSCertifiedKey) -> None:
-        self.library.call(f"{P}_tls_server_config_add_certificate", self.handle, key)
+        self.library.call("umilib_protocol_tls_tls_server_config_add_certificate", self.handle, key)
 
     def set_options(self, options: TLSServerOptions) -> None:
-        self.library.call(f"{P}_tls_server_config_set_options", self.handle, ctypes.byref(TLSStructures.structure("TLSServerOptions", options)))
+        self.library.call("umilib_protocol_tls_tls_server_config_set_options", self.handle, ctypes.byref(TLSStructures.structure("TLSServerOptions", options)))
 
     def set_client_verifier(self, verifier: TLSPathVerifier | None) -> None:
-        self.library.call(f"{P}_tls_server_config_set_client_verifier", self.handle, verifier)
+        self.library.call("umilib_protocol_tls_tls_server_config_set_client_verifier", self.handle, verifier)
 
     def set_ticket_key(self, name: bytes, key: bytes) -> None:
         """Makes tickets with the AES-256-GCM ``key`` (32 bytes) named ``name`` (16 bytes)."""
         if len(name) != 16 or len(key) != 32:
             raise ValueError("a ticket key is named by 16 bytes and is 32 bytes")
-        self.library.call(f"{P}_tls_server_config_set_ticket_key", self.handle, bytes(name), bytes(key))
+        self.library.call("umilib_protocol_tls_tls_server_config_set_ticket_key", self.handle, bytes(name), bytes(key))
 
     def set_replay_cache(self, window: int, capacity: int) -> None:
-        self.library.call(f"{P}_tls_server_config_set_replay_cache", self.handle, window, capacity)
+        self.library.call("umilib_protocol_tls_tls_server_config_set_replay_cache", self.handle, window, capacity)
 
     def add_ech_key(self, key: TLSECHKey) -> None:
-        self.library.call(f"{P}_tls_server_config_add_ech_key", self.handle, key)
+        self.library.call("umilib_protocol_tls_tls_server_config_add_ech_key", self.handle, key)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -512,78 +511,63 @@ class TLSSession:
 class TLSConnection(Handle):
     """A TLS connection without I/O (RFC 9846, RFC 5246)."""
 
-    FREE = f"{P}_tls_connection_free"
+    FREE = "umilib_protocol_tls_tls_connection_free"
 
     @classmethod
     def client(cls, config: TLSClientConfig, server_name: str | None, time: int, seed: bytes | None = None) -> TLSConnection:
         """A client connecting to ``server_name`` (a DNS name, or an address its certificate must name) at
         ``time``, its ClientHello written; randomness is seeded from the operating system unless ``seed``."""
-        return cls(Handle.create(f"{P}_tls_connection_client", config, *Text.encode(server_name or ""), *Bytes.readable(seed or os.urandom(48)), time))
+        return cls(Handle.create("umilib_protocol_tls_tls_connection_client", config, *Text.encode(server_name or ""), *Bytes.readable(seed or os.urandom(48)), time))
 
     @classmethod
     def server(cls, config: TLSServerConfig, time: int, seed: bytes | None = None) -> TLSConnection:
-        return cls(Handle.create(f"{P}_tls_connection_server", config, *Bytes.readable(seed or os.urandom(48)), time))
+        return cls(Handle.create("umilib_protocol_tls_tls_connection_server", config, *Bytes.readable(seed or os.urandom(48)), time))
 
     def receive(self, data: bytes) -> None:
         """Takes bytes received from the transport; raises :class:`TLSError` when the connection fails."""
-        self.library.call(f"{P}_tls_connection_receive", self.handle, *Bytes.readable(data))
+        self.library.call("umilib_protocol_tls_tls_connection_receive", self.handle, *Bytes.readable(data))
 
     def transmit(self) -> bytes:
         """The bytes to send to the transport."""
-        return self.library.output(f"{P}_tls_connection_transmit", self.handle)
+        return self.library.output("umilib_protocol_tls_tls_connection_transmit", self.handle)
 
     def send(self, data: bytes) -> None:
         """Sends application data, or early data the handshake allows; raises ``State`` otherwise."""
-        self.library.call(f"{P}_tls_connection_send", self.handle, *Bytes.readable(data))
+        self.library.call("umilib_protocol_tls_tls_connection_send", self.handle, *Bytes.readable(data))
 
     def read(self, size: int) -> bytes:
         out = (ctypes.c_uint8 * max(size, 1))()
-        count = self.library.value(f"{P}_tls_connection_read", ctypes.c_size_t, self.handle, out, size)
+        count = self.library.value("umilib_protocol_tls_tls_connection_read", ctypes.c_size_t, self.handle, out, size)
         return bytes(out[:count])
 
     def poll_event(self) -> TLSEvent | None:
         found, kind = ctypes.c_bool(), ctypes.c_uint8()
-        self.library.call(f"{P}_tls_connection_poll_event", self.handle, ctypes.byref(found), ctypes.byref(kind))
+        self.library.call("umilib_protocol_tls_tls_connection_poll_event", self.handle, ctypes.byref(found), ctypes.byref(kind))
         return TLSEvent(kind.value) if found.value else None
 
-    def close(self) -> None:  # type: ignore[override]
+    def close(self) -> None:
         """Sends close_notify (RFC 9846 §6.1). :meth:`free` releases the object."""
-        self.library.call(f"{P}_tls_connection_close", self.handle)
-
-    def free(self) -> None:
-        """Releases the object; ``close`` sends close_notify, as in Rust."""
-        Handle.close(self)
-
-    def __exit__(self, *exception: object) -> None:
-        Handle.close(self)
-
-    def __del__(self) -> None:
-        if getattr(self, "lock", None) is None:
-            return
-        try:
-            Handle.close(self)
-        except Exception:
-            pass
+        self.library.call("umilib_protocol_tls_tls_connection_close", self.handle)
 
     def update_keys(self, request: bool) -> None:
-        self.library.call(f"{P}_tls_connection_update_keys", self.handle, request)
+        self.library.call("umilib_protocol_tls_tls_connection_update_keys", self.handle, request)
 
     def request_certificate(self) -> None:
-        self.library.call(f"{P}_tls_connection_request_certificate", self.handle)
+        self.library.call("umilib_protocol_tls_tls_connection_request_certificate", self.handle)
 
     def export(self, label: bytes, context: bytes | None, length: int) -> bytearray:
         """Keying material (RFC 9846 §7.5, RFC 5705)."""
         out = bytearray(length)
         self.library.call(
-            f"{P}_tls_connection_export", self.handle, *Bytes.readable(label), context is not None, *Bytes.readable(context or b""),
+            "umilib_protocol_tls_tls_connection_export", self.handle, *Bytes.readable(label), context is not None, *Bytes.readable(context or b""),
             Bytes.mutable(out), length,
         )  # fmt: skip
         return out
 
     @property
     def session(self) -> TLSSession:
-        structure = Library.default().type(f"{P}_TLSSession")()
-        self.library.call(f"{P}_tls_connection_session", self.handle, ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_tls_TLSSession")()
+        self.library.call("umilib_protocol_tls_tls_connection_session", self.handle, ctypes.byref(structure))
         return TLSSession(
             version=TLSVersion(structure.version) if structure.version else None,
             cipher_suite=TLSCipherSuite(structure.cipher_suite) if structure.cipher_suite else None,
@@ -597,34 +581,34 @@ class TLSConnection(Handle):
 
     @property
     def protocol(self) -> bytes | None:
-        return self.library.optional(f"{P}_tls_connection_protocol", Buffer, self.handle)
+        return self.library.optional("umilib_protocol_tls_tls_connection_protocol", Buffer, self.handle)
 
     @property
     def server_name(self) -> str | None:
-        name = self.library.optional(f"{P}_tls_connection_server_name", Buffer, self.handle)
+        name = self.library.optional("umilib_protocol_tls_tls_connection_server_name", Buffer, self.handle)
         return None if name is None else name.decode("utf-8")
 
     @property
     def peer_certificates(self) -> list[bytes]:
         certificates = []
-        while (certificate := self.library.optional(f"{P}_tls_connection_peer_certificate", Buffer, self.handle, len(certificates))) is not None:
+        while (certificate := self.library.optional("umilib_protocol_tls_tls_connection_peer_certificate", Buffer, self.handle, len(certificates))) is not None:
             certificates.append(certificate)
         return certificates
 
     @property
     def certificate_status(self) -> bytes | None:
         """The OCSP response the server stapled (RFC 6066 §8)."""
-        return self.library.optional(f"{P}_tls_connection_certificate_status", Buffer, self.handle)
+        return self.library.optional("umilib_protocol_tls_tls_connection_certificate_status", Buffer, self.handle)
 
     @property
     def ech_retry_configs(self) -> bytes | None:
         """The ``ECHConfigList`` of a server that rejected ECH (RFC 9849 §6.1.6)."""
-        return self.library.optional(f"{P}_tls_connection_ech_retry_configs", Buffer, self.handle)
+        return self.library.optional("umilib_protocol_tls_tls_connection_ech_retry_configs", Buffer, self.handle)
 
     def error(self) -> TLSFailure | None:
         """Why the connection failed, if it did."""
         failed, kind, alert = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_uint8()
-        self.library.call(f"{P}_tls_connection_error", self.handle, ctypes.byref(failed), ctypes.byref(kind), ctypes.byref(alert))
+        self.library.call("umilib_protocol_tls_tls_connection_error", self.handle, ctypes.byref(failed), ctypes.byref(kind), ctypes.byref(alert))
         return TLSFailure(TLSErrorKind(kind.value), TLSAlertDescription(alert.value)) if failed.value else None
 
 
@@ -632,15 +616,15 @@ class TLSRule(Handle):
     """A rule that routes TLS connections by server name (``*`` any, ``*.domain`` one label of the
     domain, ``""`` no name, otherwise that name) and, if given, application protocol."""
 
-    FREE = f"{P}_tls_rule_free"
+    FREE = "umilib_protocol_tls_tls_rule_free"
 
     @classmethod
     def new(cls, server_name: str, protocol: bytes | None = None) -> TLSRule:
-        return cls(Handle.create(f"{P}_tls_rule_new", *Text.encode(server_name), *Bytes.readable(protocol or b"")))
+        return cls(Handle.create("umilib_protocol_tls_tls_rule_new", *Text.encode(server_name), *Bytes.readable(protocol or b"")))
 
     def matches_session(self, connection: TLSConnection) -> bool:
-        return bool(self.library.value(f"{P}_tls_rule_matches_session", ctypes.c_bool, self.handle, connection))
+        return bool(self.library.value("umilib_protocol_tls_tls_rule_matches_session", ctypes.c_bool, self.handle, connection))
 
     def matches_client_hello(self, body: bytes) -> bool:
         """Whether the rule matches the body of a ClientHello (without its handshake header)."""
-        return bool(self.library.value(f"{P}_tls_rule_matches_client_hello", ctypes.c_bool, self.handle, *Bytes.readable(body)))
+        return bool(self.library.value("umilib_protocol_tls_tls_rule_matches_client_hello", ctypes.c_bool, self.handle, *Bytes.readable(body)))

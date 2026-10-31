@@ -8,7 +8,7 @@ use umilib::crypto::random::HMACDRBG;
 use umilib::crypto::{CryptoError, KeyEncapsulation};
 use umilib::hash::sha::v2::SHA256;
 
-use crate::{Json, Wycheproof};
+use crate::{JSON, Wycheproof};
 
 /// Calls `$check::<P>($arguments)` for the parameter set named `$name`.
 macro_rules! with_parameters {
@@ -54,7 +54,7 @@ fn encapsulate<P: MLKEMParameters>(ek: &[u8], m: &[u8]) -> Result<(Vec<u8>, Vec<
     Ok((ciphertext, shared))
 }
 
-fn check_key_gen<P: MLKEMParameters>(test: &Json) {
+fn check_key_gen<P: MLKEMParameters>(test: &JSON) {
     let key = MLKEM::<P>::key_gen_internal(&array(&test.bytes("d")), &array(&test.bytes("z")));
     assert_eq!(decapsulation_key::<P>(&key), test.bytes("dk"));
     assert_eq!(encapsulation_key::<P>(&MLKEM::<P>::encapsulation_key(&key)), test.bytes("ek"));
@@ -63,7 +63,7 @@ fn check_key_gen<P: MLKEMParameters>(test: &Json) {
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]
 fn mlkem_acvp_key_generation() {
-    let vectors = Json::read("crypto/mlkem/acvp-keygen.json");
+    let vectors = JSON::read("crypto/mlkem/acvp-keygen.json");
     let mut count = 0;
     for group in vectors.field("testGroups").items() {
         for test in group.field("tests").items() {
@@ -74,7 +74,7 @@ fn mlkem_acvp_key_generation() {
     assert_eq!(count, 75);
 }
 
-fn check_acvp<P: MLKEMParameters>(function: &str, test: &Json) {
+fn check_acvp<P: MLKEMParameters>(function: &str, test: &JSON) {
     match function {
         "encapsulation" => {
             let (ciphertext, shared) = encapsulate::<P>(&test.bytes("ek"), &test.bytes("m")).unwrap();
@@ -84,11 +84,11 @@ fn check_acvp<P: MLKEMParameters>(function: &str, test: &Json) {
         }
         "decapsulation" => assert_eq!(decapsulate::<P>(&test.bytes("dk"), &test.bytes("c")).unwrap(), test.bytes("k")),
         "decapsulationKeyCheck" => {
-            let passed = matches!(test.field("testPassed"), Json::Bool(true));
+            let passed = matches!(test.field("testPassed"), JSON::Bool(true));
             assert_eq!(MLKEM::<P>::decapsulation_key_from_bytes(&test.bytes("dk")).is_ok(), passed);
         }
         "encapsulationKeyCheck" => {
-            let passed = matches!(test.field("testPassed"), Json::Bool(true));
+            let passed = matches!(test.field("testPassed"), JSON::Bool(true));
             assert_eq!(MLKEM::<P>::encapsulation_key_from_bytes(&test.bytes("ek")).is_ok(), passed);
         }
         other => panic!("unknown function {other}"),
@@ -98,7 +98,7 @@ fn check_acvp<P: MLKEMParameters>(function: &str, test: &Json) {
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]
 fn mlkem_acvp_encapsulation_and_decapsulation() {
-    let vectors = Json::read("crypto/mlkem/acvp-encapdecap.json");
+    let vectors = JSON::read("crypto/mlkem/acvp-encapdecap.json");
     let mut count = 0;
     for group in vectors.field("testGroups").items() {
         let function = group.field("function").as_str();
@@ -112,7 +112,7 @@ fn mlkem_acvp_encapsulation_and_decapsulation() {
 
 /// mlkem_*_test.json: a key from its seed d || z, its ek, and K of a ciphertext (implicit rejection
 /// included); invalid tests have a seed or a ciphertext of another length.
-fn check_wycheproof<P: MLKEMParameters>(test: &Json) {
+fn check_wycheproof<P: MLKEMParameters>(test: &JSON) {
     let valid = Wycheproof::valid(test);
     let key = match MLKEM::<P>::decapsulation_key_from_seed(&test.bytes("seed")) {
         Ok(key) => key,
@@ -134,7 +134,7 @@ fn check_wycheproof<P: MLKEMParameters>(test: &Json) {
 }
 
 /// mlkem_*_encaps_test.json: encapsulation with m, or the modulus check of ek.
-fn check_wycheproof_encapsulation<P: MLKEMParameters>(test: &Json) {
+fn check_wycheproof_encapsulation<P: MLKEMParameters>(test: &JSON) {
     match encapsulate::<P>(&test.bytes("ek"), &test.bytes("m")) {
         Ok((ciphertext, shared)) => {
             assert!(Wycheproof::valid(test), "{test:?}");
@@ -149,7 +149,7 @@ fn check_wycheproof_encapsulation<P: MLKEMParameters>(test: &Json) {
 }
 
 /// mlkem_*_semi_expanded_decaps_test.json: decapsulation with an expanded key, checked first.
-fn check_wycheproof_decapsulation<P: MLKEMParameters>(test: &Json) {
+fn check_wycheproof_decapsulation<P: MLKEMParameters>(test: &JSON) {
     match decapsulate::<P>(&test.bytes("dk"), &test.bytes("c")) {
         Ok(shared) => {
             assert!(Wycheproof::valid(test), "{test:?}");
@@ -160,7 +160,7 @@ fn check_wycheproof_decapsulation<P: MLKEMParameters>(test: &Json) {
 }
 
 /// mlkem_*_keygen_seed_test.json: the keys of a seed.
-fn check_wycheproof_key_gen<P: MLKEMParameters>(test: &Json) {
+fn check_wycheproof_key_gen<P: MLKEMParameters>(test: &JSON) {
     let key = MLKEM::<P>::decapsulation_key_from_seed(&test.bytes("seed")).unwrap();
     assert_eq!(decapsulation_key::<P>(&key), test.bytes("dk"));
     assert_eq!(encapsulation_key::<P>(&MLKEM::<P>::encapsulation_key(&key)), test.bytes("ek"));
@@ -170,7 +170,7 @@ fn check_wycheproof_key_gen<P: MLKEMParameters>(test: &Json) {
 }
 
 /// The check of a Wycheproof test of a parameter set named by its first argument.
-type Check = fn(&str, &Json);
+type Check = fn(&str, &JSON);
 
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]

@@ -14,8 +14,6 @@ from umilib.crypto import Primitive, Specialization
 from umilib.ffi import Bytes, Handle, Text
 from umilib.hash import CryptographicDigest
 
-P = "umilib_crypto_concatkdf_concat_kdf"
-
 
 class HashFunction:
     """The hash function ``HashFunction[H]`` as the auxiliary function of the one-step KDF (option 1)."""
@@ -35,7 +33,7 @@ class HashFunction:
 class ConcatKDF(Primitive):
     """The one-step KDF over the auxiliary function ``ConcatKDF[F]``: ``HashFunction[H]`` or ``HMAC[H]``."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_concatkdf_concat_kdf"
     FUNCTION: ClassVar[Any] = None
 
     def __class_getitem__(cls, function: Any) -> Any:
@@ -50,7 +48,7 @@ class ConcatKDF(Primitive):
         function_name, function_length = Text.encode(function.C_TYPE)
         hash_name, hash_length = Text.encode(function.PRIMITIVE.C_TYPE)
         data, length = Bytes.readable(salt)
-        super().__init__(Handle.create(f"{P}_new", function_name, function_length, hash_name, hash_length, data, length))
+        super().__init__(Handle.create("umilib_crypto_concatkdf_concat_kdf_new", function_name, function_length, hash_name, hash_length, data, length))
 
     @classmethod
     def hash(cls) -> Any:
@@ -62,7 +60,7 @@ class ConcatKDF(Primitive):
         z_data, z_length = Bytes.readable(z)
         info_data, info_length = Bytes.readable(fixed_info)
         out = (ctypes.c_uint8 * length)()
-        self.library.call(f"{P}_derive", self.handle, z_data, z_length, info_data, info_length, out, length)
+        self.library.call("umilib_crypto_concatkdf_concat_kdf_derive", self.handle, z_data, z_length, info_data, info_length, out, length)
         return bytes(out)
 
 

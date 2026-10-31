@@ -48,6 +48,7 @@ typedef struct umilib_protocol_coap_CoAPConfig {
     uint64_t ack_delay;
     size_t maximum_token;
     size_t maximum_seen;
+    size_t maximum_incoming;
 } umilib_protocol_coap_CoAPConfig;
 
 /**
@@ -417,6 +418,13 @@ const umilib_ffi_Status* umilib_protocol_coap_coap_endpoint_receive(umilib_proto
  * Non-confirmable one. Fails with State for an exchange that is not awaiting its answer.
  */
 const umilib_ffi_Status* umilib_protocol_coap_coap_endpoint_respond(umilib_protocol_coap_CoAPEndpoint* endpoint, uint64_t exchange, const umilib_protocol_coap_CoAPMessage* response, uint64_t now, void* random, const uint8_t* random_type, size_t random_type_length);
+
+/**
+ * Does not answer the request `exchange` (RFC 7967, or a multicast request, RFC 7252 §8.2): it is
+ * forgotten, and a Confirmable request not yet acknowledged is acknowledged by an empty ACK.
+ * Fails with State for an exchange not awaiting its answer.
+ */
+const umilib_ffi_Status* umilib_protocol_coap_coap_endpoint_ignore(umilib_protocol_coap_CoAPEndpoint* endpoint, uint64_t exchange);
 
 /**
  * Sends the notification `message` (a response with Observe, of the observer's token) of an

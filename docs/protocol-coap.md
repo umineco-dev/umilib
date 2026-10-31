@@ -64,6 +64,17 @@ while let Some(event) = endpoint.poll_event() {
   unacknowledged. After `ack_delay` the endpoint acknowledges the request
   alone, and the response goes separately, Confirmable for a Confirmable
   request (§5.2).
+- `ignore` answers a request with nothing: for a server that does not
+  respond (RFC 7967 No-Response, a multicast request it has nothing for,
+  §8.2). A Confirmable request not yet acknowledged gets an empty ACK, so
+  that its client stops retransmitting it. Every `Request` event should end
+  with `respond` or `ignore`; a request neither answered nor ignored is
+  forgotten after EXCHANGE_LIFETIME (Confirmable) or NON_LIFETIME
+  (Non-confirmable), when its client no longer waits for it, and
+  `respond` then fails with `State`.
+- At most `maximum_incoming` (1024) requests await an answer. Past it, a
+  Confirmable request is answered 5.03 Service Unavailable and a
+  Non-confirmable one is ignored, without a `Request` event.
 - A Confirmable message that cannot be processed, or a response or
   notification no request awaits, is answered with RST (§4.2, RFC 7641
   §3.6). A Confirmable request with a critical option it cannot process is
@@ -81,8 +92,9 @@ while let Some(event) = endpoint.poll_event() {
 ACK_RANDOM_FACTOR 1.5, MAX_RETRANSMIT 4, NSTART 1, EXCHANGE_LIFETIME
 247 s, NON_LIFETIME 145 s), the delay before a separate response, the
 longest token taken (8; up to 65804 with RFC 8974: an endpoint of extended
-tokens answers a longer one 4.00 Bad Request, §2.3), and the most messages
-remembered to find duplicates (`maximum_seen`, 8192).
+tokens answers a longer one 4.00 Bad Request, §2.3), the most messages
+remembered to find duplicates (`maximum_seen`, 8192), and the most requests
+awaiting an answer (`maximum_incoming`, 1024).
 
 ## Observation and blocks
 

@@ -65,6 +65,12 @@ impl LZ78Compressor {
     }
 }
 
+impl Default for LZ78Compressor {
+    fn default() -> LZ78Compressor {
+        LZ78Compressor::new(LZ78Config::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for LZ78Compressor {
     fn compress(&mut self, input: &[u8], output: &mut [u8], flush: Flush) -> Result<Progress, CompressionError> {
         if !self.started {

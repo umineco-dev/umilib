@@ -9,7 +9,7 @@ use umilib::crypto::mode::ccm::CCM;
 use umilib::crypto::mode::gcm::GCM;
 use umilib::crypto::{AEAD, BlockCipher, CryptoError, KeyInit};
 
-use crate::Json;
+use crate::JSON;
 
 /// Runs the Wycheproof file `$path` with the `Suite` function `$suite` and
 /// the cipher of each key size; a test with another key size must be
@@ -32,11 +32,11 @@ macro_rules! wycheproof {
 pub struct Suite;
 
 impl Suite {
-    pub fn label(test: &Json) -> String {
+    pub fn label(test: &JSON) -> String {
         format!("tcId {}: {}", test.field("tcId").as_usize(), test.field("comment").as_str())
     }
 
-    pub fn is_valid(test: &Json) -> bool {
+    pub fn is_valid(test: &JSON) -> bool {
         test.field("result").as_str() == "valid"
     }
 
@@ -69,7 +69,7 @@ impl Suite {
 
     /// Checks an AEAD test: a valid one encrypts to its ciphertext and tag and
     /// decrypts back; an invalid one fails to decrypt.
-    pub fn check_aead(test: &Json, run: impl Fn(&[u8], Option<&[u8]>) -> Result<(Vec<u8>, Vec<u8>), CryptoError>) {
+    pub fn check_aead(test: &JSON, run: impl Fn(&[u8], Option<&[u8]>) -> Result<(Vec<u8>, Vec<u8>), CryptoError>) {
         let (message, ciphertext, tag) = (test.bytes("msg"), test.bytes("ct"), test.bytes("tag"));
         let label = Suite::label(test);
         let decrypted = run(&ciphertext, Some(&tag));
@@ -82,7 +82,7 @@ impl Suite {
     }
 
     /// A test of aead_*_gcm_test.json (SP 800-38D).
-    pub fn gcm<C: BlockCipher<Block = [u8; 16]> + KeyInit>(group: &Json, test: &Json) {
+    pub fn gcm<C: BlockCipher<Block = [u8; 16]> + KeyInit>(group: &JSON, test: &JSON) {
         let (key, iv, aad) = (test.bytes("key"), test.bytes("iv"), test.bytes("aad"));
         Suite::check_aead(test, |data, tag| match group.field("tagSize").as_usize() / 8 {
             16 => Suite::aead::<GCM<C, 16>>(&key, &iv, &aad, data, tag),
@@ -97,7 +97,7 @@ impl Suite {
     }
 
     /// A test of *_ccm_test.json (SP 800-38C).
-    pub fn ccm<C: BlockCipher<Block = [u8; 16]> + KeyInit>(group: &Json, test: &Json) {
+    pub fn ccm<C: BlockCipher<Block = [u8; 16]> + KeyInit>(group: &JSON, test: &JSON) {
         let (key, iv, aad) = (test.bytes("key"), test.bytes("iv"), test.bytes("aad"));
         Suite::check_aead(test, |data, tag| match group.field("tagSize").as_usize() / 8 {
             4 => Suite::aead::<CCM<C, 4>>(&key, &iv, &aad, data, tag),
@@ -113,7 +113,7 @@ impl Suite {
 
     /// A test of *_cbc_pkcs5_test.json: CBC with the padding of PKCS #7; an
     /// invalid test has a ciphertext whose padding is wrong.
-    pub fn cbc_pkcs5<C: BlockCipher<Block = [u8; 16]> + KeyInit>(_: &Json, test: &Json) {
+    pub fn cbc_pkcs5<C: BlockCipher<Block = [u8; 16]> + KeyInit>(_: &JSON, test: &JSON) {
         let (key, iv, message, ciphertext) = (test.bytes("key"), test.bytes("iv"), test.bytes("msg"), test.bytes("ct"));
         let label = Suite::label(test);
         let iv: [u8; 16] = iv.try_into().expect("16-byte IVs");
@@ -135,7 +135,7 @@ impl Suite {
     }
 
     /// A test of *_cmac_test.json (SP 800-38B): the tag may be truncated.
-    pub fn cmac<C: BlockCipher<Block = [u8; 16]> + KeyInit>(group: &Json, test: &Json) {
+    pub fn cmac<C: BlockCipher<Block = [u8; 16]> + KeyInit>(group: &JSON, test: &JSON) {
         let (key, message, tag) = (test.bytes("key"), test.bytes("msg"), test.bytes("tag"));
         let tag_length = group.field("tagSize").as_usize() / 8;
         let full = CMAC::mac(C::new_from_slice(&key).unwrap(), &message);

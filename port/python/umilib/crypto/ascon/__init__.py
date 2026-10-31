@@ -11,13 +11,11 @@ from typing import Any, ClassVar
 from umilib.crypto import AEAD, Specialization
 from umilib.ffi import Bytes, Handle
 
-P = "umilib_crypto_ascon_ascon_aead128"
-
 
 class AsconAEAD128(AEAD):
     """Ascon-AEAD128 with tags of TAG bytes: a 16-byte key and 16-byte nonces."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_ascon_ascon_aead128"
     TAG: ClassVar[int | None] = None
 
     def __class_getitem__(cls, tag: int) -> Any:
@@ -30,10 +28,10 @@ class AsconAEAD128(AEAD):
         tag = Specialization.require(self.TAG, "AsconAEAD128")
         data, length = Bytes.readable(key)
         if nonce_mask is None:
-            super().__init__(Handle.create(f"{P}_new", tag, data, length))
+            super().__init__(Handle.create("umilib_crypto_ascon_ascon_aead128_new", tag, data, length))
         else:
             mask, mask_length = Bytes.readable(nonce_mask)
-            super().__init__(Handle.create(f"{P}_with_nonce_mask", tag, data, length, mask, mask_length))
+            super().__init__(Handle.create("umilib_crypto_ascon_ascon_aead128_with_nonce_mask", tag, data, length, mask, mask_length))
 
     @classmethod
     def with_nonce_mask(cls, key: bytes | bytearray | memoryview, nonce_mask: bytes | bytearray | memoryview) -> Any:

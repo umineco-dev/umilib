@@ -58,6 +58,12 @@ fn requests_a_server_checks() {
     assert_eq!(invalid(&|request| request.fields.set(b"sec-websocket-key", b"c2hvcnQ=").unwrap()), 400);
     assert_eq!(invalid(&|request| request.fields.set(b"sec-websocket-version", b"8").unwrap()), 426);
     assert_eq!(offer_of(&request, HTTPVersion::HTTP1_0).unwrap_err(), 400);
+    // A version of HTTP whose handshake is not known is not taken for a known one.
+    for version in
+        [HTTPVersion { major: 1, minor: 2 }, HTTPVersion { major: 4, minor: 0 }, HTTPVersion { major: 0, minor: 9 }]
+    {
+        assert_eq!(offer_of(&request, version).unwrap_err(), 505, "{version:?}");
+    }
     let refused = WebSocketHandshake::check_request(
         &{
             let mut request = request.clone();

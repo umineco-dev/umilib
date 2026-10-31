@@ -41,11 +41,11 @@ fn rfc4226_appendix_d() {
         let truncated: u32 = value[2].parse().unwrap();
         assert_eq!(u32::from_str_radix(value[1], 16).unwrap(), truncated);
         assert_eq!(HOTP::<SHA1>::truncate(&hex(hmac[1])), Some(truncated), "count {count}");
-        let code = hotp.generate(count as u64);
+        let code = hotp.generate(count as u64).unwrap();
         assert_eq!(code.to_string(), value[3], "count {count}");
         assert_eq!(code.digits(), 6);
         // With 10 digits the password is the whole truncated value (below 2^31).
-        let ten = HOTP::<SHA1>::new(&secret(20), 10).unwrap().generate(count as u64);
+        let ten = HOTP::<SHA1>::new(&secret(20), 10).unwrap().generate(count as u64).unwrap();
         assert_eq!(ten.value(), truncated);
         assert_eq!(ten.to_string(), format!("{truncated:010}"));
     }
@@ -142,11 +142,25 @@ fn totp_steps_and_windows() {
 
 #[test]
 fn codes_are_written_with_leading_zeros_and_not_printed_by_debug() {
-    let code = OTPCode::new(7081804, 8);
+    let code = OTPCode::new(7081804, 8).unwrap();
     assert_eq!(code.to_string(), "07081804");
     assert_eq!(&code.to_ascii()[..8], b"07081804");
-    assert_eq!(OTPCode::new(0, 6).to_string(), "000000");
+    assert_eq!(OTPCode::new(0, 6).unwrap().to_string(), "000000");
     assert_eq!(format!("{code:?}"), "OTPCode(8 digits)");
     let hotp = HOTP::<SHA1>::new(&secret(20), 6).unwrap();
     assert!(!format!("{hotp:?}").contains("1234"));
+}
+
+#[test]
+fn codes_have_the_digits_rfc_4226_allows() {
+    // RFC 4226 R4 and §5.3: at least 6 digits, and at most 10, since the truncated value is below 2^31.
+    assert_eq!(OTPCode::new(1, 5), Err(OTPError::Digits));
+    assert_eq!(OTPCode::new(1, 11), Err(OTPError::Digits));
+    assert_eq!(OTPCode::new(1, u32::MAX), Err(OTPError::Digits));
+    assert_eq!(OTPCode::new(1, 6).unwrap().to_string(), "000001");
+    assert_eq!(OTPCode::new(0x7FFF_FFFF, 10).unwrap().to_string(), "2147483647");
+    assert_eq!(OTPCode::new(u32::MAX, 10).unwrap().to_string(), "4294967295");
+    // The value has at most the digits of the code: §5.3 reduces it modulo 10^Digit.
+    assert_eq!(OTPCode::new(999_999, 6).unwrap().to_string(), "999999");
+    assert_eq!(OTPCode::new(1_000_000, 6), Err(OTPError::Digits));
 }

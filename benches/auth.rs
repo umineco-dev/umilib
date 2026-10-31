@@ -15,7 +15,7 @@ impl Benchmarks {
             use umilib::platform::bench::Throughput;
             let hotp = HOTP::<SHA1>::new(b"12345678901234567890", 6).unwrap();
             bench.run("auth-totp-hotp-generate", Some(Throughput::Elements(1)), || {
-                black_box(hotp.generate(black_box(5)));
+                black_box(hotp.generate(black_box(5)).unwrap());
             });
             let totp = TOTP::<SHA1>::new(b"12345678901234567890", &TOTPConfig::default()).unwrap();
             bench.run("auth-totp-verify-3-steps", Some(Throughput::Elements(3)), || {

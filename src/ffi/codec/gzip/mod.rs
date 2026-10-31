@@ -4,7 +4,7 @@
 
 use alloc::vec::Vec;
 
-use crate::codec::deflate::DeflateConfig;
+use crate::codec::deflate::{DeflateConfig, DeflateDecompressorConfig};
 use crate::codec::gzip::{GzipCompressor, GzipConfig, GzipDecompressor, GzipDecompressorConfig, GzipHeader};
 use crate::ffi::{Buffer, Definition, Function, Module, Pointer, Status, ToStatus};
 
@@ -82,20 +82,26 @@ crate::ffi_functions! {
 
     /// Writes a new decompressor into `out`: of a file of any number of members if
     /// `multiple_members`, otherwise of one member; names, comments and extra fields longer than
-    /// `maximum_field` bytes fail with `LimitExceeded`.
-    pub unsafe extern "C" fn umilib_codec_gzip_gzip_decompressor_new(multiple_members: bool, maximum_field: usize, out: *mut *mut GzipDecompressor) -> *const Status {
-        let decompressor = GzipDecompressor::new(GzipDecompressorConfig { multiple_members, maximum_field });
-        // SAFETY: the caller passes a writable pointer.
-        Status::from_result(unsafe { Pointer::write_handle(out, decompressor) })
+    /// `maximum_field` bytes fail with `LimitExceeded`; the Deflate data keeps a window of
+    /// 2^`window_bits` bytes (8 to 15), matches reaching farther failing with `LimitExceeded`.
+    pub unsafe extern "C" fn umilib_codec_gzip_gzip_decompressor_new(multiple_members: bool, maximum_field: usize, window_bits: u32, out: *mut *mut GzipDecompressor) -> *const Status {
+        Status::from_result((|| {
+            let deflate = DeflateDecompressorConfig { window_bits };
+            let config = GzipDecompressorConfig { multiple_members, maximum_field, deflate };
+            let decompressor = GzipDecompressor::new(config).map_err(|error| error.to_status())?;
+            // SAFETY: the caller passes a writable pointer.
+            unsafe { Pointer::write_handle(out, decompressor) }
+        })())
     }
 
-    /// Writes the default `multiple_members` and `maximum_field` of a decompressor.
-    pub unsafe extern "C" fn umilib_codec_gzip_gzip_decompressor_config_default(multiple_members: *mut bool, maximum_field: *mut usize) -> *const Status {
+    /// Writes the default `multiple_members`, `maximum_field` and `window_bits` of a decompressor.
+    pub unsafe extern "C" fn umilib_codec_gzip_gzip_decompressor_config_default(multiple_members: *mut bool, maximum_field: *mut usize, window_bits: *mut u32) -> *const Status {
         Status::from_result((|| {
             let config = GzipDecompressorConfig::default();
             // SAFETY: the caller passes writable pointers.
             unsafe { Pointer::write(multiple_members, config.multiple_members) }?;
-            unsafe { Pointer::write(maximum_field, config.maximum_field) }
+            unsafe { Pointer::write(maximum_field, config.maximum_field) }?;
+            unsafe { Pointer::write(window_bits, config.deflate.window_bits) }
         })())
     }
 

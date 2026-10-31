@@ -7,7 +7,7 @@ use umilib::auth::cert::key::{
 use umilib::protocol::jwt::{Base64URL, JWK, JWKCurve, JWKKey, JWKSet, JWTError};
 
 use super::{jwk, path, random, sorted};
-use crate::{Json, RFC};
+use crate::{JSON, RFC};
 
 #[test]
 fn cookbook_keys_read_and_write_back() {
@@ -19,17 +19,17 @@ fn cookbook_keys_read_and_write_back() {
         "3_5.symmetric_key_mac_computation",
         "3_6.symmetric_key_encryption",
     ] {
-        let value = Json::read(&path(&format!("cookbook/jwk/{name}.json")));
+        let value = JSON::read(&path(&format!("cookbook/jwk/{name}.json")));
         let key = jwk(&value);
-        let written = Json::from_text(&key.to_json());
+        let written = JSON::from_text(&key.to_json());
         assert_eq!(sorted(&written), sorted(&value), "{name}");
     }
     // RFC 7520 §3.2: the private key holds the public key of §3.1.
-    let public = jwk(&Json::read(&path("cookbook/jwk/3_1.ec_public_key.json")));
-    let private = jwk(&Json::read(&path("cookbook/jwk/3_2.ec_private_key.json")));
+    let public = jwk(&JSON::read(&path("cookbook/jwk/3_1.ec_public_key.json")));
+    let private = jwk(&JSON::read(&path("cookbook/jwk/3_2.ec_private_key.json")));
     assert_eq!(private.to_public().unwrap().to_json(), public.to_json());
     assert_eq!(private.public_key().unwrap(), public.public_key().unwrap());
-    let rsa = jwk(&Json::read(&path("cookbook/jwk/3_4.rsa_private_key.json")));
+    let rsa = jwk(&JSON::read(&path("cookbook/jwk/3_4.rsa_private_key.json")));
     assert_eq!(rsa.private_key().unwrap().public_key().unwrap(), rsa.public_key().unwrap());
 }
 
@@ -41,7 +41,7 @@ fn thumbprints_follow_rfc_7638_and_rfc_9278() {
         "This section demonstrates the JWK Thumbprint computation",
         Some("As defined in"),
     );
-    let key = jwk(&Json::from_text(example.split_once("only):").unwrap().1));
+    let key = jwk(&JSON::from_text(example.split_once("only):").unwrap().1));
     let input = RFC::block_from(&path("rfc7638.txt"), r#"{"e":"AQAB""#);
     assert_eq!(key.thumbprint_input().unwrap(), input);
     let expected = "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs";
@@ -55,7 +55,7 @@ fn thumbprints_follow_rfc_7638_and_rfc_9278() {
     with_members.key_id = Some(String::from("other"));
     assert_eq!(with_members.thumbprint(HashAlgorithm::SHA256).unwrap(), key.thumbprint(HashAlgorithm::SHA256).unwrap());
     // RFC 8037 A.3: an OKP key.
-    let ed25519 = jwk(&Json::from_text(&RFC::block_from(&path("rfc8037.txt"), r#"{"kty":"OKP","crv":"Ed25519","#)));
+    let ed25519 = jwk(&JSON::from_text(&RFC::block_from(&path("rfc8037.txt"), r#"{"kty":"OKP","crv":"Ed25519","#)));
     let canonical = RFC::block(&path("rfc8037.txt"), "linebreak inserted for formatting reasons) is:", None);
     assert_eq!(ed25519.thumbprint_input().unwrap(), canonical);
     assert_eq!(
@@ -76,7 +76,7 @@ pub struct MLDSAExamples;
 
 impl MLDSAExamples {
     /// The JSON object of the figure whose caption is `caption`.
-    pub fn figure(caption: &str) -> Json {
+    pub fn figure(caption: &str) -> JSON {
         let text = crate::Vectors::read(&path("rfc9964.txt"));
         let end = text.find(caption).unwrap_or_else(|| panic!("no {caption}"));
         let start = text[..end].rfind("\n{\n").unwrap() + 1;
@@ -85,7 +85,7 @@ impl MLDSAExamples {
             .filter(|line| !RFC::is_page_break(line) && !line.trim().is_empty())
             .map(str::trim)
             .collect();
-        Json::from_text(&joined)
+        JSON::from_text(&joined)
     }
 }
 
@@ -133,31 +133,31 @@ fn keys_convert_to_and_from_the_key_module() {
 #[test]
 fn keys_follow_rfc_7517_and_rfc_7518() {
     let refused = |text: &str| JWK::from_json(text.as_bytes()).map(|_| ());
-    let p256 = Json::read(&path("cookbook/jwk/3_2.ec_private_key.json"));
-    type Members = Vec<(String, Json)>;
+    let p256 = JSON::read(&path("cookbook/jwk/3_2.ec_private_key.json"));
+    type Members = Vec<(String, JSON)>;
     let ec = |change: &dyn Fn(&mut Members)| {
-        let Json::Object(mut members) = Json::read(&path("cookbook/jwk/3_1.ec_public_key.json")) else {
+        let JSON::Object(mut members) = JSON::read(&path("cookbook/jwk/3_1.ec_public_key.json")) else {
             unreachable!()
         };
         change(&mut members);
-        Json::Object(members).encode()
+        JSON::Object(members).encode()
     };
-    let set = |members: &mut Members, name: &str, value: Json| {
+    let set = |members: &mut Members, name: &str, value: JSON| {
         members.retain(|(key, _)| key != name);
         members.push((name.to_string(), value));
     };
     // The coordinates have the size of the field, the point is on the curve (RFC 7518 §6.2.1).
-    let short = ec(&|members| set(members, "x", Json::String(Base64URL::encode(&[1; 65]))));
+    let short = ec(&|members| set(members, "x", JSON::String(Base64URL::encode(&[1; 65]))));
     assert!(refused(&short).is_err());
-    let off_curve = ec(&|members| set(members, "y", Json::String(Base64URL::encode(&[1; 66]))));
+    let off_curve = ec(&|members| set(members, "y", JSON::String(Base64URL::encode(&[1; 66]))));
     assert!(refused(&off_curve).is_err());
     // The curve of the key type (RFC 8037 §2: Ed25519 is OKP, not EC).
-    let wrong_type = ec(&|members| set(members, "crv", Json::String(String::from("Ed25519"))));
+    let wrong_type = ec(&|members| set(members, "crv", JSON::String(String::from("Ed25519"))));
     assert_eq!(refused(&wrong_type), Err(JWTError::UnknownKeyType));
     assert_eq!(refused(r#"{"kty":"XYZ"}"#), Err(JWTError::UnknownKeyType));
     // `use` and `key_ops` consistent, no operation twice (RFC 7517 §4.3).
     let inconsistent = ec(&|members| {
-        set(members, "key_ops", Json::Array(vec![Json::String(String::from("encrypt"))]));
+        set(members, "key_ops", JSON::Array(vec![JSON::String(String::from("encrypt"))]));
     });
     assert_eq!(refused(&inconsistent), Err(JWTError::Format));
     let repeated = ec(&|members| {
@@ -165,38 +165,38 @@ fn keys_follow_rfc_7517_and_rfc_7518() {
         set(
             members,
             "key_ops",
-            Json::Array(vec![Json::String(String::from("verify")), Json::String(String::from("verify"))]),
+            JSON::Array(vec![JSON::String(String::from("verify")), JSON::String(String::from("verify"))]),
         );
     });
     assert_eq!(refused(&repeated), Err(JWTError::Format));
     // The private key of another public key.
-    let Json::Object(mut mismatched) = p256.clone() else { unreachable!() };
-    set(&mut mismatched, "d", Json::String(Base64URL::encode(&[2; 66])));
-    assert!(matches!(refused(&Json::Object(mismatched).encode()), Err(JWTError::Key(_))));
+    let JSON::Object(mut mismatched) = p256.clone() else { unreachable!() };
+    set(&mut mismatched, "d", JSON::String(Base64URL::encode(&[2; 66])));
+    assert!(matches!(refused(&JSON::Object(mismatched).encode()), Err(JWTError::Key(_))));
     // RSA integers in the fewest octets (RFC 7518 §2), private parameters all or none (§6.3.2).
-    let Json::Object(rsa) = Json::read(&path("cookbook/jwk/3_4.rsa_private_key.json")) else { unreachable!() };
+    let JSON::Object(rsa) = JSON::read(&path("cookbook/jwk/3_4.rsa_private_key.json")) else { unreachable!() };
     let mut padded = rsa.clone();
     let e = Base64URL::decode("AQAB").unwrap();
-    set(&mut padded, "e", Json::String(Base64URL::encode(&[&[0][..], &e].concat())));
-    assert_eq!(refused(&Json::Object(padded).encode()), Err(JWTError::Base64));
+    set(&mut padded, "e", JSON::String(Base64URL::encode(&[&[0][..], &e].concat())));
+    assert_eq!(refused(&JSON::Object(padded).encode()), Err(JWTError::Base64));
     let mut partial = rsa.clone();
     partial.retain(|(key, _)| key != "qi");
-    assert_eq!(refused(&Json::Object(partial).encode()), Err(JWTError::Format));
+    assert_eq!(refused(&JSON::Object(partial).encode()), Err(JWTError::Format));
     let mut multiprime = rsa.clone();
-    set(&mut multiprime, "oth", Json::Array(Vec::new()));
-    assert!(refused(&Json::Object(multiprime).encode()).is_err());
+    set(&mut multiprime, "oth", JSON::Array(Vec::new()));
+    assert!(refused(&JSON::Object(multiprime).encode()).is_err());
     let mut d_only = rsa.clone();
     d_only.retain(|(key, _)| !["p", "q", "dp", "dq", "qi"].contains(&key.as_str()));
-    let key = JWK::from_json(Json::Object(d_only).encode().as_bytes()).unwrap();
+    let key = JWK::from_json(JSON::Object(d_only).encode().as_bytes()).unwrap();
     assert!(matches!(key.key, JWKKey::RSA { private: Some(ref private), .. } if private.primes.is_none()));
     // AKP keys need their alg (RFC 9964 §4), and an ML-DSA private key is a seed of 32 bytes.
     assert_eq!(refused(r#"{"kty":"AKP","pub":"AA"}"#), Err(JWTError::Format));
     let example = MLDSAExamples::figure("Figure 3: ML_DSA_44");
-    let Json::Object(mut akp) = example.field("jwk").clone() else { unreachable!() };
-    set(&mut akp, "priv", Json::String(Base64URL::encode(&[0; 31])));
-    assert!(refused(&Json::Object(akp).encode()).is_err());
+    let JSON::Object(mut akp) = example.field("jwk").clone() else { unreachable!() };
+    set(&mut akp, "priv", JSON::String(Base64URL::encode(&[0; 31])));
+    assert!(refused(&JSON::Object(akp).encode()).is_err());
     // Members a JWK does not define are kept (RFC 7517 §4).
-    let extra = ec(&|members| set(members, "ext", Json::Bool(true)));
+    let extra = ec(&|members| set(members, "ext", JSON::Bool(true)));
     let key = JWK::from_json(extra.as_bytes()).unwrap();
     assert_eq!(key.other.get("ext").and_then(|value| value.as_bool()), Some(true));
     assert!(key.to_json().contains("\"ext\":true"));
@@ -211,7 +211,7 @@ fn keys_follow_rfc_7517_and_rfc_7518() {
 #[test]
 fn sets_follow_rfc_7517_section_5() {
     let keys = ["3_1.ec_public_key", "3_3.rsa_public_key", "3_5.symmetric_key_mac_computation"]
-        .map(|name| Json::read(&path(&format!("cookbook/jwk/{name}.json"))).encode());
+        .map(|name| JSON::read(&path(&format!("cookbook/jwk/{name}.json"))).encode());
     // A key of a type this library does not know is left out (RFC 7517 §5).
     let text = format!(r#"{{"keys":[{},{},{},{{"kty":"unknown","kid":"x"}}],"other":1}}"#, keys[0], keys[1], keys[2]);
     let set = JWKSet::from_json(text.as_bytes()).unwrap();

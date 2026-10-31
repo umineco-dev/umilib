@@ -22,7 +22,6 @@ from typing import Any, ClassVar
 from umilib.codec.mail import MailConfig
 from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Nanoseconds, Text
 
-P = "umilib_protocol_imap_v4"
 
 __all__ = [
     "IMAPBody",
@@ -89,7 +88,7 @@ class IMAPCommand:
         """The command of a logical line, a tag and a command; raises ``Syntax``."""
         data = line.encode("utf-8") if isinstance(line, str) else line
         tag, name, out = Buffer(), Buffer(), Buffer()
-        Library.default().call(f"{P}_imap_command_normalize", *Bytes.readable(data), ctypes.byref(tag), ctypes.byref(name), ctypes.byref(out))
+        Library.default().call("umilib_protocol_imap_v4_imap_command_normalize", *Bytes.readable(data), ctypes.byref(tag), ctypes.byref(name), ctypes.byref(out))
         library = Library.default()
         tag_text, name_text = library.take(tag).decode("utf-8"), library.take(name).decode("utf-8")
         return cls(library.take(out), tag_text, name_text)
@@ -112,19 +111,19 @@ class IMAPResponse:
     @classmethod
     def parse(cls, line: bytes | str) -> IMAPResponse:
         data = line.encode("utf-8") if isinstance(line, str) else line
-        return cls(Library.default().output(f"{P}_imap_response_normalize", *Bytes.readable(data)))
+        return cls(Library.default().output("umilib_protocol_imap_v4_imap_response_normalize", *Bytes.readable(data)))
 
     @classmethod
     def tagged(cls, tag: str, condition: IMAPCondition, code: str | None, text: str) -> IMAPResponse:
         """The tagged status response of ``tag`` (OK, NO or BAD), its code with its brackets."""
         return cls(Library.default().output(
-            f"{P}_imap_response_status_encode", *Text.encode(tag), int(condition), *Text.encode(code or ""), *Text.encode(text),
+            "umilib_protocol_imap_v4_imap_response_status_encode", *Text.encode(tag), int(condition), *Text.encode(code or ""), *Text.encode(text),
         ))  # fmt: skip
 
     @classmethod
     def untagged(cls, condition: IMAPCondition, code: str | None, text: str) -> IMAPResponse:
         return cls(Library.default().output(
-            f"{P}_imap_response_status_encode", None, 0, int(condition), *Text.encode(code or ""), *Text.encode(text),
+            "umilib_protocol_imap_v4_imap_response_status_encode", None, 0, int(condition), *Text.encode(code or ""), *Text.encode(text),
         ))  # fmt: skip
 
     def status(self) -> tuple[str | None, IMAPCondition, str | None, str] | None:
@@ -134,7 +133,7 @@ class IMAPResponse:
         is_status, tagged, condition = ctypes.c_bool(), ctypes.c_bool(), ctypes.c_uint8()
         tag, code, text = Buffer(), Buffer(), Buffer()
         library.call(
-            f"{P}_imap_response_status", *Bytes.readable(self.line), ctypes.byref(is_status), ctypes.byref(tagged),
+            "umilib_protocol_imap_v4_imap_response_status", *Bytes.readable(self.line), ctypes.byref(is_status), ctypes.byref(tagged),
             ctypes.byref(tag), ctypes.byref(condition), ctypes.byref(code), ctypes.byref(text),
         )  # fmt: skip
         tag_text, code_text, text_text = (library.take(buffer).decode("utf-8") for buffer in (tag, code, text))
@@ -151,12 +150,12 @@ class IMAPMailbox:
 
     @staticmethod
     def encode_modified_utf7(text: str) -> str:
-        return Library.default().output(f"{P}_imap_mailbox_encode_modified_utf7", *Text.encode(text)).decode("ascii")
+        return Library.default().output("umilib_protocol_imap_v4_imap_mailbox_encode_modified_utf7", *Text.encode(text)).decode("ascii")
 
     @staticmethod
     def decode_modified_utf7(name: bytes | str) -> str:
         data = name.encode("ascii") if isinstance(name, str) else name
-        return Library.default().output(f"{P}_imap_mailbox_decode_modified_utf7", *Bytes.readable(data)).decode("utf-8")
+        return Library.default().output("umilib_protocol_imap_v4_imap_mailbox_decode_modified_utf7", *Bytes.readable(data)).decode("utf-8")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -167,11 +166,11 @@ class IMAPSequenceSet:
 
     @classmethod
     def parse(cls, text: str) -> IMAPSequenceSet:
-        return cls(Library.default().output(f"{P}_imap_sequence_set_normalize", *Text.encode(text)).decode("ascii"))
+        return cls(Library.default().output("umilib_protocol_imap_v4_imap_sequence_set_normalize", *Text.encode(text)).decode("ascii"))
 
     def resolve(self, last: int) -> list[range]:
         """The ranges of the set when ``last`` is the highest number, in order and merged."""
-        text = Library.default().output(f"{P}_imap_sequence_set_resolve", *Text.encode(self.text), last).decode("ascii")
+        text = Library.default().output("umilib_protocol_imap_v4_imap_sequence_set_resolve", *Text.encode(self.text), last).decode("ascii")
         ranges = []
         for part in filter(None, text.split(",")):
             first, _, end = part.partition(":")
@@ -179,7 +178,7 @@ class IMAPSequenceSet:
         return ranges
 
     def contains(self, number: int, last: int) -> bool:
-        return Library.default().value(f"{P}_imap_sequence_set_contains", ctypes.c_bool, *Text.encode(self.text), number, last)
+        return Library.default().value("umilib_protocol_imap_v4_imap_sequence_set_contains", ctypes.c_bool, *Text.encode(self.text), number, last)
 
     def __str__(self) -> str:
         return self.text
@@ -196,11 +195,11 @@ class IMAPDateTime:
     def parse(cls, text: str) -> IMAPDateTime:
         """The date-time of ``text``, with its quotes: ``"17-Jul-1996 02:44:25 -0700"``."""
         seconds, offset = ctypes.c_int64(), ctypes.c_int16()
-        Library.default().call(f"{P}_imap_date_time_parse", *Text.encode(text), ctypes.byref(seconds), ctypes.byref(offset))
+        Library.default().call("umilib_protocol_imap_v4_imap_date_time_parse", *Text.encode(text), ctypes.byref(seconds), ctypes.byref(offset))
         return cls(seconds.value, offset.value)
 
     def __str__(self) -> str:
-        return Library.default().output(f"{P}_imap_date_time_format", self.seconds, self.offset).decode("ascii")
+        return Library.default().output("umilib_protocol_imap_v4_imap_date_time_format", self.seconds, self.offset).decode("ascii")
 
 
 class IMAPEnvelope:
@@ -208,7 +207,7 @@ class IMAPEnvelope:
 
     @staticmethod
     def of_message(message: bytes, config: MailConfig | None = None) -> bytes:
-        return Library.default().output(f"{P}_imap_envelope_of_message", *Bytes.readable(message), (config or MailConfig()).to_structure())
+        return Library.default().output("umilib_protocol_imap_v4_imap_envelope_of_message", *Bytes.readable(message), (config or MailConfig()).to_structure())
 
 
 class IMAPBody:
@@ -217,7 +216,7 @@ class IMAPBody:
     @staticmethod
     def of_message(message: bytes, config: MailConfig | None = None, extensible: bool = True) -> bytes:
         """With extension data (BODYSTRUCTURE) if ``extensible``, without it (BODY) otherwise."""
-        return Library.default().output(f"{P}_imap_body_of_message", *Bytes.readable(message), (config or MailConfig()).to_structure(), extensible)
+        return Library.default().output("umilib_protocol_imap_v4_imap_body_of_message", *Bytes.readable(message), (config or MailConfig()).to_structure(), extensible)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -229,7 +228,7 @@ class IMAPSection:
     def extract(self, message: bytes, config: MailConfig | None = None) -> bytes | None:
         """The octets of the section of ``message``; ``None`` if it has none."""
         return Library.default().optional(
-            f"{P}_imap_section_extract", Buffer, *Text.encode(self.text), *Bytes.readable(message), (config or MailConfig()).to_structure(),
+            "umilib_protocol_imap_v4_imap_section_extract", Buffer, *Text.encode(self.text), *Bytes.readable(message), (config or MailConfig()).to_structure(),
         )  # fmt: skip
 
 
@@ -248,13 +247,13 @@ class IMAPConfig:
     #: Whether a client sends a password as it is (LOGIN, AUTHENTICATE PLAIN or LOGIN) only under TLS.
     passwords_require_tls: bool
 
-    C_TYPE: ClassVar[str] = f"{P}_IMAPConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_imap_v4_IMAPConfig"
     DURATIONS: ClassVar[tuple[str, ...]] = ("command_timeout", "autologout", "login_timeout")
 
     @classmethod
     def default(cls) -> IMAPConfig:
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_imap_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_imap_v4_imap_config_default", ctypes.byref(structure))
         return cls.from_structure(structure)
 
     @classmethod
@@ -288,13 +287,13 @@ class IMAPServerConfig:
     capabilities: list[str]
     commands: list[str]
 
-    C_TYPE: ClassVar[str] = f"{P}_IMAPServerConfig"
+    C_TYPE: ClassVar[str] = "umilib_protocol_imap_v4_IMAPServerConfig"
     LISTS: ClassVar[tuple[str, ...]] = ("auth_mechanisms", "plaintext_mechanisms", "capabilities", "commands")
 
     @classmethod
     def default(cls) -> IMAPServerConfig:
         structure = Library.default().type(cls.C_TYPE)()
-        Library.default().call(f"{P}_imap_server_config_default", ctypes.byref(structure))
+        Library.default().call("umilib_protocol_imap_v4_imap_server_config_default", ctypes.byref(structure))
         values = {field.name: getattr(structure, field.name) for field in dataclasses.fields(cls) if field.name not in cls.LISTS}
         return cls(auth_mechanisms=[], plaintext_mechanisms=[], capabilities=[], commands=[], **values)
 
@@ -345,7 +344,7 @@ class IMAPClientEvent:
         found, kind, error = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_void_p()
         tag, command, response, data = Buffer(), Buffer(), Buffer(), Buffer()
         library.call(
-            f"{P}_imap_client_poll_event", client.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(tag),
+            "umilib_protocol_imap_v4_imap_client_poll_event", client.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(tag),
             ctypes.byref(command), ctypes.byref(response), ctypes.byref(data), ctypes.byref(error),
         )  # fmt: skip
         tag_text = library.take(tag).decode("utf-8")
@@ -377,7 +376,7 @@ class IMAPServerEvent:
         found, kind, error = ctypes.c_bool(), ctypes.c_uint8(), ctypes.c_void_p()
         tag, command, response, data = Buffer(), Buffer(), Buffer(), Buffer()
         library.call(
-            f"{P}_imap_server_poll_event", server.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(tag),
+            "umilib_protocol_imap_v4_imap_server_poll_event", server.handle, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(tag),
             ctypes.byref(command), ctypes.byref(response), ctypes.byref(data), ctypes.byref(error),
         )  # fmt: skip
         tag_text = library.take(tag).decode("utf-8")
@@ -392,62 +391,62 @@ class IMAPClient(Handle):
     capabilities, literals sent as the server takes them (RFC 7888), pipelined where the order of
     results cannot change (§5.5), and each tagged response paired with its command."""
 
-    FREE = f"{P}_imap_client_free"
+    FREE = "umilib_protocol_imap_v4_imap_client_free"
 
     @classmethod
     def new(cls, config: IMAPConfig | None, secure: bool, prefix: str, now: int) -> IMAPClient:
         """A client of a new connection, ``secure`` if it is TLS from its start (RFC 8314); its tags
         ``prefix`` and a number."""
-        return cls(Handle.create(f"{P}_imap_client_new", (config or IMAPConfig.default()).to_structure(), secure, *Text.encode(prefix), now))
+        return cls(Handle.create("umilib_protocol_imap_v4_imap_client_new", (config or IMAPConfig.default()).to_structure(), secure, *Text.encode(prefix), now))
 
     @property
     def state(self) -> IMAPState:
-        return IMAPState(self.library.value(f"{P}_imap_client_state", ctypes.c_uint8, self.handle))
+        return IMAPState(self.library.value("umilib_protocol_imap_v4_imap_client_state", ctypes.c_uint8, self.handle))
 
     def is_open(self) -> bool:
-        return self.library.value(f"{P}_imap_client_is_open", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_imap_v4_imap_client_is_open", ctypes.c_bool, self.handle)
 
     def has_capability(self, capability: str) -> bool:
-        return self.library.value(f"{P}_imap_client_has_capability", ctypes.c_bool, self.handle, *Text.encode(capability))
+        return self.library.value("umilib_protocol_imap_v4_imap_client_has_capability", ctypes.c_bool, self.handle, *Text.encode(capability))
 
     def learn_capabilities(self, capabilities: list[str]) -> None:
         """Takes ``capabilities`` as those the server announced."""
         array = Text.array(capabilities)
-        self.library.call(f"{P}_imap_client_learn_capabilities", self.handle, *array[:2])
+        self.library.call("umilib_protocol_imap_v4_imap_client_learn_capabilities", self.handle, *array[:2])
 
     def receive(self, data: bytes, now: int) -> None:
-        self.library.call(f"{P}_imap_client_receive", self.handle, *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_imap_v4_imap_client_receive", self.handle, *Bytes.readable(data), now)
 
     def send(self, body: bytes | str, now: int) -> str:
         """Queues the command ``body`` (without a tag) and returns its tag; raises ``State`` for one
         the state or the capabilities do not allow."""
         data = body.encode("utf-8") if isinstance(body, str) else body
-        return self.library.output(f"{P}_imap_client_send", self.handle, *Bytes.readable(data), now).decode("utf-8")
+        return self.library.output("umilib_protocol_imap_v4_imap_client_send", self.handle, *Bytes.readable(data), now).decode("utf-8")
 
     def send_with_tag(self, tag: str, body: bytes | str, now: int) -> None:
         data = body.encode("utf-8") if isinstance(body, str) else body
-        self.library.call(f"{P}_imap_client_send_with_tag", self.handle, *Text.encode(tag), *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_imap_v4_imap_client_send_with_tag", self.handle, *Text.encode(tag), *Bytes.readable(data), now)
 
     def authenticate_respond(self, response: bytes, now: int) -> None:
-        self.library.call(f"{P}_imap_client_authenticate_respond", self.handle, *Bytes.readable(response), now)
+        self.library.call("umilib_protocol_imap_v4_imap_client_authenticate_respond", self.handle, *Bytes.readable(response), now)
 
     def authenticate_cancel(self, now: int) -> None:
-        self.library.call(f"{P}_imap_client_authenticate_cancel", self.handle, now)
+        self.library.call("umilib_protocol_imap_v4_imap_client_authenticate_cancel", self.handle, now)
 
     def idle_done(self, now: int) -> None:
-        self.library.call(f"{P}_imap_client_idle_done", self.handle, now)
+        self.library.call("umilib_protocol_imap_v4_imap_client_idle_done", self.handle, now)
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_imap_client_transmit", self.handle)
+        return self.library.output("umilib_protocol_imap_v4_imap_client_transmit", self.handle)
 
     def poll_event(self) -> IMAPClientEvent | None:
         return IMAPClientEvent.poll(self)
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_imap_client_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_imap_v4_imap_client_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_imap_client_expire", self.handle, now)
+        self.library.call("umilib_protocol_imap_v4_imap_client_expire", self.handle, now)
 
 
 class IMAPServer(Handle):
@@ -455,75 +454,75 @@ class IMAPServer(Handle):
     another state, LOGIN and plaintext mechanisms without TLS where passwords need it, and literals
     too large itself, and tells the caller each other command, one at a time."""
 
-    FREE = f"{P}_imap_server_free"
+    FREE = "umilib_protocol_imap_v4_imap_server_free"
 
     @classmethod
     def new(cls, config: IMAPConfig | None, server: IMAPServerConfig | None, secure: bool) -> IMAPServer:
         server = server or IMAPServerConfig.default()
         arrays = [Text.array(getattr(server, name)) for name in IMAPServerConfig.LISTS]
         arguments = [argument for array in arrays for argument in array[:2]]
-        return cls(Handle.create(f"{P}_imap_server_new", (config or IMAPConfig.default()).to_structure(), server.to_structure(), *arguments, secure))
+        return cls(Handle.create("umilib_protocol_imap_v4_imap_server_new", (config or IMAPConfig.default()).to_structure(), server.to_structure(), *arguments, secure))
 
     @property
     def state(self) -> IMAPState:
-        return IMAPState(self.library.value(f"{P}_imap_server_state", ctypes.c_uint8, self.handle))
+        return IMAPState(self.library.value("umilib_protocol_imap_v4_imap_server_state", ctypes.c_uint8, self.handle))
 
     @property
     def rev2(self) -> bool:
         """Whether IMAP4rev2 is in use: SEARCH is answered with ESEARCH then."""
-        return self.library.value(f"{P}_imap_server_rev2", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_imap_v4_imap_server_rev2", ctypes.c_bool, self.handle)
 
     def is_open(self) -> bool:
-        return self.library.value(f"{P}_imap_server_is_open", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_imap_v4_imap_server_is_open", ctypes.c_bool, self.handle)
 
     def capabilities(self) -> list[str]:
         """The capabilities the server announces now (RFC 9051 §7.2.2)."""
-        return self.library.output(f"{P}_imap_server_capabilities", self.handle).decode("utf-8").split(" ")
+        return self.library.output("umilib_protocol_imap_v4_imap_server_capabilities", self.handle).decode("utf-8").split(" ")
 
     def passwords_taken(self) -> bool:
-        return self.library.value(f"{P}_imap_server_passwords_taken", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_imap_v4_imap_server_passwords_taken", ctypes.c_bool, self.handle)
 
     def greet(self, condition: IMAPCondition, text: str, now: int) -> None:
         """Sends the greeting: OK, PREAUTH or BYE, with the capabilities (RFC 9051 §7.1)."""
-        self.library.call(f"{P}_imap_server_greet", self.handle, int(condition), *Text.encode(text), now)
+        self.library.call("umilib_protocol_imap_v4_imap_server_greet", self.handle, int(condition), *Text.encode(text), now)
 
     def wants_receive(self) -> bool:
         """Whether the server takes more input now: stop reading the connection while it is false,
         so that a peer that pipelines cannot make it hold more than ``maximum_buffered``."""
-        return self.library.value(f"{P}_imap_server_wants_receive", ctypes.c_bool, self.handle)
+        return self.library.value("umilib_protocol_imap_v4_imap_server_wants_receive", ctypes.c_bool, self.handle)
 
     def receive(self, data: bytes, now: int) -> None:
-        self.library.call(f"{P}_imap_server_receive", self.handle, *Bytes.readable(data), now)
+        self.library.call("umilib_protocol_imap_v4_imap_server_receive", self.handle, *Bytes.readable(data), now)
 
     def respond(self, response: IMAPResponse | bytes | str) -> None:
         """Sends an untagged response of the command told."""
         line = response.line if isinstance(response, IMAPResponse) else response
         data = line.encode("utf-8") if isinstance(line, str) else line
-        self.library.call(f"{P}_imap_server_respond", self.handle, *Bytes.readable(data))
+        self.library.call("umilib_protocol_imap_v4_imap_server_respond", self.handle, *Bytes.readable(data))
 
     def complete(self, condition: IMAPCondition, code: str | None, text: str, now: int) -> None:
         """Completes the command told with OK, NO or BAD, the code with its brackets (RFC 9051 §7.1)."""
-        self.library.call(f"{P}_imap_server_complete", self.handle, int(condition), *Text.encode(code or ""), *Text.encode(text), now)
+        self.library.call("umilib_protocol_imap_v4_imap_server_complete", self.handle, int(condition), *Text.encode(code or ""), *Text.encode(text), now)
 
     def authenticate_challenge(self, challenge: bytes, now: int) -> None:
-        self.library.call(f"{P}_imap_server_authenticate_challenge", self.handle, *Bytes.readable(challenge), now)
+        self.library.call("umilib_protocol_imap_v4_imap_server_authenticate_challenge", self.handle, *Bytes.readable(challenge), now)
 
     def idle(self, text: str, now: int) -> None:
         """Accepts the IDLE told with a continuation request (RFC 9051 §6.3.13)."""
-        self.library.call(f"{P}_imap_server_idle", self.handle, *Text.encode(text), now)
+        self.library.call("umilib_protocol_imap_v4_imap_server_idle", self.handle, *Text.encode(text), now)
 
     def shutdown(self, text: str) -> None:
-        """Closes the connection with an untagged BYE (RFC 9051 §7.1.5)."""
-        self.library.call(f"{P}_imap_server_shutdown", self.handle, *Text.encode(text))
+        """Closes the connection with an untagged BYE (RFC 9051 §7.1.5); raises ``Syntax`` for a line break in ``text``."""
+        self.library.call("umilib_protocol_imap_v4_imap_server_shutdown", self.handle, *Text.encode(text))
 
     def transmit(self) -> bytes:
-        return self.library.output(f"{P}_imap_server_transmit", self.handle)
+        return self.library.output("umilib_protocol_imap_v4_imap_server_transmit", self.handle)
 
     def poll_event(self) -> IMAPServerEvent | None:
         return IMAPServerEvent.poll(self)
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_imap_server_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_imap_v4_imap_server_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int) -> None:
-        self.library.call(f"{P}_imap_server_expire", self.handle, now)
+        self.library.call("umilib_protocol_imap_v4_imap_server_expire", self.handle, now)

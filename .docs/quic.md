@@ -97,6 +97,22 @@ How `protocol::quic` is built and why. The user's view is `docs/protocol-quic.md
   (RFC 9000 §13.2.1), so a receiver that only acknowledges would otherwise
   keep every one of them. Their ACK frames then never trim the ranges
   reported; `maximum_received_ranges` bounds those.
+- **Data received out of order is bounded in pieces, not only in bytes**
+  (`maximum_receive_fragments`, per stream and per level of CRYPTO data).
+  Flow control bounds the bytes, but a peer that sends one byte every other
+  offset makes each byte a piece of its own (an allocation and a map entry,
+  tens of bytes each): about 512k of them within the default credit of
+  1 MiB, and 32k per half-open connection in Initial CRYPTO data, whose keys
+  anyone can derive. A piece that follows the chunk before it is appended to
+  it up to `QUICReceiveBuffer::CHUNK_SIZE`, so data arriving in order or
+  backwards in small pieces stays a few chunks; the bound is 16 KiB so that
+  reading part of a chunk never moves more than that. Past the limit the
+  connection closes with CRYPTO_BUFFER_EXCEEDED for CRYPTO data (RFC 9000
+  §7.5) and INTERNAL_ERROR for stream data, since RFC 9000 §20.1 has no code
+  about load. Rejected alternative: one contiguous buffer per stream indexed
+  by offset (as ngtcp2 does), which removes the per-piece cost but holds the
+  whole window of every stream from its first out-of-order byte; still
+  possible later without changing the configuration.
 - **Duplicates**: once an ACK frame of this end is acknowledged, the ranges
   below its largest are dropped, and packets below it count as duplicates
   (`QUICReceivedPackets::floor`). A late packet below it that never arrived
@@ -190,7 +206,10 @@ How `protocol::quic` is built and why. The user's view is `docs/protocol-quic.md
   AES-256-GCM under the deployment's key (the client's address as
   associated data, the original and Retry connection IDs, the port and the
   version inside). NEW_TOKEN tokens bind the address but not the port, as
-  later connections come from other ports, and last a day.
+  later connections come from other ports. Retry tokens last 10 seconds and
+  NEW_TOKEN tokens a day by default (`QUICEndpointConfig::retry_token_lifetime`
+  and `new_token_lifetime`): servers of a deployment whose clocks differ, or
+  a policy of shorter tokens, change them.
 - **Version Negotiation is never answered with another** (RFC 9000 §6.1),
   and a client takes one only if it carries its connection IDs back,
   swapped (§17.2.1).

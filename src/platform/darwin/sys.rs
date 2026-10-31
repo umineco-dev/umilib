@@ -1,7 +1,7 @@
 //! The Darwin functions and constants the Darwin layer uses, declared from
 //! the headers of the macOS SDK (`sys/event.h`, `sys/random.h`).
 
-use core::ffi::{c_int, c_void};
+use core::ffi::{c_int, c_long, c_void};
 
 /// `struct kevent`.
 #[derive(Clone, Copy, Debug)]
@@ -21,12 +21,14 @@ impl Default for KEvent {
     }
 }
 
-/// `struct timespec`.
+/// `struct timespec`: `{ time_t tv_sec; long tv_nsec; }`, where `time_t` is
+/// `long` too (`__darwin_time_t`), so 32 bits on 32-bit targets (arm64_32
+/// and armv7k watchOS, i686).
 #[derive(Clone, Copy, Debug, Default)]
 #[repr(C)]
 pub struct TimeSpec {
-    pub seconds: i64,
-    pub nanoseconds: i64,
+    pub seconds: c_long,
+    pub nanoseconds: c_long,
 }
 
 unsafe extern "C" {

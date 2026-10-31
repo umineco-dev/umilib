@@ -1,9 +1,8 @@
 use alloc::vec::Vec;
 
-use super::{
-    FSEDecodingTable, FSEDistribution, ZstandardFormat, ZstandardHuffman, ZstandardOffsets, ZstandardSequenceTables,
-};
+use super::{ZstandardFormat, ZstandardHuffman, ZstandardOffsets, ZstandardSequenceTables};
 use crate::codec::CompressionError;
+use crate::codec::fse::{FSEDecodingTable, FSEDistribution};
 
 /// A Zstandard dictionary (RFC 8878 section 5): raw content (any bytes
 /// that do not start with the magic number), or a formatted dictionary

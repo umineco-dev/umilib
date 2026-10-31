@@ -361,6 +361,14 @@ impl IMAPClient {
         // argument of a line break would otherwise add commands of its own.
         let line = &writer.out[..writer.out.len() - 2];
         IMAPCommand::parse(line, self.rev2, self.config.maximum_depth)?;
+        // Nor may its last line end as the announcement of a literal the writer did not write
+        // (RFC 9051 §4.3): the server would take what follows as the literal's octets.
+        if IMAPLineReader::literal_of(&line[writer.literal_end.min(line.len())..]).is_some() {
+            return Err(IMAPError::Syntax {
+                position: line.len(),
+                reason: "a command ending as the length of a literal",
+            });
+        }
         let mut parts = VecDeque::new();
         let mut start = 0;
         for wait in writer.waits.iter().copied().chain(core::iter::once(writer.out.len())) {
@@ -427,8 +435,10 @@ impl IMAPClient {
         }
         if matches!(body, IMAPCommandBody::Other { arguments, .. } if arguments.iter().any(|byte| matches!(byte, b'\r' | b'\n')))
         {
-            // The parts of a literal in a command this type does not know could not be waited for.
-            return state("a command of an extension with a literal or a line break");
+            // Its arguments are written as they are, and read back as the rest of the line: a line
+            // break would end the command there, and begin another. (A literal the arguments end
+            // with is refused by send_with_tag, as of any command.)
+            return state("a command of an extension with a line break");
         }
         match body {
             IMAPCommandBody::StartTLS if self.secure || !self.has_capability("STARTTLS") => {

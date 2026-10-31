@@ -21,7 +21,6 @@ from umilib.ffi import Buffer, Bytes, FFIError, Fields, Handle, Library, Text, W
 from umilib.protocol.ip import IPEndpoint
 from umilib.protocol.tls import TLSClientConfig, TLSServerConfig
 
-P = "umilib_protocol_quic"
 
 __all__ = [
     "QUICCloseReason",
@@ -122,7 +121,7 @@ class QUICLimits:
         "initial_max_streams_bidi", "initial_max_streams_uni", "ack_delay_exponent", "max_ack_delay",
         "active_connection_id_limit", "initial_rtt", "max_datagram_frame_size", "disable_active_migration", "pacing",
         "grease_quic_bit", "spin_bit", "grease_transport_parameters", "maximum_crypto_buffer", "maximum_send_buffer",
-        "maximum_datagrams",
+        "maximum_datagrams", "maximum_receive_fragments",
     )  # fmt: skip
 
     connection_id_length: int = 8
@@ -148,6 +147,7 @@ class QUICLimits:
     maximum_crypto_buffer: int = 1 << 16
     maximum_send_buffer: int = 1 << 20
     maximum_datagrams: int = 64
+    maximum_receive_fragments: int = 1024
 
 
 @dataclasses.dataclass(frozen=True)
@@ -164,39 +164,39 @@ class QUICSession:
 class QUICConfig(Handle):
     """The configuration of QUIC connections: versions, limits and flags."""
 
-    FREE = f"{P}_quic_config_free"
+    FREE = "umilib_protocol_quic_quic_config_free"
 
     def __init__(self, pointer: int | None = None) -> None:
-        super().__init__(pointer or Handle.create(f"{P}_quic_config_new"))
+        super().__init__(pointer or Handle.create("umilib_protocol_quic_quic_config_new"))
 
     def set_versions(self, versions: list[int]) -> None:
         array = Words.array(ctypes.c_uint32, [int(version) for version in versions], len(versions)) if versions else None
-        self.library.call(f"{P}_quic_config_set_versions", self.handle, array, len(versions))
+        self.library.call("umilib_protocol_quic_quic_config_set_versions", self.handle, array, len(versions))
 
     def set_reset_key(self, key: bytes | None) -> None:
         """The 32-byte key of stateless reset tokens (RFC 9000 §10.3.2), or none."""
         if key is not None and len(key) != 32:
             raise ValueError("a reset key is 32 bytes")
-        self.library.call(f"{P}_quic_config_set_reset_key", self.handle, key)
+        self.library.call("umilib_protocol_quic_quic_config_set_reset_key", self.handle, key)
 
     @property
     def limits(self) -> QUICLimits:
-        structure = Library.default().type(f"{P}_QUICLimits")()
-        self.library.call(f"{P}_quic_config_limits", self.handle, ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_quic_QUICLimits")()
+        self.library.call("umilib_protocol_quic_quic_config_limits", self.handle, ctypes.byref(structure))
         return QUICLimits(**{field: getattr(structure, field) for field in QUICLimits.FIELDS})
 
     @limits.setter
     def limits(self, limits: QUICLimits) -> None:
-        structure = Library.default().type(f"{P}_QUICLimits")()
+        structure = Library.default().type("umilib_protocol_quic_QUICLimits")()
         for field in QUICLimits.FIELDS:
             Fields.assign(structure, field, getattr(limits, field))
-        self.library.call(f"{P}_quic_config_set_limits", self.handle, ctypes.byref(structure))
+        self.library.call("umilib_protocol_quic_quic_config_set_limits", self.handle, ctypes.byref(structure))
 
 
 class QUICEndpoint(Handle):
     """A QUIC endpoint without I/O (RFC 9000 §5.2): the connections of one socket."""
 
-    FREE = f"{P}_quic_endpoint_free"
+    FREE = "umilib_protocol_quic_quic_endpoint_free"
 
     def __init__(
         self,
@@ -211,7 +211,7 @@ class QUICEndpoint(Handle):
         if token_key is not None and len(token_key) != 32:
             raise ValueError("a token key is 32 bytes")
         super().__init__(
-            Handle.create(f"{P}_quic_endpoint_new", config, tls, token_key, retry, *Bytes.readable(seed or os.urandom(48)))
+            Handle.create("umilib_protocol_quic_quic_endpoint_new", config, tls, token_key, retry, *Bytes.readable(seed or os.urandom(48)))
         )
 
     def connect(
@@ -227,7 +227,7 @@ class QUICEndpoint(Handle):
         """Opens a connection to ``remote`` as ``server_name``, with a NEW_TOKEN ``token`` of the server if any."""
         handle = ctypes.c_uint64()
         self.library.call(
-            f"{P}_quic_endpoint_connect", self.handle, tls, *Text.encode(server_name or ""), ctypes.byref(remote.to_structure()),
+            "umilib_protocol_quic_quic_endpoint_connect", self.handle, tls, *Text.encode(server_name or ""), ctypes.byref(remote.to_structure()),
             *Bytes.readable(token or b""), *Bytes.readable(seed or os.urandom(48)), now, time, ctypes.byref(handle),
         )  # fmt: skip
         return QUICConnection(self, handle.value)
@@ -236,7 +236,7 @@ class QUICEndpoint(Handle):
         """Takes a datagram from ``remote``; the connection that took it, if any."""
         found, handle = ctypes.c_bool(), ctypes.c_uint64()
         self.library.call(
-            f"{P}_quic_endpoint_receive", self.handle, *Bytes.readable(datagram), ctypes.byref(remote.to_structure()), int(ecn), now,
+            "umilib_protocol_quic_quic_endpoint_receive", self.handle, *Bytes.readable(datagram), ctypes.byref(remote.to_structure()), int(ecn), now,
             time, ctypes.byref(found), ctypes.byref(handle),
         )  # fmt: skip
         return QUICConnection(self, handle.value) if found.value else None
@@ -246,20 +246,20 @@ class QUICEndpoint(Handle):
         found = ctypes.c_bool()
         destination = Library.default().type("umilib_protocol_ip_IPEndpoint")()
         buffer = Buffer()
-        self.library.call(f"{P}_quic_endpoint_transmit", self.handle, now, ctypes.byref(found), ctypes.byref(destination), ctypes.byref(buffer))
+        self.library.call("umilib_protocol_quic_quic_endpoint_transmit", self.handle, now, ctypes.byref(found), ctypes.byref(destination), ctypes.byref(buffer))
         data = self.library.take(buffer)
         return (IPEndpoint.from_structure(destination), data) if found.value else None
 
     def poll_timeout(self) -> int | None:
         """When :meth:`expire` is next due, in nanoseconds."""
-        return self.library.optional(f"{P}_quic_endpoint_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_quic_quic_endpoint_poll_timeout", ctypes.c_uint64, self.handle)
 
     def expire(self, now: int, time: int) -> None:
-        self.library.call(f"{P}_quic_endpoint_expire", self.handle, now, time)
+        self.library.call("umilib_protocol_quic_quic_endpoint_expire", self.handle, now, time)
 
     def accept(self) -> QUICConnection | None:
         """The next connection accepted."""
-        handle = self.library.optional(f"{P}_quic_endpoint_accept", ctypes.c_uint64, self.handle)
+        handle = self.library.optional("umilib_protocol_quic_quic_endpoint_accept", ctypes.c_uint64, self.handle)
         return None if handle is None else QUICConnection(self, handle)
 
 
@@ -271,11 +271,11 @@ class QUICConnection:
         self.handle = handle
 
     def call(self, name: str, *arguments: Any) -> None:
-        self.endpoint.library.call(f"{P}_quic_connection_{name}", self.endpoint.handle, self.handle, *arguments)
+        self.endpoint.library.call(f"umilib_protocol_quic_quic_connection_{name}", self.endpoint.handle, self.handle, *arguments)
 
     @property
     def session(self) -> QUICSession:
-        structure = Library.default().type(f"{P}_QUICSession")()
+        structure = Library.default().type("umilib_protocol_quic_QUICSession")()
         self.call("session", ctypes.byref(structure))
         return QUICSession(
             state=QUICConnectionState(structure.state),
@@ -293,7 +293,7 @@ class QUICConnection:
 
     def poll_event(self) -> QUICEvent | None:
         found = ctypes.c_bool()
-        structure = Library.default().type(f"{P}_QUICEvent")()
+        structure = Library.default().type("umilib_protocol_quic_QUICEvent")()
         buffer = Buffer()
         self.call("poll_event", ctypes.byref(found), ctypes.byref(structure), ctypes.byref(buffer))
         data = self.endpoint.library.take(buffer)

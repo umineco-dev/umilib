@@ -30,13 +30,16 @@ pub trait RevocationSource: fmt::Debug {
     /// The status of `certificate`, issued by the holder of `issuer` and
     /// `issuer_key`, under `config` (its time, key limits and algorithms):
     /// `Undetermined` when the source says nothing current about it, an
-    /// error when what it says about it cannot be used.
+    /// error when what it says about it cannot be used. Every signature the
+    /// source verifies is spent from `budget`, the budget of the whole
+    /// validation; `Work` when it runs out.
     fn status(
         &self,
         certificate: &Certificate<'_>,
         issuer: &Name<'_>,
         issuer_key: &PublicKey,
         config: &PathConfig,
+        budget: &mut PathBudget,
     ) -> Result<RevocationStatus, PathErrorReason>;
 }
 
@@ -60,10 +63,6 @@ impl ReasonFlags {
 }
 
 impl<'a, 'c> PathValidator<'a, 'c> {
-    /// The most CRL issuer paths nested in one another (a CRL issuer whose
-    /// own revocation needs a CRL of another issuer, and so on).
-    pub const MAXIMUM_NESTED_SIGNERS: usize = 4;
-
     /// The CRL extensions processed; another critical one makes a CRL unusable.
     pub const CRL_EXTENSIONS: [ObjectIdentifier<'static>; 7] = [
         AuthorityKeyIdentifier::OID,
@@ -271,7 +270,7 @@ impl<'a, 'c> PathValidator<'a, 'c> {
         if anchor.name.matches(crl_issuer) && signs_crls(anchor.certificate.as_ref()) && verifies(&anchor.public_key)? {
             return Ok(Some(anchor.public_key.clone()));
         }
-        if signers.len() >= PathValidator::MAXIMUM_NESTED_SIGNERS {
+        if signers.len() >= self.config.maximum_nested_signers {
             return Ok(None);
         }
         // The path of a CRL issuer is validated as that of a certificate
@@ -413,8 +412,9 @@ impl<'a, 'c> PathValidator<'a, 'c> {
             if let RevocationStatus::Revoked(_) = status {
                 break;
             }
-            match source.status(certificate, &tbs.issuer, issuer_key, self.config) {
+            match source.status(certificate, &tbs.issuer, issuer_key, self.config, budget) {
                 Ok(answer) => status = status.combine(answer),
+                Err(PathErrorReason::Work) => return Err(PathErrorReason::Work),
                 Err(reason) => {
                     skipped.get_or_insert(reason);
                 }

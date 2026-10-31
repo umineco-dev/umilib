@@ -77,6 +77,15 @@ pub struct QUICConfig {
     /// The most CRYPTO data held out of order at one level (RFC 9000 §7.5:
     /// at least 4096): 64 KiB by default.
     pub maximum_crypto_buffer: usize,
+    /// The most separate pieces of data received out of order that one
+    /// stream, or the CRYPTO data of one level, holds: against a peer that
+    /// fills its credit with pieces of one byte, each held on its own.
+    /// 1024 by default.
+    pub maximum_receive_fragments: usize,
+    /// The most PATH_RESPONSE frames owed at once; challenges past it are
+    /// not answered, against a peer that sends many (RFC 9000 §8.2.2 allows
+    /// one response per challenge, not more). 4 by default.
+    pub maximum_path_responses: usize,
     /// The most datagrams kept that cannot be read yet because their keys
     /// are not there (RFC 9001 §4.1.4).
     pub maximum_buffered_packets: usize,
@@ -118,6 +127,8 @@ impl Default for QUICConfig {
             maximum_ack_ranges: 32,
             maximum_received_ranges: 256,
             maximum_crypto_buffer: 1 << 16,
+            maximum_receive_fragments: 1024,
+            maximum_path_responses: 4,
             maximum_buffered_packets: 8,
             maximum_datagrams: 64,
             maximum_events: 1024,
@@ -162,6 +173,7 @@ impl QUICConfig {
             && self.initial_max_streams_bidi <= super::QUICStreamID::MAXIMUM_COUNT
             && self.initial_max_streams_uni <= super::QUICStreamID::MAXIMUM_COUNT
             && self.maximum_crypto_buffer >= 4096
+            && self.maximum_receive_fragments >= 1
             && self.maximum_ack_ranges >= 1
             && self.maximum_received_ranges >= self.maximum_ack_ranges
             && !self.initial_rtt.is_zero();

@@ -183,22 +183,28 @@ class Secret(Handle):
     def expose_mut(self) -> memoryview:
         """A view of the secret bytes inside umilib. The view keeps the secret
         alive; using it after :meth:`close` is not allowed."""
-        pointer, length = ctypes.c_void_p(), ctypes.c_size_t()
-        self.library.call("umilib_secret_secret_expose_mut", self.handle, ctypes.byref(pointer), ctypes.byref(length))
-        if not length.value:
-            return memoryview(bytearray())
-        array = (ctypes.c_uint8 * length.value).from_address(pointer.value)
-        array.owner = self  # the view keeps the secret, and so its memory, alive
-        self.views.append(weakref.ref(array))
+        # The view is registered under the lock, so that :meth:`free` cannot release the memory in between.
+        with self.locked():
+            pointer, length = self.location_mut()
+            if not length:
+                return memoryview(bytearray())
+            array = (ctypes.c_uint8 * length).from_address(pointer)
+            array.owner = self  # the view keeps the secret, and so its memory, alive
+            self.views.append(weakref.ref(array))
         return memoryview(array).cast("B")
 
-    def close(self) -> None:
+    def free(self) -> None:
         """Zeroizes and releases the secret. Fails while a view from
         :meth:`expose_mut` is still in use, because it would point to freed memory."""
-        self.views = [view for view in self.views if view() is not None]
-        if self.views:
-            raise FFIError("secret", "Borrowed", "a view from expose_mut is still in use")
-        super().close()
+        # The views are checked under the lock that :meth:`expose_mut` registers them under.
+        self.acquire()
+        try:
+            self.views = [view for view in self.views if view() is not None]
+            if self.views:
+                raise FFIError("secret", "Borrowed", "a view from expose_mut is still in use")
+            super().free()
+        finally:
+            self.release()
 
     def ct_eq(self, other: Secret) -> Choice:
         """Compares two secrets without copying them."""

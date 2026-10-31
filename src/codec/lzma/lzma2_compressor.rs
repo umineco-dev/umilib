@@ -128,6 +128,12 @@ impl LZMA2Compressor {
     }
 }
 
+impl Default for LZMA2Compressor {
+    fn default() -> LZMA2Compressor {
+        LZMA2Compressor::new(LZMAConfig::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for LZMA2Compressor {
     fn compress(&mut self, input: &[u8], output: &mut [u8], flush: Flush) -> Result<Progress, CompressionError> {
         let (mut consumed, mut produced) = (0, 0);

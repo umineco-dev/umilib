@@ -93,12 +93,24 @@ thread, ends the current or next wait with an event of token
 `PollEvent::NOTIFY`, which descriptors may not use. A wait interrupted by
 a signal returns early with no events (as `epoll_wait` and `kevent` do,
 since neither is restarted after a signal handler), so a caller waits in a
-loop.
+loop. One wait returns at most `maximum_events()` events:
+`Poller::DEFAULT_MAXIMUM_EVENTS` (256) for `Poller::new()`, or the number
+given to `Poller::with_maximum_events` (1 to `i32::MAX`); the others are
+returned by the next wait.
 
 On Windows, `CompletionPort` reports completed operations instead:
 `associate(handle, key)` attaches a socket created overlapped, `wait`
 gives `Completion`s (the key, the address of the `OVERLAPPED`, the bytes),
 `post` queues one, and `notify()` posts one of key `Completion::NOTIFY`.
+One wait returns at most `maximum_completions()` completions
+(`CompletionPort::DEFAULT_MAXIMUM_COMPLETIONS`, 256, or the number given to
+`CompletionPort::with_maximum_completions`).
+
+On Linux and Android, the layers build only for the architectures whose
+socket and file constants are those of the kernel's generic headers: x86,
+x86-64, ARM, AArch64, RISC-V, LoongArch64, PowerPC and s390x. MIPS, SPARC
+and the other architectures that number them differently fail to compile
+rather than run with wrong values.
 
 ## C and Python
 

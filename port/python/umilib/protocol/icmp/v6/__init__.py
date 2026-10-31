@@ -21,8 +21,6 @@ from umilib.protocol.icmp import ICMPExtensions, ICMPHeader
 from umilib.protocol.ip import IPv6Address
 from umilib.protocol.ip.v6 import IPv6Header
 
-P = "umilib_protocol_icmp_v6"
-
 
 class ICMPv6Type(int):
     """The type of an ICMPv6 message (the IANA registry "ICMPv6 'type' Numbers")."""
@@ -52,11 +50,11 @@ class ICMPv6Type(int):
 
     def is_error(self) -> bool:
         """Whether the type is that of an error message: below 128."""
-        return bool(Library.default().function(f"{P}_icmpv6_type_is_error")(int(self)))
+        return bool(Library.default().function("umilib_protocol_icmp_v6_icmpv6_type_is_error")(int(self)))
 
     def is_extensible(self) -> bool:
         """Whether an error of this type carries the length attribute of RFC 4884."""
-        return bool(Library.default().function(f"{P}_icmpv6_type_is_extensible")(int(self)))
+        return bool(Library.default().function("umilib_protocol_icmp_v6_icmpv6_type_is_extensible")(int(self)))
 
     def __repr__(self) -> str:
         return f"ICMPv6Type({int(self)})"
@@ -121,12 +119,12 @@ class ICMPv6Message:
         """The message that ``data`` is, carried from ``source`` to ``destination``; raises ``Length`` or ``Checksum``."""
         data = bytes(data)
         structure = Library.default().type("umilib_protocol_icmp_ICMPHeader")()
-        Library.default().call(f"{P}_icmpv6_message_decode", data, len(data), source.to_structure(), destination.to_structure(), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_icmp_v6_icmpv6_message_decode", data, len(data), source.to_structure(), destination.to_structure(), ctypes.byref(structure))
         return cls.from_structure(structure, data[ICMPv6Message.HEADER_LENGTH :])
 
     def encode(self, source: IPv6Address, destination: IPv6Address) -> bytes:
         return Library.default().output(
-            f"{P}_icmpv6_message_encode", self.header_structure(), *Bytes.readable(self.body), source.to_structure(), destination.to_structure()
+            "umilib_protocol_icmp_v6_icmpv6_message_encode", self.header_structure(), *Bytes.readable(self.body), source.to_structure(), destination.to_structure()
         )
 
     def length(self) -> int:
@@ -134,17 +132,17 @@ class ICMPv6Message:
 
     @classmethod
     def echo_request(cls, identifier: int, sequence: int, data: bytes = b"") -> ICMPv6Message:
-        return cls.from_structure(Library.default().function(f"{P}_icmpv6_message_echo_request")(identifier, sequence), bytes(data))
+        return cls.from_structure(Library.default().function("umilib_protocol_icmp_v6_icmpv6_message_echo_request")(identifier, sequence), bytes(data))
 
     def echo_reply(self) -> ICMPv6Message | None:
         found = ctypes.c_bool()
         structure = Library.default().type("umilib_protocol_icmp_ICMPHeader")()
-        Library.default().call(f"{P}_icmpv6_message_echo_reply", self.header_structure(), ctypes.byref(found), ctypes.byref(structure))
+        Library.default().call("umilib_protocol_icmp_v6_icmpv6_message_echo_reply", self.header_structure(), ctypes.byref(found), ctypes.byref(structure))
         return ICMPv6Message.from_structure(structure, self.body) if found.value else None
 
     def echo(self) -> tuple[int, int] | None:
         found, identifier, sequence = ctypes.c_bool(), ctypes.c_uint16(), ctypes.c_uint16()
-        Library.default().call(f"{P}_icmpv6_message_echo", self.header_structure(), ctypes.byref(found), ctypes.byref(identifier), ctypes.byref(sequence))
+        Library.default().call("umilib_protocol_icmp_v6_icmpv6_message_echo", self.header_structure(), ctypes.byref(found), ctypes.byref(identifier), ctypes.byref(sequence))
         return (identifier.value, sequence.value) if found.value else None
 
     def is_echo(self) -> bool:
@@ -160,16 +158,16 @@ class ICMPv6Message:
 
     def mtu(self) -> int | None:
         """The MTU of a Packet Too Big message."""
-        return Library.default().optional(f"{P}_icmpv6_message_mtu", ctypes.c_uint32, self.header_structure())
+        return Library.default().optional("umilib_protocol_icmp_v6_icmpv6_message_mtu", ctypes.c_uint32, self.header_structure())
 
     def pointer(self) -> int | None:
         """The offset in the invoking packet a Parameter Problem points to."""
-        return Library.default().optional(f"{P}_icmpv6_message_pointer", ctypes.c_uint32, self.header_structure())
+        return Library.default().optional("umilib_protocol_icmp_v6_icmpv6_message_pointer", ctypes.c_uint32, self.header_structure())
 
     def original(self) -> tuple[bytes, ICMPExtensions | None]:
         """The invoking packet an error quotes and its extension structure (RFC 4884), if any."""
         length, found = ctypes.c_size_t(), ctypes.c_bool()
-        Library.default().call(f"{P}_icmpv6_message_original", self.header_structure(), *Bytes.readable(self.body), ctypes.byref(length), ctypes.byref(found))
+        Library.default().call("umilib_protocol_icmp_v6_icmpv6_message_original", self.header_structure(), *Bytes.readable(self.body), ctypes.byref(length), ctypes.byref(found))
         return self.body[: length.value], (ICMPExtensions.decode(self.body[length.value :]) if found.value else None)
 
     def invoking(self) -> tuple[IPv6Header, bytes] | None:
@@ -189,7 +187,7 @@ class ICMPv6Message:
 
     @staticmethod
     def quote_length(length: int, headers: int) -> int:
-        return Library.default().function(f"{P}_icmpv6_message_quote_length")(length, headers)
+        return Library.default().function("umilib_protocol_icmp_v6_icmpv6_message_quote_length")(length, headers)
 
     @staticmethod
     def quote(packet: bytes, headers: int) -> bytes:
@@ -200,7 +198,7 @@ class ICMPv6Message:
     def may_report(header: IPv6Header, payload: bytes, multicast: bool, error: ICMPv6Message) -> bool:
         """Whether the error ``error`` (its body is not read) may be sent about a packet (RFC 4443 §2.4 (e))."""
         return Library.default().value(
-            f"{P}_icmpv6_message_may_report", ctypes.c_bool, ctypes.byref(header.to_structure()), *Bytes.readable(payload), multicast, error.header_structure()
+            "umilib_protocol_icmp_v6_icmpv6_message_may_report", ctypes.c_bool, ctypes.byref(header.to_structure()), *Bytes.readable(payload), multicast, error.header_structure()
         )
 
 
@@ -246,11 +244,11 @@ class NDPOption:
     @staticmethod
     def encode(kind: int, data: bytes) -> bytes:
         """The bytes of an option of ``kind`` with ``data``, padded to a multiple of 8 bytes."""
-        return Library.default().output(f"{P}_ndp_option_encode", int(kind), *Bytes.readable(data))
+        return Library.default().output("umilib_protocol_icmp_v6_ndp_option_encode", int(kind), *Bytes.readable(data))
 
     def mtu(self) -> int | None:
         """The MTU of an MTU option."""
-        return Library.default().optional(f"{P}_ndp_option_mtu", ctypes.c_uint32, int(self.kind), *Bytes.readable(self.data))
+        return Library.default().optional("umilib_protocol_icmp_v6_ndp_option_mtu", ctypes.c_uint32, int(self.kind), *Bytes.readable(self.data))
 
     def redirected_packet(self) -> bytes | None:
         return self.data[6:] if self.kind == NDPOptionKind.REDIRECTED_HEADER and len(self.data) >= 6 else None
@@ -267,7 +265,7 @@ class NDPOptions:
         index = 0
         while True:
             found, kind, data = ctypes.c_bool(), ctypes.c_uint8(), Buffer()
-            library.call(f"{P}_ndp_options_get", self.data, len(self.data), index, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(data))
+            library.call("umilib_protocol_icmp_v6_ndp_options_get", self.data, len(self.data), index, ctypes.byref(found), ctypes.byref(kind), ctypes.byref(data))
             value = library.take(data)
             if not found.value:
                 return
@@ -306,15 +304,15 @@ class NDPPrefixInformation:
 
     @classmethod
     def decode(cls, data: bytes) -> NDPPrefixInformation:
-        structure = Library.default().type(f"{P}_NDPPrefixInformation")()
-        Library.default().call(f"{P}_ndp_prefix_information_decode", *Bytes.readable(data), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_icmp_v6_NDPPrefixInformation")()
+        Library.default().call("umilib_protocol_icmp_v6_ndp_prefix_information_decode", *Bytes.readable(data), ctypes.byref(structure))
         return cls(
             structure.prefix_length, bool(structure.on_link), bool(structure.autonomous), structure.flags,
             structure.valid_lifetime, structure.preferred_lifetime, IPv6Address.from_structure(structure.prefix),
         )  # fmt: skip
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_NDPPrefixInformation")()
+        structure = Library.default().type("umilib_protocol_icmp_v6_NDPPrefixInformation")()
         for name in ("prefix_length", "flags", "valid_lifetime", "preferred_lifetime"):
             Fields.assign(structure, name, getattr(self, name))
         structure.on_link, structure.autonomous = self.on_link, self.autonomous
@@ -324,10 +322,10 @@ class NDPPrefixInformation:
     def check(self) -> None:
         """Raises ``Invalid`` for a prefix length above 128, a preferred lifetime above the valid one,
         or other bits in ``flags`` than :attr:`FLAGS`."""
-        Library.default().call(f"{P}_ndp_prefix_information_check", self.to_structure())
+        Library.default().call("umilib_protocol_icmp_v6_ndp_prefix_information_check", self.to_structure())
 
     def encode(self) -> bytes:
-        return Library.default().output(f"{P}_ndp_prefix_information_encode", self.to_structure())
+        return Library.default().output("umilib_protocol_icmp_v6_ndp_prefix_information_encode", self.to_structure())
 
 
 class NDPPreference:
@@ -354,16 +352,16 @@ class NDPRouteInformation:
 
     @classmethod
     def decode(cls, data: bytes) -> NDPRouteInformation:
-        structure = Library.default().type(f"{P}_NDPRouteInformation")()
-        Library.default().call(f"{P}_ndp_route_information_decode", *Bytes.readable(data), ctypes.byref(structure))
+        structure = Library.default().type("umilib_protocol_icmp_v6_NDPRouteInformation")()
+        Library.default().call("umilib_protocol_icmp_v6_ndp_route_information_decode", *Bytes.readable(data), ctypes.byref(structure))
         return cls(structure.prefix_length, structure.preference, structure.lifetime, IPv6Address.from_structure(structure.prefix))
 
     def encode(self) -> bytes:
-        structure = Library.default().type(f"{P}_NDPRouteInformation")()
+        structure = Library.default().type("umilib_protocol_icmp_v6_NDPRouteInformation")()
         for name in ("prefix_length", "preference", "lifetime"):
             Fields.assign(structure, name, getattr(self, name))
         structure.prefix = self.prefix.to_structure()
-        return Library.default().output(f"{P}_ndp_route_information_encode", structure)
+        return Library.default().output("umilib_protocol_icmp_v6_ndp_route_information_encode", structure)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -377,7 +375,7 @@ class NDPRecursiveDNSServers:
     def decode(cls, data: bytes) -> NDPRecursiveDNSServers:
         lifetime, addresses = ctypes.c_uint32(), Buffer()
         library = Library.default()
-        library.call(f"{P}_ndp_recursive_dns_servers_decode", *Bytes.readable(data), ctypes.byref(lifetime), ctypes.byref(addresses))
+        library.call("umilib_protocol_icmp_v6_ndp_recursive_dns_servers_decode", *Bytes.readable(data), ctypes.byref(lifetime), ctypes.byref(addresses))
         return cls(lifetime.value, library.take(addresses))
 
     def __iter__(self) -> Iterator[IPv6Address]:
@@ -388,7 +386,7 @@ class NDPRecursiveDNSServers:
         return iter(self)
 
     def encode(self) -> bytes:
-        return Library.default().output(f"{P}_ndp_recursive_dns_servers_encode", self.lifetime, *Bytes.readable(self.addresses))
+        return Library.default().output("umilib_protocol_icmp_v6_ndp_recursive_dns_servers_encode", self.lifetime, *Bytes.readable(self.addresses))
 
 
 class NDPMessage:
@@ -398,7 +396,7 @@ class NDPMessage:
 
     @staticmethod
     def is_solicited_node(address: IPv6Address) -> bool:
-        return bool(Library.default().function(f"{P}_ndp_message_is_solicited_node")(address.to_structure()))
+        return bool(Library.default().function("umilib_protocol_icmp_v6_ndp_message_is_solicited_node")(address.to_structure()))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -410,11 +408,11 @@ class NDPRouterSolicitation:
     @classmethod
     def decode(cls, message: ICMPv6Message, header: IPv6Header) -> NDPRouterSolicitation:
         """The valid solicitation (RFC 4861 §6.1.1) of ``message``; raises ``Invalid``."""
-        Library.default().call(f"{P}_ndp_router_solicitation_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()))
+        Library.default().call("umilib_protocol_icmp_v6_ndp_router_solicitation_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()))
         return cls(message.body)
 
     def encode(self, source: IPv6Address, destination: IPv6Address) -> bytes:
-        return Library.default().output(f"{P}_ndp_router_solicitation_encode", *Bytes.readable(self.options), source.to_structure(), destination.to_structure())
+        return Library.default().output("umilib_protocol_icmp_v6_ndp_router_solicitation_encode", *Bytes.readable(self.options), source.to_structure(), destination.to_structure())
 
     def source_link_address(self) -> bytes | None:
         return NDPOptions.find(self.options, NDPOptionKind.SOURCE_LINK_ADDRESS)
@@ -443,21 +441,21 @@ class NDPRouterAdvertisement:
     @classmethod
     def decode(cls, message: ICMPv6Message, header: IPv6Header) -> NDPRouterAdvertisement:
         """The valid advertisement (RFC 4861 §6.1.2) of ``message``; raises ``Invalid``."""
-        structure = Library.default().type(f"{P}_NDPRouterAdvertisement")()
+        structure = Library.default().type("umilib_protocol_icmp_v6_NDPRouterAdvertisement")()
         offset = ctypes.c_size_t()
         Library.default().call(
-            f"{P}_ndp_router_advertisement_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()),
+            "umilib_protocol_icmp_v6_ndp_router_advertisement_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()),
             ctypes.byref(structure), ctypes.byref(offset),
         )  # fmt: skip
         values = {name: getattr(structure, name) for name in NDPRouterAdvertisement.FIELDS}
         return cls(**values, options=message.body[offset.value :])
 
     def encode(self, source: IPv6Address, destination: IPv6Address) -> bytes:
-        structure = Library.default().type(f"{P}_NDPRouterAdvertisement")()
+        structure = Library.default().type("umilib_protocol_icmp_v6_NDPRouterAdvertisement")()
         for name in NDPRouterAdvertisement.FIELDS:
             Fields.assign(structure, name, getattr(self, name))
         return Library.default().output(
-            f"{P}_ndp_router_advertisement_encode", ctypes.byref(structure), *Bytes.readable(self.options), source.to_structure(), destination.to_structure()
+            "umilib_protocol_icmp_v6_ndp_router_advertisement_encode", ctypes.byref(structure), *Bytes.readable(self.options), source.to_structure(), destination.to_structure()
         )
 
     def source_link_address(self) -> bytes | None:
@@ -477,14 +475,14 @@ class NDPNeighborSolicitation:
         target = Library.default().type("umilib_protocol_ip_IPv6Address")()
         offset = ctypes.c_size_t()
         Library.default().call(
-            f"{P}_ndp_neighbor_solicitation_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()),
+            "umilib_protocol_icmp_v6_ndp_neighbor_solicitation_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()),
             ctypes.byref(target), ctypes.byref(offset),
         )  # fmt: skip
         return cls(IPv6Address.from_structure(target), message.body[offset.value :])
 
     def encode(self, source: IPv6Address, destination: IPv6Address) -> bytes:
         return Library.default().output(
-            f"{P}_ndp_neighbor_solicitation_encode", self.target.to_structure(), *Bytes.readable(self.options), source.to_structure(), destination.to_structure()
+            "umilib_protocol_icmp_v6_ndp_neighbor_solicitation_encode", self.target.to_structure(), *Bytes.readable(self.options), source.to_structure(), destination.to_structure()
         )
 
     def source_link_address(self) -> bytes | None:
@@ -506,15 +504,15 @@ class NDPNeighborAdvertisement:
     options: bytes = b""
 
     def to_structure(self) -> Any:
-        return Library.default().type(f"{P}_NDPNeighborAdvertisement")(self.router_flag, self.solicited_flag, self.override_flag, self.target.to_structure())
+        return Library.default().type("umilib_protocol_icmp_v6_NDPNeighborAdvertisement")(self.router_flag, self.solicited_flag, self.override_flag, self.target.to_structure())
 
     @classmethod
     def decode(cls, message: ICMPv6Message, header: IPv6Header) -> NDPNeighborAdvertisement:
         """The valid advertisement (RFC 4861 §7.1.2) of ``message``; raises ``Invalid``."""
-        structure = Library.default().type(f"{P}_NDPNeighborAdvertisement")()
+        structure = Library.default().type("umilib_protocol_icmp_v6_NDPNeighborAdvertisement")()
         offset = ctypes.c_size_t()
         Library.default().call(
-            f"{P}_ndp_neighbor_advertisement_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()),
+            "umilib_protocol_icmp_v6_ndp_neighbor_advertisement_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()),
             ctypes.byref(structure), ctypes.byref(offset),
         )  # fmt: skip
         return cls(
@@ -524,7 +522,7 @@ class NDPNeighborAdvertisement:
 
     def encode(self, source: IPv6Address, destination: IPv6Address) -> bytes:
         return Library.default().output(
-            f"{P}_ndp_neighbor_advertisement_encode", ctypes.byref(self.to_structure()), *Bytes.readable(self.options), source.to_structure(), destination.to_structure()
+            "umilib_protocol_icmp_v6_ndp_neighbor_advertisement_encode", ctypes.byref(self.to_structure()), *Bytes.readable(self.options), source.to_structure(), destination.to_structure()
         )
 
     def target_link_address(self) -> bytes | None:
@@ -546,14 +544,14 @@ class NDPRedirect:
         destination = Library.default().type("umilib_protocol_ip_IPv6Address")()
         offset = ctypes.c_size_t()
         Library.default().call(
-            f"{P}_ndp_redirect_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()),
+            "umilib_protocol_icmp_v6_ndp_redirect_decode", message.header_structure(), *Bytes.readable(message.body), ctypes.byref(header.to_structure()),
             ctypes.byref(target), ctypes.byref(destination), ctypes.byref(offset),
         )  # fmt: skip
         return cls(IPv6Address.from_structure(target), IPv6Address.from_structure(destination), message.body[offset.value :])
 
     def encode(self, source: IPv6Address, destination: IPv6Address) -> bytes:
         return Library.default().output(
-            f"{P}_ndp_redirect_encode", self.target.to_structure(), self.destination.to_structure(), *Bytes.readable(self.options),
+            "umilib_protocol_icmp_v6_ndp_redirect_encode", self.target.to_structure(), self.destination.to_structure(), *Bytes.readable(self.options),
             source.to_structure(), destination.to_structure(),
         )  # fmt: skip
 
@@ -574,7 +572,7 @@ class NeighborConfig:
     maximum_queued: int = 1
 
     def to_structure(self) -> Any:
-        structure = Library.default().type(f"{P}_NeighborConfig")()
+        structure = Library.default().type("umilib_protocol_icmp_v6_NeighborConfig")()
         for name in ("reachable_time", "retransmission_timer", "delay_first_probe_time"):
             Fields.assign(structure, name, Nanoseconds.from_timedelta(getattr(self, name)))
         for name in ("maximum_multicast_solicitations", "maximum_unicast_solicitations", "maximum_entries", "maximum_queued"):
@@ -612,12 +610,12 @@ class NeighborReception:
 class NeighborPackets(Handle):
     """Packets the neighbor cache gives back."""
 
-    FREE = f"{P}_neighbor_packets_free"
+    FREE = "umilib_protocol_icmp_v6_neighbor_packets_free"
 
     def __iter__(self) -> Iterator[bytes]:
-        count = self.library.value(f"{P}_neighbor_packets_count", ctypes.c_size_t, self.handle)
+        count = self.library.value("umilib_protocol_icmp_v6_neighbor_packets_count", ctypes.c_size_t, self.handle)
         for index in range(count):
-            yield self.library.output(f"{P}_neighbor_packets_get", self.handle, index)
+            yield self.library.output("umilib_protocol_icmp_v6_neighbor_packets_get", self.handle, index)
 
     def list(self) -> list[bytes]:
         return list(self)
@@ -633,14 +631,14 @@ class NeighborEvent(Handle):
     """What :meth:`NeighborCache.poll` reports: a solicitation to send (``kind`` :attr:`SOLICIT`,
     multicast if ``link`` is ``None``) or a neighbor that did not answer (:attr:`UNREACHABLE`)."""
 
-    FREE = f"{P}_neighbor_event_free"
+    FREE = "umilib_protocol_icmp_v6_neighbor_event_free"
     SOLICIT: ClassVar[int] = 1
     UNREACHABLE: ClassVar[int] = 2
 
     def fields(self) -> tuple[int, IPv6Address, bytes | None]:
         kind, unicast, link = ctypes.c_uint8(), ctypes.c_bool(), (ctypes.c_uint8 * 6)()
         target = self.library.type("umilib_protocol_ip_IPv6Address")()
-        self.library.call(f"{P}_neighbor_event_target", self.handle, ctypes.byref(kind), ctypes.byref(target), ctypes.byref(unicast), link)
+        self.library.call("umilib_protocol_icmp_v6_neighbor_event_target", self.handle, ctypes.byref(kind), ctypes.byref(target), ctypes.byref(unicast), link)
         return kind.value, IPv6Address.from_structure(target), (bytes(link) if unicast.value else None)
 
     @property
@@ -658,7 +656,7 @@ class NeighborEvent(Handle):
     @property
     def packets(self) -> list[bytes]:
         pointer = ctypes.c_void_p()
-        self.library.call(f"{P}_neighbor_event_packets", self.handle, ctypes.byref(pointer))
+        self.library.call("umilib_protocol_icmp_v6_neighbor_event_packets", self.handle, ctypes.byref(pointer))
         return NeighborPackets.collect(pointer.value)
 
 
@@ -666,10 +664,10 @@ class NeighborCache(Handle):
     """The Neighbor Cache of RFC 4861 §5.1 and its reachability state machine (§7.3, Appendix C) for
     6-byte link-layer addresses, without I/O."""
 
-    FREE = f"{P}_neighbor_cache_free"
+    FREE = "umilib_protocol_icmp_v6_neighbor_cache_free"
 
     def __init__(self, config: NeighborConfig = NeighborConfig()) -> None:
-        super().__init__(Handle.create(f"{P}_neighbor_cache_new", config.to_structure()))
+        super().__init__(Handle.create("umilib_protocol_icmp_v6_neighbor_cache_new", config.to_structure()))
         self.config = config
 
     def resolve(self, address: IPv6Address, packet: bytes | None, now: int) -> tuple[NeighborResolution, bytes | None]:
@@ -677,24 +675,24 @@ class NeighborCache(Handle):
         resolution; ``packet`` is kept until it ends. Raises ``Limit``."""
         kind, link = ctypes.c_uint8(), (ctypes.c_uint8 * 6)()
         data, length = (None, 0) if packet is None else (bytes(packet), len(packet))
-        self.library.call(f"{P}_neighbor_cache_resolve", self.handle, address.to_structure(), data, length, now, ctypes.byref(kind), link)
+        self.library.call("umilib_protocol_icmp_v6_neighbor_cache_resolve", self.handle, address.to_structure(), data, length, now, ctypes.byref(kind), link)
         resolution = NeighborResolution(kind.value)
         return resolution, (bytes(link) if resolution == NeighborResolution.RESOLVED else None)
 
     def lookup(self, address: IPv6Address) -> tuple[bytes, NeighborState] | None:
         found, state, link = ctypes.c_bool(), ctypes.c_uint8(), (ctypes.c_uint8 * 6)()
-        self.library.call(f"{P}_neighbor_cache_lookup", self.handle, address.to_structure(), ctypes.byref(found), ctypes.byref(state), link)
+        self.library.call("umilib_protocol_icmp_v6_neighbor_cache_lookup", self.handle, address.to_structure(), ctypes.byref(found), ctypes.byref(state), link)
         return (bytes(link), NeighborState(state.value)) if found.value else None
 
     def confirm(self, address: IPv6Address, now: int) -> None:
         """A confirmation from an upper layer that ``address`` is reachable (RFC 4861 §7.3.1)."""
-        self.library.call(f"{P}_neighbor_cache_confirm", self.handle, address.to_structure(), now)
+        self.library.call("umilib_protocol_icmp_v6_neighbor_cache_confirm", self.handle, address.to_structure(), now)
 
     def receive_advertisement(self, advertisement: NDPNeighborAdvertisement, now: int) -> NeighborReception:
         """Processes a valid Neighbor Advertisement (RFC 4861 §7.2.5)."""
         pointer, no_longer_router = ctypes.c_void_p(), ctypes.c_bool()
         self.library.call(
-            f"{P}_neighbor_cache_receive_advertisement", self.handle, ctypes.byref(advertisement.to_structure()),
+            "umilib_protocol_icmp_v6_neighbor_cache_receive_advertisement", self.handle, ctypes.byref(advertisement.to_structure()),
             *Bytes.readable(advertisement.options), now, ctypes.byref(pointer), ctypes.byref(no_longer_router),
         )  # fmt: skip
         return NeighborReception(NeighborPackets.collect(pointer.value), no_longer_router.value)
@@ -709,20 +707,20 @@ class NeighborCache(Handle):
         code = 0 if router is None else (2 if router else 1)
         data = None if link is None else bytes(link)
         self.library.call(
-            f"{P}_neighbor_cache_learn", self.handle, address.to_structure(), data, code, now, ctypes.byref(pointer), ctypes.byref(no_longer_router)
+            "umilib_protocol_icmp_v6_neighbor_cache_learn", self.handle, address.to_structure(), data, code, now, ctypes.byref(pointer), ctypes.byref(no_longer_router)
         )
         return NeighborReception(NeighborPackets.collect(pointer.value), no_longer_router.value)
 
     def remove(self, address: IPv6Address) -> bool:
-        return self.library.value(f"{P}_neighbor_cache_remove", ctypes.c_bool, self.handle, address.to_structure())
+        return self.library.value("umilib_protocol_icmp_v6_neighbor_cache_remove", ctypes.c_bool, self.handle, address.to_structure())
 
     def poll_timeout(self) -> int | None:
-        return self.library.optional(f"{P}_neighbor_cache_poll_timeout", ctypes.c_uint64, self.handle)
+        return self.library.optional("umilib_protocol_icmp_v6_neighbor_cache_poll_timeout", ctypes.c_uint64, self.handle)
 
     def poll(self, now: int) -> NeighborEvent | None:
         """Advances the cache to ``now``; returns the next solicitation to send or neighbor that did not answer."""
         found, pointer = ctypes.c_bool(), ctypes.c_void_p()
-        self.library.call(f"{P}_neighbor_cache_poll", self.handle, now, ctypes.byref(found), ctypes.byref(pointer))
+        self.library.call("umilib_protocol_icmp_v6_neighbor_cache_poll", self.handle, now, ctypes.byref(found), ctypes.byref(pointer))
         return NeighborEvent(pointer.value) if found.value else None
 
 

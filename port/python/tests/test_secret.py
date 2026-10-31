@@ -66,6 +66,9 @@ def test_zeroize_and_secret():
     assert error.value.name == "Borrowed"
     del view
     secret.close()
+    with pytest.raises(FFIError) as error:
+        secret.expose_mut()
+    assert error.value.name == "Closed"
 
 
 def test_exposed_views_keep_the_secret_alive():

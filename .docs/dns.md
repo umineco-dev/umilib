@@ -115,6 +115,33 @@ How `protocol::dns` is built and why. The user's view is `docs/protocol-dns.md`.
   lowercased in the canonical form (RFC 4034 §6.2). Data of other types is
   kept whole: reading it once failed for any non-empty record of a type
   without a structure, which made the whole message unreadable.
+- **Malformed data of a known type is `Unknown` where its bytes stand
+  alone** (audit finding: the documentation said so, but `decode` failed
+  the whole message, while the zone-file `\#` form fell back to `Unknown`
+  for every type). A record of a well-formed message whose data breaks its
+  type's rules (an SVCB of malformed parameters, a CAA tag not
+  alphanumeric, an NSEC3 of an empty hash, an A of 3 bytes) is malformed
+  alone; RFC 9460 §2.2 says such an SVCB is to be ignored, not the message,
+  and failing the message would let one record hide the rest. `decode`
+  keeps the bytes as `Unknown` when the type has no name that may be
+  compressed (`decompresses_names`, RFC 3597 §4) or lowercased in the
+  canonical form (`lowercases_names`, RFC 4034 §6.2): then the bytes are
+  the record in any message and in the canonical form, so it is written
+  again and validated the same. For the other types the bytes may hold a
+  pointer into the message, meaningless alone, or a name whose canonical
+  form differs: the message is refused, as before. The `\#` form goes
+  through `decode_uncompressed`, the same rules with no name compressed:
+  RFC 3597 §5 makes it the RDATA uncompressed, and decoding it as a message
+  followed a pointer within the data itself (a SOA whose RNAME pointed at
+  its MNAME was read), so a zone file and a message accept the same data;
+  it once fell back to `Unknown` for every type, which kept data of MX or
+  RRSIG whose canonical form would have been wrong. Text in a type's own
+  presentation format that breaks its rules is still a syntax error: an
+  operator wrote it. `decode_strict` is the decoder that refuses all
+  malformed data, for callers that want that. Rejected: failing every
+  malformed record (one bad record hides an answer; RFC 9460 says to
+  ignore it), and keeping every malformed record as `Unknown` (compressed
+  names cannot be kept as bytes).
 
 ### DNSSEC
 

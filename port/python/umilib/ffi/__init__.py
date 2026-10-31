@@ -380,8 +380,9 @@ class Library:
 class Handle:
     """A Python owner of an object created by umilib, released by ``FREE``.
 
-    Handles are released when garbage collected, by :meth:`close`, or at the
-    end of a ``with`` block. A handle is passed to C functions as it is (see
+    Handles are released when garbage collected, by :meth:`free`, or at the
+    end of a ``with`` block; :meth:`close` releases them too, unless a type
+    overrides it with an operation of its protocol. A handle is passed to C functions as it is (see
     :attr:`handle`): :class:`Function` locks it for the duration of the call,
     so one object can be shared by threads, which the C ABI alone does not
     allow. Using a handle again from a callback that runs inside a call on
@@ -487,8 +488,9 @@ class Handle:
         """Marks the object as released by a C function that consumed it; call it while holding the lock."""
         self.pointer = None
 
-    def close(self) -> None:
-        """Releases the object; using it afterwards raises :class:`FFIError`."""
+    def free(self) -> None:
+        """Releases the object; using it afterwards raises :class:`FFIError`.
+        Garbage collection and the end of a ``with`` block call this method."""
         self.acquire()
         try:
             pointer, self.pointer = self.pointer, None
@@ -496,6 +498,12 @@ class Handle:
             self.release()
         if pointer is not None:
             self.library.function(self.FREE)(pointer)
+
+    def close(self) -> None:
+        """Releases the object (:meth:`free`). Types whose Rust ``close`` is an
+        operation of a protocol, such as sending a FIN, override this method
+        with it and are released only by :meth:`free`."""
+        self.free()
 
     def detach(self) -> int:
         """Gives up ownership without releasing the object and returns the pointer."""
@@ -508,13 +516,13 @@ class Handle:
         return self
 
     def __exit__(self, *exception: object) -> None:
-        self.close()
+        self.free()
 
     def __del__(self) -> None:
         if getattr(self, "lock", None) is None:
             return  # construction failed before the handle existed
         try:
-            self.close()
+            self.free()
         except Exception:
             pass
 

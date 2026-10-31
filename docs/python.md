@@ -40,8 +40,12 @@ a system installation.
   never cross into C: a failing benchmark routine is not called again and its
   exception is raised when measuring ends; a failing fuzz target is a failure;
   `KeyboardInterrupt` and `SystemExit` stop the run and are raised again.
-- Objects created by umilib are released when garbage collected, by `close()`
-  or at the end of a `with` block.
+- Objects created by umilib are released when garbage collected, by `free()`
+  or at the end of a `with` block; `close()` releases them too, except where
+  the Rust `close` is an operation of a protocol (`TCPConnection.close()`
+  sends a FIN, `WebSocketConnection.close()` starts the closing handshake,
+  `TLSConnection.close()` sends `close_notify`, `Receiver.close()` closes the
+  channel): those do that operation, as in Rust, and only `free()` releases.
 - Objects can be shared between threads: every call locks the objects it is
   given, and methods that copy memory an object owns, or consume it, hold the
   lock until they are done (the C ABI itself does not synchronize, see

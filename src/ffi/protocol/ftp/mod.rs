@@ -690,8 +690,7 @@ crate::ffi_functions! {
         Status::from_result((|| {
             // SAFETY: the caller passes a valid handle and readable text.
             let server = unsafe { Pointer::reference_mut(server) }?;
-            server.shutdown(unsafe { Pointer::text(text, length) }?);
-            Ok(())
+            server.shutdown(unsafe { Pointer::text(text, length) }?).map_err(|error| error.to_status())
         })())
     }
 

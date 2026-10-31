@@ -559,6 +559,27 @@ fn sequence_sets_of_section_9() {
     );
     assert!(IMAPDateTime::read(&mut IMAPReader::new(b"\"30-Feb-1994 00:00:00 +0000\"", DEPTH)).is_err());
     assert!(IMAPDate::read(&mut IMAPReader::new(b"\"1-Feb-1994\"", DEPTH)).is_ok());
+    // A date-time made by the application at the ends of its range is a date, written without
+    // overflow: its local time is the instant plus the zone's offset (§9 `zone`).
+    for (seconds, offset) in [(i64::MAX, 1439), (i64::MIN, -1439), (i64::MAX, -1439), (i64::MIN, 1439)] {
+        let far = IMAPDateTime::new(seconds, offset);
+        let written = far.to_string();
+        let date = far.date();
+        assert!(written.starts_with(&format!("\"{:02}-", date.day)), "{written}");
+        // §9 `date-year` and `zone` are 4DIGIT: such a date-time cannot be written as one.
+        assert!(!far.is_valid());
+    }
+    // The first and last instants of years 0000 and 9999, local time, and zones of 99:59.
+    assert!(IMAPDateTime::read(&mut IMAPReader::new(b"\"01-Jan-0000 00:00:00 +9959\"", DEPTH)).unwrap().is_valid());
+    assert!(IMAPDateTime::read(&mut IMAPReader::new(b"\"31-Dec-9999 23:59:59 -9959\"", DEPTH)).unwrap().is_valid());
+    let last = IMAPDateTime::read(&mut IMAPReader::new(b"\"31-Dec-9999 23:59:59 +0000\"", DEPTH)).unwrap();
+    assert!(!IMAPDateTime::new(last.seconds + 1, 0).is_valid());
+    assert!(!IMAPDateTime::new(0, 100 * 60).is_valid());
+    // A server does not send an INTERNALDATE that the syntax cannot write.
+    let mut server = IMAPServer::new(IMAPConfig::default(), IMAPServerConfig::default(), false).unwrap();
+    let fetch = |date| IMAPResponse::Fetch { number: 1, items: vec![IMAPFetchItem::InternalDate(date)] };
+    assert!(server.respond(&fetch(IMAPDateTime::new(last.seconds + 1, 0))).is_err());
+    assert!(server.respond(&fetch(last)).is_ok());
 }
 
 /// The message of the part numbers of RFC 9051 §6.4.5.
@@ -957,4 +978,83 @@ fn rules_of_the_review() {
     client.send(IMAPCommandBody::StartTLS, T0).unwrap();
     client.receive(b"T1 OK begin TLS\r\n", T0).unwrap();
     assert!(!client.rev2 && client.literal_mode() == IMAPLiteralMode::Synchronizing);
+}
+
+/// RFC 9051 §7.1.5: a server that shuts down sends an untagged BYE and closes; a response is a
+/// line (§2.2.2), so text of a line break, which would be responses of its own, is refused.
+#[test]
+fn shutdown_of_section_7_1_5() {
+    let mut server = IMAPServer::new(IMAPConfig::default(), IMAPServerConfig::default(), false).unwrap();
+    server.greet(IMAPCondition::OK, "ready", T0).unwrap();
+    server.transmit(&mut Vec::new());
+    // §9 resp-text: text beginning with "[" would be read as a response code the server did not give.
+    for text in ["bye\r\n* OK [ALERT] x", "bye\n* OK", "bye\r", "bye\0", "[ALERT] forged"] {
+        assert!(server.shutdown(text).is_err(), "{text:?}");
+        let mut out = Vec::new();
+        server.transmit(&mut out);
+        assert!(out.is_empty(), "{text:?}");
+        assert!(server.is_open());
+    }
+    server.shutdown("Autologout; idle for too long").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert_eq!(out, b"* BYE Autologout; idle for too long\r\n");
+    assert!(!server.is_open());
+    assert!(matches!(server.poll_event(), Some(IMAPServerEvent::Closed { error: None })));
+    server.shutdown("again").unwrap();
+    let mut out = Vec::new();
+    server.transmit(&mut out);
+    assert!(out.is_empty());
+}
+
+/// RFC 9051 §4.3 and RFC 7888 §3: a line that ends in `{n}`, `{n+}` or `~{n}` announces a literal,
+/// and the receiver reads the next n octets as its data. A client writes such a line only for a
+/// literal of its own: a command of an extension whose arguments end so would make the server
+/// wait for octets (or read the next commands as them), and wait for a continuation request the
+/// client does not know of.
+#[test]
+fn no_literal_announced_but_by_the_writer() {
+    let greeted_client = || {
+        let mut client = IMAPClient::new(IMAPConfig::default(), false, "T", T0).unwrap();
+        client.receive(b"* PREAUTH [CAPABILITY IMAP4rev2 ENABLE] ready\r\n", T0).unwrap();
+        client.transmit(&mut Vec::new());
+        while client.poll_event().is_some() {}
+        client
+    };
+    let other = |name: &str, arguments: &[u8]| IMAPCommandBody::Other {
+        name: String::from(name),
+        arguments: arguments.to_vec(),
+    };
+    let bodies = [
+        other("XEXT", b"{5}"),
+        other("XEXT", b"a {5}"),
+        other("XEXT", b"a {5+}"),
+        other("XEXT", b"a ~{5}"),
+        other("XEXT", b"a {0}"),
+        other("XEXT{5}", b""),
+        other("UID XEXT", b"1 {5}"),
+        IMAPCommandBody::Enable(vec![String::from("X{5}")]),
+        IMAPCommandBody::Authenticate { mechanism: String::from("X{5}"), initial: None },
+    ];
+    for body in bodies {
+        let mut client = greeted_client();
+        assert!(client.send(body.clone(), T0).is_err(), "{body:?}");
+        let mut out = Vec::new();
+        client.transmit(&mut out);
+        assert!(out.is_empty(), "{body:?}: {}", String::from_utf8_lossy(&out));
+    }
+    // Braces that announce nothing are arguments as any.
+    let mut client = greeted_client();
+    client.send(other("XEXT", b"{5} a"), T0).unwrap();
+    let mut out = Vec::new();
+    client.transmit(&mut out);
+    assert_eq!(out, b"T1 XEXT {5} a\r\n");
+    // The octets of a literal are no line: a message whose last line ends in braces is sent.
+    let mut client = greeted_client();
+    let message = b"Subject: x\r\n\r\nsee {5}".to_vec();
+    let append = IMAPCommandBody::Append { mailbox: IMAPMailbox::inbox(), flags: vec![], date: None, message };
+    client.send(append, T0).unwrap();
+    let mut out = Vec::new();
+    client.transmit(&mut out);
+    assert_eq!(out, b"T1 APPEND INBOX {21+}\r\nSubject: x\r\n\r\nsee {5}\r\n");
 }

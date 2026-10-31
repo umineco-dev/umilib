@@ -4,6 +4,7 @@ import threading
 
 import pytest
 
+from umilib.ffi import FFIError
 from umilib.runtime import Channel, LocalExecutor, RuntimeStatusError, TimerQueue
 
 
@@ -170,3 +171,26 @@ def test_tasks_spawned_through_clones_keep_their_callbacks():
     first.result()
     second.result()
     assert executor.callbacks == {}
+
+
+def test_closing_a_receiver_closes_the_channel_and_keeps_the_receiver():
+    sender, receiver = Channel.bounded(1)
+    receiver.close()
+    with pytest.raises(RuntimeStatusError) as error:
+        sender.try_send(b"a")
+    assert error.value.name == "Closed"
+    assert len(receiver) == 0
+    receiver.free()
+    with pytest.raises(FFIError) as error:
+        len(receiver)
+    assert error.value.name == "Closed"
+
+
+def test_a_failed_spawn_keeps_no_callbacks():
+    executor = LocalExecutor()
+    clone = executor.clone()
+    executor.free()
+    with pytest.raises(FFIError) as error:
+        executor.spawn(lambda waker: True)
+    assert error.value.name == "Closed"
+    assert clone.callbacks == {}

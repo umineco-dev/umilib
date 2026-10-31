@@ -54,7 +54,7 @@ impl<H: CryptographicDigest + Default> TOTP<H> {
 
     /// The password at `time`.
     pub fn generate(&self, time: u64) -> Result<OTPCode, OTPError> {
-        Ok(self.hotp.generate(self.counter(time)?))
+        self.hotp.generate(self.counter(time)?)
     }
 
     /// The time step, from `behind` steps before that of `time` to `ahead`

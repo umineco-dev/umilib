@@ -1,7 +1,8 @@
 # `umilib::codec::zstandard`
 
 Zstandard (RFC 8878). Feature: `codec-zstandard` (uses `bytes`,
-`codec-huffman-canonical`, `codec-lz77` and `hash-xxhash-xxh64`). The
+`codec-fse`, `codec-huffman-canonical`, `codec-lz77` and
+`hash-xxhash-xxh64`). The
 streaming interface is that of [codec-compression.md](codec-compression.md).
 
 ## Compression
@@ -54,12 +55,13 @@ data and writes its identifier.
 
 ## Parts
 
-`FSEDistribution` (table descriptions, normalization), `FSEDecodingTable`
-and `FSEEncodingTable` (finite state entropy), `ZstandardHuffman` (the
-Huffman codes of literals and their descriptions), `ZstandardBitReader` and
-`ZstandardBitWriter` (backward bitstreams), `ZstandardLiterals`,
-`ZstandardSequences` and `ZstandardOffsets` (the sections of a block and the
-repeat offsets) are usable on their own.
+`ZstandardHuffman` (the Huffman codes of literals and their descriptions),
+`ZstandardLiterals`, `ZstandardSequences` and `ZstandardOffsets` (the
+sections of a block and the repeat offsets) are usable on their own. The
+entropy coder of the sequences and of the Huffman weights is the general
+FSE module ([codec-fse.md](codec-fse.md)), and the backward bitstreams are
+`bytes::BackwardBitReader` and `bytes::BackwardBitWriter`
+([bytes.md](bytes.md)).
 
 Note: two tables of RFC 8878 have errors. Table 18 (repeat offsets) shows
 offset value 1 where 3 was meant in one row and a wrong third offset in the

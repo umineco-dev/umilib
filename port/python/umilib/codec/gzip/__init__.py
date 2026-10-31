@@ -6,7 +6,7 @@ import ctypes
 import dataclasses
 
 from umilib.codec import Compressor, Decompressor
-from umilib.codec.deflate import DeflateConfig
+from umilib.codec.deflate import DeflateConfig, DeflateDecompressorConfig
 from umilib.ffi import Buffer, Bytes, Handle, Library
 
 
@@ -33,13 +33,17 @@ class GzipConfig:
 
 
 class GzipDecompressorConfig:
-    """The limits of a :class:`GzipDecompressor`."""
+    """The limits of a :class:`GzipDecompressor`: the members, the longest field and the window
+    of the Deflate data (2^``deflate.window_bits`` bytes)."""
 
-    def __init__(self, multiple_members: bool | None = None, maximum_field: int | None = None) -> None:
-        defaults = (ctypes.c_bool(), ctypes.c_size_t())
-        Library.default().call("umilib_codec_gzip_gzip_decompressor_config_default", ctypes.byref(defaults[0]), ctypes.byref(defaults[1]))
+    def __init__(
+        self, multiple_members: bool | None = None, maximum_field: int | None = None, deflate: DeflateDecompressorConfig | None = None,
+    ) -> None:
+        defaults = (ctypes.c_bool(), ctypes.c_size_t(), ctypes.c_uint32())
+        Library.default().call("umilib_codec_gzip_gzip_decompressor_config_default", *(ctypes.byref(default) for default in defaults))
         self.multiple_members = defaults[0].value if multiple_members is None else multiple_members
         self.maximum_field = defaults[1].value if maximum_field is None else maximum_field
+        self.deflate = DeflateDecompressorConfig(defaults[2].value) if deflate is None else deflate
 
 
 class GzipCompressor(Compressor):
@@ -64,7 +68,7 @@ class GzipDecompressor(Decompressor):
 
     def __init__(self, config: GzipDecompressorConfig | None = None) -> None:
         config = config or GzipDecompressorConfig()
-        super().__init__(Handle.create(f"{self.PREFIX}_new", config.multiple_members, config.maximum_field))
+        super().__init__(Handle.create(f"{self.PREFIX}_new", config.multiple_members, config.maximum_field, config.deflate.window_bits))
 
     def header(self) -> GzipHeader:
         """The header of the member being read, or of the last one."""

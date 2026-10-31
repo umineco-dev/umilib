@@ -145,6 +145,12 @@ impl DeflateCompressor {
     }
 }
 
+impl Default for DeflateCompressor {
+    fn default() -> DeflateCompressor {
+        DeflateCompressor::new(DeflateConfig::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for DeflateCompressor {
     fn compress(&mut self, input: &[u8], output: &mut [u8], flush: Flush) -> Result<Progress, CompressionError> {
         let (mut consumed, mut produced) = (0, 0);

@@ -14,13 +14,11 @@ from umilib.crypto import Primitive, Specialization
 from umilib.crypto.kbkdf import KBKDF
 from umilib.ffi import Bytes, Handle, Text
 
-P = "umilib_crypto_kdftree_kdftree"
-
 
 class KDFTree(Primitive):
     """KDF_TREE over the PRF ``KDFTree[P]``, keyed with K_in, with a counter of 1 to 4 bytes."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_kdftree_kdftree"
     PRF: ClassVar[Any] = None
 
     def __class_getitem__(cls, prf: Any) -> Any:
@@ -33,7 +31,7 @@ class KDFTree(Primitive):
         primitive_name, primitive_length = Text.encode(primitive)
         data, length = Bytes.readable(key)
         super().__init__(
-            Handle.create(f"{P}_new", function_name, function_length, primitive_name, primitive_length, data, length, counter_bytes)
+            Handle.create("umilib_crypto_kdftree_kdftree_new", function_name, function_length, primitive_name, primitive_length, data, length, counter_bytes)
         )
 
     def derive(self, label: bytes | bytearray | memoryview, seed: bytes | bytearray | memoryview, length: int) -> bytes:
@@ -41,7 +39,7 @@ class KDFTree(Primitive):
         label_data, label_length = Bytes.readable(label)
         seed_data, seed_length = Bytes.readable(seed)
         out = (ctypes.c_uint8 * length)()
-        self.library.call(f"{P}_derive", self.handle, label_data, label_length, seed_data, seed_length, out, length)
+        self.library.call("umilib_crypto_kdftree_kdftree_derive", self.handle, label_data, label_length, seed_data, seed_length, out, length)
         return bytes(out)
 
 

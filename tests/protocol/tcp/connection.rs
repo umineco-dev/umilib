@@ -124,7 +124,7 @@ pub fn read_all(connection: &mut TCPConnection) -> Vec<u8> {
 fn three_way_handshake() {
     // RFC 9293 §3.5, Figure 6.
     let mut network = Network::new(TCPConfig::default(), TCPConfig::default());
-    assert_eq!((network.a.state, network.b.state), (TCPState::SynSent, TCPState::SynReceived));
+    assert_eq!((network.a.state, network.b.state), (TCPState::SYNSent, TCPState::SYNReceived));
     network.run(never);
     assert_eq!((network.a.state, network.b.state), (TCPState::Established, TCPState::Established));
     assert_eq!(Network::events(&mut network.a), [TCPEvent::Connected]);
@@ -208,7 +208,7 @@ fn data_both_ways_and_close() {
     assert!(data.flags.contains(TCPFlags::PSH));
     network.a.close().unwrap();
     network.run(never);
-    assert_eq!((network.a.state, network.b.state), (TCPState::FinWait2, TCPState::CloseWait));
+    assert_eq!((network.a.state, network.b.state), (TCPState::FINWait2, TCPState::CloseWait));
     assert!(Network::events(&mut network.b).contains(&TCPEvent::PeerClosed));
     assert_eq!(network.a.send(b"x"), Err(umilib::protocol::tcp::TCPError::State));
     network.b.send(b"last").unwrap();
@@ -254,7 +254,7 @@ fn simultaneous_open() {
     b.transmit(now, &mut to_a).unwrap().unwrap();
     b.receive(&TCPSegment::decode(to_b.as_slice(), a_end.address, b_end.address).unwrap(), false, now);
     a.receive(&TCPSegment::decode(to_a.as_slice(), b_end.address, a_end.address).unwrap(), false, now);
-    assert_eq!((a.state, b.state), (TCPState::SynReceived, TCPState::SynReceived));
+    assert_eq!((a.state, b.state), (TCPState::SYNReceived, TCPState::SYNReceived));
     let (mut to_b, mut to_a) = (Buffer::new(), Buffer::new());
     a.transmit(now, &mut to_b).unwrap().unwrap();
     b.transmit(now, &mut to_a).unwrap().unwrap();
@@ -482,7 +482,7 @@ fn refused_connections() {
     let mut bytes = Buffer::new();
     TCPSegment::reset(9, 40000, TCPSequence(0), None).encode(b_end.address, a_end.address, &mut bytes).unwrap();
     a.receive(&TCPSegment::decode(bytes.as_slice(), b_end.address, a_end.address).unwrap(), false, at(1));
-    assert_eq!(a.state, TCPState::SynSent);
+    assert_eq!(a.state, TCPState::SYNSent);
     let reply = syn.reset_reply().unwrap();
     let mut bytes = Buffer::new();
     reply.encode(b_end.address, a_end.address, &mut bytes).unwrap();
@@ -508,7 +508,7 @@ fn refused_connections() {
     b.transmit(at(1), &mut reset).unwrap().unwrap();
     let reset = TCPSegment::decode(reset.as_slice(), a_end.address, b_end.address).unwrap();
     assert_eq!((reset.flags, reset.sequence), (TCPFlags::RST, TCPSequence(9999)));
-    assert_eq!(b.state, TCPState::SynSent);
+    assert_eq!(b.state, TCPState::SYNSent);
 }
 
 #[test]

@@ -273,9 +273,8 @@ crate::ffi_functions! {
         Status::from_result((|| {
             // SAFETY: the caller passes a valid handle and writable pointers.
             let queue = unsafe { Pointer::reference_mut(queue) }?;
-            let next = queue.next_deadline();
-            unsafe { Pointer::write(has, next.is_some()) }?;
-            unsafe { Pointer::write(deadline, next.map_or(0, Instant::as_nanos)) }
+            let next = queue.next_deadline().map(Instant::as_nanos);
+            unsafe { Pointer::write_optional(next, has, deadline) }
         })())
     }
 

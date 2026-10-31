@@ -42,7 +42,7 @@ class BorrowedWaker(Waker):
     """The waker given to a poll function: valid only during the call and owned by the executor.
     Closing it (or dropping it) only gives it up; :meth:`clone` gives a waker to keep."""
 
-    def close(self) -> None:
+    def free(self) -> None:
         if self.pointer is not None:
             self.detach()
 
@@ -117,7 +117,12 @@ class LocalExecutor(Handle):
 
         entry = (self.library.type("umilib_runtime_TaskPoll")(poll_task), self.library.type("umilib_runtime_TaskDrop")(drop_task))
         callbacks[key] = entry
-        return JoinHandle(Handle.create("umilib_runtime_local_executor_spawn", self.handle, entry[0], entry[1], key))
+        try:
+            return JoinHandle(Handle.create("umilib_runtime_local_executor_spawn", self.handle, entry[0], entry[1], key))
+        except BaseException:
+            # Not spawned: the executor never calls its drop callback.
+            callbacks.pop(key, None)
+            raise
 
     def run_until_idle(self) -> int:
         """Runs the tasks in the run queue until it is empty; returns the polls made."""
@@ -198,7 +203,7 @@ class Receiver(Handle):
         return self.library.take(buffer) if ready.value else None
 
     def close(self) -> None:
-        """Closes the channel: sends fail from now on."""
+        """Closes the channel: sends fail from now on. :meth:`free` releases the object."""
         self.library.call("umilib_runtime_receiver_close", self.handle)
 
     def __len__(self) -> int:

@@ -9,7 +9,7 @@ use umilib::protocol::jwt::{
 };
 
 use super::{decimals, decrypting, folded, hexadecimal, jwk, object, path, random, sorted};
-use crate::{Json, RFC, Vectors, Wycheproof};
+use crate::{JSON, RFC, Vectors, Wycheproof};
 
 /// Every algorithm and every content encryption, compression accepted.
 fn everything() -> JWEConfig {
@@ -25,7 +25,7 @@ fn public(key: &JWK) -> JWK {
 
 /// The algorithm of a cookbook example by its name, `None` for one this
 /// module does not implement (RSA1_5, deliberately).
-fn algorithm(name: &Json) -> Option<JWEAlgorithm> {
+fn algorithm(name: &JSON) -> Option<JWEAlgorithm> {
     JWEAlgorithm::from_name(name.as_str())
 }
 
@@ -35,16 +35,16 @@ fn algorithm(name: &Json) -> Option<JWEAlgorithm> {
 /// AES-GCM key wrapping, ECDH-ES with the ephemeral key given) reproduce
 /// their outputs; and a JWE made again with the same headers decrypts.
 fn check_cookbook(name: &str) {
-    let example = Json::read(&path(name));
+    let example = JSON::read(&path(name));
     let input = example.field("input");
     let keys: Vec<JWK> = match (input.get("key"), input.get("pwd")) {
-        (Some(Json::Array(keys)), _) => keys.iter().map(jwk).collect(),
+        (Some(JSON::Array(keys)), _) => keys.iter().map(jwk).collect(),
         (Some(key), _) => vec![jwk(key)],
         (None, Some(password)) => vec![JWK::symmetric(password.as_str().as_bytes())],
         (None, None) => panic!("{name}: no key"),
     };
-    let algorithms: Vec<&Json> = match input.field("alg") {
-        Json::Array(names) => names.iter().collect(),
+    let algorithms: Vec<&JSON> = match input.field("alg") {
+        JSON::Array(names) => names.iter().collect(),
         single => vec![single],
     };
     let plaintext = input.field("plaintext").as_str().as_bytes();
@@ -54,7 +54,7 @@ fn check_cookbook(name: &str) {
         ["protected", "unprotected"].iter().find_map(|member| content.get(member).and_then(|header| header.get("enc")));
     let encryption = JWEEncryption::from_name(enc.unwrap().as_str()).unwrap();
     let config = everything();
-    let reproducible = !matches!(example.get("reproducible"), Some(Json::Bool(false)));
+    let reproducible = !matches!(example.get("reproducible"), Some(JSON::Bool(false)));
     let output = example.field("output");
     for member in ["compact", "json", "json_flat"] {
         let Some(serialization) = output.get(member) else { continue };
@@ -78,7 +78,7 @@ fn check_cookbook(name: &str) {
                 let general = serialization.get("recipients").is_some();
                 let written = if general { jwe.to_json() } else { jwe.to_flattened_json() }.unwrap();
                 assert_eq!(JWE::from_json(written.as_bytes()).unwrap(), jwe, "{name} {member}");
-                assert_eq!(sorted(&Json::from_text(&written)), sorted(serialization), "{name} {member}");
+                assert_eq!(sorted(&JSON::from_text(&written)), sorted(serialization), "{name} {member}");
             }
         }
     }
@@ -98,8 +98,8 @@ fn check_cookbook(name: &str) {
             encryption.encrypt(&cek, &iv, aad.as_bytes(), compressed.as_deref().unwrap_or(plaintext)).unwrap();
         assert_eq!(Base64URL::encode(&ciphertext), content.field("ciphertext").as_str(), "{name}");
         assert_eq!(Base64URL::encode(&tag), content.field("tag").as_str(), "{name}");
-        let steps: Vec<&Json> = match example.field("encrypting_key") {
-            Json::Array(steps) => steps.iter().collect(),
+        let steps: Vec<&JSON> = match example.field("encrypting_key") {
+            JSON::Array(steps) => steps.iter().collect(),
             single => vec![single],
         };
         for ((key, name_of_algorithm), step) in keys.iter().zip(&algorithms).zip(steps) {
@@ -128,8 +128,8 @@ fn check_key_management(
     algorithm: Option<JWEAlgorithm>,
     encryption: JWEEncryption,
     key: &JWK,
-    step: &Json,
-    content: &Json,
+    step: &JSON,
+    content: &JSON,
     cek: &[u8],
 ) {
     let Some(algorithm) = algorithm else { return };
@@ -245,13 +245,13 @@ fn rfc_7516_appendix_a() {
     assert_eq!(plaintext, b"Live long and prosper.");
     assert_eq!(recipient, &jwe.recipients[1]);
     assert_eq!(jwe.joined_header(recipient).unwrap().key_id().unwrap(), Some("7"));
-    assert_eq!(sorted(&Json::from_text(&jwe.to_json().unwrap())), sorted(&general));
+    assert_eq!(sorted(&JSON::from_text(&jwe.to_json().unwrap())), sorted(&general));
     // A.5: the flattened JSON serialization of the second recipient.
     let flattened =
         object(&RFC::section(&path("rfc7516.txt"), "A.5.  ", "Appendix B."), "The complete JWE JSON Serialization");
     let jwe = JWE::from_json(flattened.encode().as_bytes()).unwrap();
     assert_eq!(jwe.decrypt(&key, &config, &mut decrypting()).unwrap().0, b"Live long and prosper.");
-    assert_eq!(sorted(&Json::from_text(&jwe.to_flattened_json().unwrap())), sorted(&flattened));
+    assert_eq!(sorted(&JSON::from_text(&jwe.to_flattened_json().unwrap())), sorted(&flattened));
 }
 
 #[test]
@@ -338,15 +338,15 @@ fn wycheproof() {
         let id = test.field("tcId").as_usize();
         let key = jwk(group.field("private"));
         let decrypted = match test.field("jwe") {
-            Json::String(json) if json.starts_with('{') => JWE::from_json(json.as_bytes()),
-            Json::String(compact) => JWE::from_compact(compact),
+            JSON::String(json) if json.starts_with('{') => JWE::from_json(json.as_bytes()),
+            JSON::String(compact) => JWE::from_compact(compact),
             json => JWE::from_json(json.encode().as_bytes()),
         }
         .and_then(|jwe| jwe.decrypt(&key, &config, &mut decrypting()).map(|(plaintext, _)| plaintext));
         let comment =
             format!("{} {id} {}: {decrypted:?}", group.field("comment").as_str(), test.field("comment").as_str());
         let rsa1_5 = match test.field("jwe") {
-            Json::String(compact) => JWE::from_compact(compact)
+            JSON::String(compact) => JWE::from_compact(compact)
                 .ok()
                 .and_then(|jwe| jwe.protected_header.string("alg").ok().flatten().map(|name| name == "RSA1_5")),
             _ => None,
@@ -368,7 +368,7 @@ fn wycheproof() {
 #[test]
 fn every_algorithm_round_trips() {
     // The key of RFC 7520 §3.4, whose use is "sig", made a key of any use.
-    let mut rsa = jwk(&Json::read(&path("cookbook/jwk/3_4.rsa_private_key.json")));
+    let mut rsa = jwk(&JSON::read(&path("cookbook/jwk/3_4.rsa_private_key.json")));
     rsa.key_use = None;
     let mut keys: Vec<(JWEAlgorithm, JWK)> = Vec::new();
     for algorithm in JWEAlgorithm::ALL {
@@ -408,11 +408,11 @@ fn every_algorithm_round_trips() {
     }
     // ECDH-ES on each curve of RFC 7518 §4.6 and RFC 8037 §3.2.
     for key in [
-        JWK { key_use: None, ..jwk(&Json::read(&path("cookbook/jwk/3_2.ec_private_key.json"))) },
-        jwk(&Json::from_text(
+        JWK { key_use: None, ..jwk(&JSON::read(&path("cookbook/jwk/3_2.ec_private_key.json"))) },
+        jwk(&JSON::from_text(
             r#"{"kty":"EC","crv":"P-256","x":"weNJy2HscCSM6AEDTDg04biOvhFhyyWvOHQfeF_PxMQ","y":"e8lnCO-AlStT-NJVX-crhB7QRYhiix03illJOVAOyck","d":"VEmDZpDXXK8p8N0Cndsxs924q6nS1RXFASRl6BfUqdw"}"#,
         )),
-        jwk(&Json::read(&path("cookbook/curve25519/ecdh-es.json")).field("input").field("key").clone()),
+        jwk(&JSON::read(&path("cookbook/curve25519/ecdh-es.json")).field("input").field("key").clone()),
         JWK::from_private_key(
             &umilib::auth::cert::key::PrivateKey::from_raw(umilib::auth::cert::key::KeyAlgorithm::X448, &[9; 56])
                 .unwrap(),
@@ -446,7 +446,7 @@ fn every_algorithm_round_trips() {
 #[test]
 fn multiple_recipients_share_the_content() {
     // The key of RFC 7520 §3.4, whose use is "sig", made a key of any use.
-    let mut rsa = jwk(&Json::read(&path("cookbook/jwk/3_4.rsa_private_key.json")));
+    let mut rsa = jwk(&JSON::read(&path("cookbook/jwk/3_4.rsa_private_key.json")));
     rsa.key_use = None;
     let wrap = JWK::symmetric(&[1; 16]);
     let gcm = JWK::symmetric(&[2; 32]);
@@ -654,9 +654,9 @@ fn serializations_follow_rfc_7516_section_7() {
     assert_eq!(JWE::from_json(flattened.as_bytes()).unwrap(), jwe);
     assert_eq!(JWE::from_json(jwe.to_json().unwrap().as_bytes()).unwrap(), jwe);
     // RFC 7516 §7.2.1: "recipients" excludes the members of a flattened recipient.
-    let mut mixed = Json::from_text(&jwe.to_json().unwrap());
-    if let Json::Object(members) = &mut mixed {
-        members.push((String::from("encrypted_key"), Json::String(String::from("AAAA"))));
+    let mut mixed = JSON::from_text(&jwe.to_json().unwrap());
+    if let JSON::Object(members) = &mut mixed {
+        members.push((String::from("encrypted_key"), JSON::String(String::from("AAAA"))));
     }
     assert_eq!(JWE::from_json(mixed.encode().as_bytes()), Err(JWTError::Format));
     // The JWE AAD exists only in the JSON serializations.

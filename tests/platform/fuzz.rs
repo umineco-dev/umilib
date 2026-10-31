@@ -65,6 +65,20 @@ fn fuzzer_stops_at_the_iteration_or_time_limit() {
 }
 
 #[test]
+fn the_sampling_of_generated_inputs_is_configurable() {
+    let defaults = FuzzConfig::default();
+    assert_eq!((defaults.maximum_corpus_inputs, defaults.sample_interval), (1024, 64));
+    // Keeping no generated input (an interval of 0, or no room) still fuzzes.
+    let target = FuzzFunction::new("passes", |_: &[u8]| {});
+    for (maximum_corpus_inputs, sample_interval) in [(1024, 0), (0, 64), (1, 1)] {
+        let config =
+            FuzzConfig { iterations: Some(200), maximum_corpus_inputs, sample_interval, ..FuzzConfig::default() };
+        let report = Fuzzer::new(config).run(&target).unwrap();
+        assert!(report.is_success() && report.iterations == 200);
+    }
+}
+
+#[test]
 fn corpus_round_trips_and_replay_reports_each_failure() {
     let directory = Scratch::directory("corpus");
     assert!(Corpus::load(&directory).unwrap().inputs.is_empty());

@@ -38,7 +38,8 @@ let stream = client.send_request(&request, false).unwrap();
 # let (served, received) = (umilib::protocol::http::HTTPStreamID(0), request.clone());
 let offer = match WebSocketHandshake::check_request(&received, HTTPVersion::HTTP1_1) {
     Ok(offer) => offer,
-    // 400, or 426 with the version this end speaks (§4.4): send it and stop.
+    // 400, 426 with the version this end speaks (§4.4), or 505 for a version of
+    // HTTP other than 1.0, 1.1, 2 and 3: send it and stop.
     Err(refusal) => {
         server.send_response(served, &refusal, true).unwrap();
         return;

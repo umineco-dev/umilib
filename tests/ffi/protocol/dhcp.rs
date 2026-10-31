@@ -1254,6 +1254,9 @@ mod v6 {
             valid: 4000,
             t1: 1000,
             t2: 1600,
+            decline_time: 3_600_000,
+            maximum_ias: 16,
+            maximum_bindings: 65_536,
         }
     }
 

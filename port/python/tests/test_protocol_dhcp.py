@@ -428,11 +428,11 @@ def v6_server(**changes) -> DHCPv6Server:
     options = DHCPv6Options()
     options.push(DHCPv6OptionCode.DNS_SERVERS, v6(53).octets)
     values = dict(
-        duid=duid(0x53), addresses=(v6(100), v6(101)), prefixes=(PREFIX, 48, 56), preferred=3000, valid=4000, t1=1000, t2=1600,
+        addresses=(v6(100), v6(101)), prefixes=(PREFIX, 48, 56), preferred=3000, valid=4000, t1=1000, t2=1600,
         preference=0, rapid_commit=False, options=options,
     )  # fmt: skip
     values.update(changes)
-    return DHCPv6Server(DHCPv6ServerConfig(**values))
+    return DHCPv6Server(dataclasses.replace(DHCPv6ServerConfig.new(duid(0x53)), **values))
 
 
 def test_messages_of_rfc_9915():
@@ -623,6 +623,13 @@ def test_the_checks_of_section_16_and_relays():
     advertise = DHCPv6Message.decode(pool.receive(solicit.encode(), 0))
     assert advertise.kind == DHCPv6MessageType.ADVERTISE
     assert advertise.options.ias(DHCPv6OptionCode.IA_NA)[0].addresses()[0].address == v6(100)
+    # §18.3.9: every IA is answered; past `maximum_ias`, with NoAddrsAvail.
+    few = DHCPv6Server(dataclasses.replace(config, addresses=(v6(100), v6(101)), maximum_ias=1))
+    two = DHCPv6Message(solicit.kind, 7, DHCPv6Options([*solicit.options.entries]))
+    two.options.push(DHCPv6OptionCode.IA_NA, DHCPv6IA.new(DHCPv6OptionCode.IA_NA, 2).encode().data)
+    ias = DHCPv6Message.decode(few.receive(two.encode(), 0)).options.ias(DHCPv6OptionCode.IA_NA)
+    assert [(ia.iaid, len(ia.addresses())) for ia in ias] == [(1, 1), (2, 0)]
+    assert ias[1].options.status().code == DHCPv6StatusCode.NO_ADDRS_AVAIL
     # §16: a Solicit with a Server Identifier or without a Client Identifier, a Request without the
     # server's identifier: discarded.
     with_server = DHCPv6Message(solicit.kind, 7, DHCPv6Options([*solicit.options.entries]))

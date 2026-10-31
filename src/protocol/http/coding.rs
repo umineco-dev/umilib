@@ -67,7 +67,7 @@ impl HTTPContentCoding {
         match self {
             #[cfg(umilib_feature = "codec-gzip")]
             HTTPContentCoding::Gzip => {
-                return Ok(Box::new(crate::codec::gzip::GzipDecompressor::new(Default::default())));
+                return Ok(Box::new(crate::codec::gzip::GzipDecompressor::default()));
             }
             #[cfg(umilib_feature = "codec-zlib")]
             HTTPContentCoding::Deflate => {

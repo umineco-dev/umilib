@@ -221,8 +221,9 @@ crate::ffi_functions! {
     const FUNCTIONS;
 
     /// Writes the defaults at `time` into `out`: the profile of RFC 5280, any policy, no name
-    /// constraints, at most 8 intermediates, 100 signatures and 2^20 name comparisons, the default
-    /// key limits, SHA-1 refused, no revocation checking, and no usage, purpose or identity.
+    /// constraints, at most 8 intermediates, 100 signatures, 4 nested CRL issuer paths and 2^20
+    /// name comparisons, the default key limits, SHA-1 refused, no revocation checking, and no
+    /// usage, purpose or identity.
     pub unsafe extern "C" fn umilib_auth_cert_path_path_config_new(time: i64, out: *mut *mut PathConfig) -> *const Status {
         Status::from_result((|| {
             let time = crate::codec::asn1::ASN1Time::from_unix_seconds(time).map_err(|_| &X509Status::INVALID_TIME)?;
@@ -276,14 +277,15 @@ crate::ffi_functions! {
         })())
     }
 
-    /// Sets the most intermediate certificates (not counting self-issued ones), signatures and
-    /// name comparisons.
-    pub unsafe extern "C" fn umilib_auth_cert_path_path_config_set_limits(config: *mut PathConfig, maximum_intermediates: usize, maximum_signatures: usize, maximum_name_checks: usize) -> *const Status {
+    /// Sets the most intermediate certificates (not counting self-issued ones), signatures, CRL
+    /// issuer paths nested in one another and name comparisons.
+    pub unsafe extern "C" fn umilib_auth_cert_path_path_config_set_limits(config: *mut PathConfig, maximum_intermediates: usize, maximum_signatures: usize, maximum_nested_signers: usize, maximum_name_checks: usize) -> *const Status {
         Status::from_result((|| {
             // SAFETY: the caller passes a valid handle.
             let config = unsafe { Pointer::reference_mut(config) }?;
             config.maximum_intermediates = maximum_intermediates;
             config.maximum_signatures = maximum_signatures;
+            config.maximum_nested_signers = maximum_nested_signers;
             config.maximum_name_checks = maximum_name_checks;
             Ok(())
         })())

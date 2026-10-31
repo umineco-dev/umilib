@@ -1,7 +1,7 @@
 //! gzip (RFC 1952): the files of Python and GNU gzip, headers and their
 //! optional fields, members, and the CRC-32 and size trailer.
 
-use umilib::codec::deflate::DeflateConfig;
+use umilib::codec::deflate::{DeflateConfig, DeflateDecompressorConfig};
 use umilib::codec::gzip::{GzipCompressor, GzipConfig, GzipDecompressor, GzipDecompressorConfig, GzipHeader};
 use umilib::codec::{CompressionError, Compressor, Decompressor};
 use umilib::hash::crc::{CRC, CRCCatalogue};
@@ -22,7 +22,7 @@ fn gzip_decompressors_read_the_files_of_python_and_gzip() {
         let stream = Vectors::bytes(&format!("codec/gzip/{file}.gz"));
         Streaming::check(&mut GzipDecompressor::default(), &stream, data, Ending::Input);
         let single = GzipDecompressorConfig { multiple_members: false, ..GzipDecompressorConfig::default() };
-        Streaming::check(&mut GzipDecompressor::new(single), &stream, data, Ending::Marked);
+        Streaming::check(&mut GzipDecompressor::new(single).unwrap(), &stream, data, Ending::Marked);
     }
     let mut decompressor = GzipDecompressor::default();
     decompressor.decompress_to_vec(&Vectors::bytes("codec/gzip/text.named.gz"), text.len()).unwrap();
@@ -53,7 +53,8 @@ fn gzip_decompressors_read_the_files_of_python_and_gzip() {
     );
     // A single member leaves what follows it.
     let mut single =
-        GzipDecompressor::new(GzipDecompressorConfig { multiple_members: false, ..GzipDecompressorConfig::default() });
+        GzipDecompressor::new(GzipDecompressorConfig { multiple_members: false, ..GzipDecompressorConfig::default() })
+            .unwrap();
     assert_eq!(single.decompress_to_vec(&members, usize::MAX).unwrap(), &text[..1000]);
     // No member at all is not a gzip file.
     decompressor.reset();
@@ -105,9 +106,30 @@ fn gzip_headers_follow_rfc1952() {
         decompressor.reset();
         assert_eq!(decompressor.decompress_to_vec(&corrupt, 100), Err(error), "byte {index}");
     }
+    // A window smaller than the distances of the member's matches (RFC 1951 §3.2.5): gzip does
+    // not announce its window, so the member fails; the whole 32 KiB, the default, reads it.
+    let text = Vectors::bytes("codec/deflate/text.bin");
+    let mut compressor = GzipCompressor::new(GzipConfig::default()).unwrap();
+    let far = compressor.compress_to_vec(&[&text[..], &text[..]].concat()).unwrap();
+    let small = GzipDecompressorConfig {
+        deflate: DeflateDecompressorConfig { window_bits: 8 },
+        ..GzipDecompressorConfig::default()
+    };
+    let result = GzipDecompressor::new(small).unwrap().decompress_to_vec(&far, usize::MAX);
+    assert_eq!(result, Err(CompressionError::LimitExceeded { limit: 256 }));
+    assert_eq!(
+        GzipDecompressor::default().decompress_to_vec(&far, usize::MAX).unwrap(),
+        [&text[..], &text[..]].concat()
+    );
+    let invalid = GzipDecompressorConfig {
+        deflate: DeflateDecompressorConfig { window_bits: 16 },
+        ..GzipDecompressorConfig::default()
+    };
+    assert!(GzipDecompressor::new(invalid).is_err());
     // Fields beyond the limit, and names with a zero byte.
     let mut limited =
-        GzipDecompressor::new(GzipDecompressorConfig { maximum_field: 4, ..GzipDecompressorConfig::default() });
+        GzipDecompressor::new(GzipDecompressorConfig { maximum_field: 4, ..GzipDecompressorConfig::default() })
+            .unwrap();
     assert_eq!(limited.decompress_to_vec(&stream, 100), Err(CompressionError::LimitExceeded { limit: 4 }));
     let zero = GzipHeader { name: Some(b"a\0b".to_vec()), ..GzipHeader::new() };
     assert!(GzipCompressor::new(GzipConfig { deflate: DeflateConfig::default(), header: zero }).is_err());
@@ -128,6 +150,6 @@ fn gzip_files_round_trip() {
         Streaming::round_trip(&mut compressor, &mut GzipDecompressor::default(), Ending::Input, true);
         let single = GzipDecompressorConfig { multiple_members: false, ..GzipDecompressorConfig::default() };
         compressor.reset();
-        Streaming::round_trip(&mut compressor, &mut GzipDecompressor::new(single), Ending::Marked, true);
+        Streaming::round_trip(&mut compressor, &mut GzipDecompressor::new(single).unwrap(), Ending::Marked, true);
     }
 }

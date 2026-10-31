@@ -5,7 +5,7 @@
 
 use umilib::protocol::http::{HTTPBareItem, HTTPItem, HTTPMember, HTTPParameters, HTTPStructuredField};
 
-use crate::Json;
+use crate::JSON;
 
 const DIRECTORY: &str = "protocol/http/structured-field-tests";
 
@@ -40,18 +40,18 @@ fn number(text: &str) -> Option<HTTPBareItem> {
 }
 
 /// The bare item of the suite's JSON; `None` for one the type cannot hold.
-fn bare(json: &Json) -> Option<HTTPBareItem> {
+fn bare(json: &JSON) -> Option<HTTPBareItem> {
     Some(match json {
-        Json::Number(text) => number(text)?,
-        Json::String(text) => HTTPBareItem::String(text.clone()),
-        Json::Bool(value) => HTTPBareItem::Boolean(*value),
-        Json::Object(_) => {
+        JSON::Number(text) => number(text)?,
+        JSON::String(text) => HTTPBareItem::String(text.clone()),
+        JSON::Bool(value) => HTTPBareItem::Boolean(*value),
+        JSON::Object(_) => {
             let value = json.field("value");
             match json.field("__type").as_str() {
                 "token" => HTTPBareItem::Token(value.as_str().to_string()),
                 "binary" => HTTPBareItem::ByteSequence(base32(value.as_str())),
                 "date" => match value {
-                    Json::Number(text) => HTTPBareItem::Date(text.parse().ok()?),
+                    JSON::Number(text) => HTTPBareItem::Date(text.parse().ok()?),
                     _ => return None,
                 },
                 "displaystring" => HTTPBareItem::DisplayString(value.as_str().to_string()),
@@ -62,7 +62,7 @@ fn bare(json: &Json) -> Option<HTTPBareItem> {
     })
 }
 
-fn parameters(json: &Json) -> Option<HTTPParameters> {
+fn parameters(json: &JSON) -> Option<HTTPParameters> {
     let mut parameters = HTTPParameters::default();
     for pair in json.items() {
         parameters.parameters.push((pair.items()[0].as_str().to_string(), bare(&pair.items()[1])?));
@@ -70,15 +70,15 @@ fn parameters(json: &Json) -> Option<HTTPParameters> {
     Some(parameters)
 }
 
-fn item(json: &Json) -> Option<HTTPItem> {
+fn item(json: &JSON) -> Option<HTTPItem> {
     Some(HTTPItem { bare: bare(&json.items()[0])?, parameters: parameters(&json.items()[1])? })
 }
 
 /// A member: an inner list is `[[items], parameters]`, an item `[bare, parameters]`.
-fn member(json: &Json) -> Option<HTTPMember> {
+fn member(json: &JSON) -> Option<HTTPMember> {
     let parts = json.items();
     match &parts[0] {
-        Json::Array(items) => {
+        JSON::Array(items) => {
             let items = items.iter().map(item).collect::<Option<Vec<_>>>()?;
             Some(HTTPMember::InnerList(items, parameters(&parts[1])?))
         }
@@ -94,7 +94,7 @@ enum Value {
     Dictionary(Vec<(String, HTTPMember)>),
 }
 
-fn expected(kind: &str, json: &Json) -> Option<Value> {
+fn expected(kind: &str, json: &JSON) -> Option<Value> {
     Some(match kind {
         "item" => Value::Item(item(json)?),
         "list" => Value::List(json.items().iter().map(member).collect::<Option<Vec<_>>>()?),
@@ -142,14 +142,14 @@ fn files(directory: &str) -> Vec<String> {
 fn parsing() {
     let mut count = 0;
     for path in files(DIRECTORY) {
-        for test in Json::read(&path).items() {
+        for test in JSON::read(&path).items() {
             let name = format!("{path}: {}", test.field("name").as_str());
             let kind = test.field("header_type").as_str();
-            let lines: Vec<&str> = test.field("raw").items().iter().map(Json::as_str).collect();
+            let lines: Vec<&str> = test.field("raw").items().iter().map(JSON::as_str).collect();
             // The lines of a field combine into one value (RFC 9651 §4.2).
             let input = lines.join(", ");
-            let must_fail = test.get("must_fail") == Some(&Json::Bool(true));
-            let can_fail = test.get("can_fail") == Some(&Json::Bool(true));
+            let must_fail = test.get("must_fail") == Some(&JSON::Bool(true));
+            let can_fail = test.get("can_fail") == Some(&JSON::Bool(true));
             let parsed = parse(kind, input.as_bytes());
             count += 1;
             if must_fail {
@@ -163,7 +163,7 @@ fn parsing() {
             let expected = expected(kind, test.field("expected")).unwrap_or_else(|| panic!("{name}: expected"));
             assert_eq!(parsed, expected, "{name}");
             let canonical = match test.get("canonical") {
-                Some(canonical) => canonical.items().iter().map(Json::as_str).collect::<Vec<_>>().join(", "),
+                Some(canonical) => canonical.items().iter().map(JSON::as_str).collect::<Vec<_>>().join(", "),
                 None => input.clone(),
             };
             assert_eq!(serialize(&parsed).map(String::from_utf8), Some(Ok(canonical)), "{name}: serialized");
@@ -176,17 +176,17 @@ fn parsing() {
 fn serialization() {
     let mut count = 0;
     for path in files(&format!("{DIRECTORY}/serialisation-tests")) {
-        for test in Json::read(&path).items() {
+        for test in JSON::read(&path).items() {
             let name = format!("{path}: {}", test.field("name").as_str());
             let kind = test.field("header_type").as_str();
-            let must_fail = test.get("must_fail") == Some(&Json::Bool(true));
+            let must_fail = test.get("must_fail") == Some(&JSON::Bool(true));
             count += 1;
             let serialized = expected(kind, test.field("expected")).and_then(|value| serialize(&value));
             if must_fail {
                 assert!(serialized.is_none(), "{name}: serialized {serialized:?}");
                 continue;
             }
-            let canonical = test.field("canonical").items().iter().map(Json::as_str).collect::<Vec<_>>().join(", ");
+            let canonical = test.field("canonical").items().iter().map(JSON::as_str).collect::<Vec<_>>().join(", ");
             assert_eq!(serialized.map(String::from_utf8), Some(Ok(canonical)), "{name}");
         }
     }

@@ -13,8 +13,6 @@ from umilib.crypto import Specialization
 from umilib.ffi import Bytes, Library, Preset, Text
 from umilib.hash import CryptographicDigest
 
-P = "umilib_crypto_pbkdf2_pbkdf2"
-
 
 class PBKDF2:
     """PBKDF2 with HMAC over the hash function ``PBKDF2[H]``."""
@@ -27,7 +25,7 @@ class PBKDF2:
         if not (isinstance(hash, type) and issubclass(hash, CryptographicDigest) and hash.C_TYPE):
             raise TypeError("PBKDF2 needs a cryptographic hash function class, such as PBKDF2[SHA256]")
         name, name_length = Text.encode(hash.C_TYPE)
-        maximum = Preset(lambda: Library.default().value(f"{P}_maximum_output", ctypes.c_uint64, name, name_length))
+        maximum = Preset(lambda: Library.default().value("umilib_crypto_pbkdf2_pbkdf2_maximum_output", ctypes.c_uint64, name, name_length))
         return Specialization.of(cls, (hash,), {"HASH": hash, "MAXIMUM_OUTPUT": maximum})
 
     @classmethod
@@ -44,7 +42,7 @@ class PBKDF2:
         salt_data, salt_length = Bytes.readable(salt)
         out = (ctypes.c_uint8 * length)()
         Library.default().call(
-            f"{P}_derive", name, name_length, password_data, password_length, salt_data, salt_length, iterations, out, length
+            "umilib_crypto_pbkdf2_pbkdf2_derive", name, name_length, password_data, password_length, salt_data, salt_length, iterations, out, length
         )
         return bytes(out)
 

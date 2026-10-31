@@ -9,7 +9,7 @@ use umilib::crypto::{CryptoError, PreHash, SignatureScheme};
 use umilib::hash::sha::v2::{SHA224, SHA256, SHA384, SHA512, SHA512_224, SHA512_256};
 use umilib::hash::sha::v3::{SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE128, SHAKE256};
 
-use crate::{Json, Vectors, Wycheproof};
+use crate::{JSON, Vectors, Wycheproof};
 
 /// Calls `$check::<P>($arguments)` for the parameter set named `$name`.
 macro_rules! with_parameters {
@@ -60,7 +60,7 @@ fn verifying_key<P: MLDSAParameters>(key: &<MLDSA<P> as SignatureScheme>::Verify
     out
 }
 
-fn check_key_gen<P: MLDSAParameters>(test: &Json) {
+fn check_key_gen<P: MLDSAParameters>(test: &JSON) {
     let key = MLDSA::<P>::signing_key_from_seed(&test.bytes("seed")).unwrap();
     assert_eq!(signing_key::<P>(&key), test.bytes("sk"));
     assert_eq!(verifying_key::<P>(&MLDSA::<P>::verifying_key(&key)), test.bytes("pk"));
@@ -72,7 +72,7 @@ fn check_key_gen<P: MLDSAParameters>(test: &Json) {
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]
 fn mldsa_acvp_key_generation() {
-    let vectors = Json::read("crypto/mldsa/acvp-keygen.json");
+    let vectors = JSON::read("crypto/mldsa/acvp-keygen.json");
     let mut count = 0;
     for group in vectors.field("testGroups").items() {
         for test in group.field("tests").items() {
@@ -103,9 +103,9 @@ fn verify_pre_hash<P: MLDSAParameters, H: PreHash>(
 }
 
 /// The interface of an ACVP group: internal with μ, internal on M', external pure or external pre-hash.
-fn interface(group: &Json) -> &'static str {
+fn interface(group: &JSON) -> &'static str {
     match (group.field("signatureInterface").as_str(), group.field("preHash").as_str()) {
-        ("internal", _) if matches!(group.field("externalMu"), Json::Bool(true)) => "mu",
+        ("internal", _) if matches!(group.field("externalMu"), JSON::Bool(true)) => "mu",
         ("internal", _) => "internal",
         ("external", "pure") => "pure",
         ("external", "preHash") => "preHash",
@@ -113,11 +113,11 @@ fn interface(group: &Json) -> &'static str {
     }
 }
 
-fn check_signature_generation<P: MLDSAParameters>(group: &Json, test: &Json) {
+fn check_signature_generation<P: MLDSAParameters>(group: &JSON, test: &JSON) {
     let key = MLDSA::<P>::signing_key_from_bytes(&test.bytes("sk")).unwrap();
     assert_eq!(verifying_key::<P>(&MLDSA::<P>::verifying_key(&key)), test.bytes("pk"));
     let rnd = match group.field("deterministic") {
-        Json::Bool(true) => [0; 32],
+        JSON::Bool(true) => [0; 32],
         _ => array(&test.bytes("rnd")),
     };
     let mut signature = vec![0; P::SIGNATURE_SIZE];
@@ -145,7 +145,7 @@ fn check_signature_generation<P: MLDSAParameters>(group: &Json, test: &Json) {
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]
 fn mldsa_acvp_signature_generation() {
-    let vectors = Json::read("crypto/mldsa/acvp-siggen-subset.json");
+    let vectors = JSON::read("crypto/mldsa/acvp-siggen-subset.json");
     let mut count = 0;
     for group in vectors.field("testGroups").items() {
         for test in group.field("tests").items() {
@@ -156,7 +156,7 @@ fn mldsa_acvp_signature_generation() {
     assert_eq!(count, 24 * 5);
 }
 
-fn check_signature_verification<P: MLDSAParameters>(group: &Json, test: &Json) {
+fn check_signature_verification<P: MLDSAParameters>(group: &JSON, test: &JSON) {
     let key = MLDSA::<P>::verifying_key_from_bytes(&test.bytes("pk")).unwrap();
     let signature = test.bytes("signature");
     let result = match interface(group) {
@@ -168,7 +168,7 @@ fn check_signature_verification<P: MLDSAParameters>(group: &Json, test: &Json) {
             with_pre_hash!(test.field("hashAlg").as_str(), verify_pre_hash::<P>(&key, &message, &context, &signature))
         }
     };
-    let passed = matches!(test.field("testPassed"), Json::Bool(true));
+    let passed = matches!(test.field("testPassed"), JSON::Bool(true));
     assert_eq!(result.is_ok(), passed, "tcId {:?}", test.field("tcId"));
     if !passed {
         assert_eq!(result, Err(CryptoError::InvalidSignature));
@@ -178,7 +178,7 @@ fn check_signature_verification<P: MLDSAParameters>(group: &Json, test: &Json) {
 #[test]
 #[cfg_attr(miri, ignore = "slow under Miri")]
 fn mldsa_acvp_signature_verification() {
-    let vectors = Json::read("crypto/mldsa/acvp-sigver.json");
+    let vectors = JSON::read("crypto/mldsa/acvp-sigver.json");
     let mut count = 0;
     for group in vectors.field("testGroups").items() {
         for test in group.field("tests").items() {
@@ -192,7 +192,7 @@ fn mldsa_acvp_signature_verification() {
 /// mldsa_*_sign_{seed,noseed}_test.json: a key from its seed (or its
 /// expanded encoding), the signature of a message with a context (or of
 /// μ), deterministic or with rnd, and its verification.
-fn check_wycheproof_signing<P: MLDSAParameters>(group: &Json, test: &Json) {
+fn check_wycheproof_signing<P: MLDSAParameters>(group: &JSON, test: &JSON) {
     let valid = Wycheproof::valid(test);
     let key = match group.get("privateSeed") {
         Some(seed) => MLDSA::<P>::signing_key_from_seed(&hex(seed.as_str())),
@@ -233,7 +233,7 @@ fn check_wycheproof_signing<P: MLDSAParameters>(group: &Json, test: &Json) {
 }
 
 /// mldsa_*_verify_test.json.
-fn check_wycheproof_verification<P: MLDSAParameters>(group: &Json, test: &Json) {
+fn check_wycheproof_verification<P: MLDSAParameters>(group: &JSON, test: &JSON) {
     let context = test.get("ctx").map(|context| hex(context.as_str())).unwrap_or_default();
     let result = MLDSA::<P>::verifying_key_from_bytes(&group.bytes("publicKey"))
         .and_then(|key| MLDSA::<P>::verify_with_context(&key, &test.bytes("msg"), &context, &test.bytes("sig")));

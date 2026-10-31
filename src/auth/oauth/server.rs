@@ -17,7 +17,7 @@ use super::{
     DPoPConfig, DPoPProof, DPoPTarget, DPoPVerifier, OAuthAuthorizationRequest, OAuthAuthorizationResponse,
     OAuthClientAuthentication, OAuthClientCredentials, OAuthClientMethod, OAuthClientRegistration,
     OAuthDeviceAuthorizationResponse, OAuthEndpointRequest, OAuthError, OAuthErrorCode, OAuthErrorResponse, OAuthGrant,
-    OAuthHTTPResponse, OAuthIntrospectionResponse, OAuthMetadata, OAuthMetadataKind, OAuthParameters,
+    OAuthHTTPResponse, OAuthIntrospectionResponse, OAuthMembers, OAuthMetadata, OAuthMetadataKind, OAuthParameters,
     OAuthPushedAuthorizationResponse, OAuthRecord, OAuthScope, OAuthTable, OAuthTokenRequest, OAuthTokenResponse,
     PKCEChallenge,
 };
@@ -1049,11 +1049,7 @@ impl OAuthServer {
         if let Some(context) = &grant.authentication_context {
             claims.set_string("acr", context);
         }
-        if let Some(thumbprint) = &grant.confirmation {
-            let mut cnf = JSONObject::new();
-            cnf.insert("jkt".to_string(), JSONValue::String(thumbprint.clone()));
-            claims.set("cnf", JSONValue::Object(cnf));
-        }
+        OAuthMembers::insert_confirmation(&mut claims.claims, grant.confirmation.as_deref());
         claims
     }
 

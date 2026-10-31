@@ -13,6 +13,7 @@ For users of umilib: Rust programs, C programs and Python programs.
 | [codec-compression.md](codec-compression.md) | `umilib::codec`: the streaming interface of the compressed formats |
 | [codec-deflate.md](codec-deflate.md) | `umilib::codec::deflate`, `zlib`, `gzip`: Deflate, zlib and gzip |
 | [codec-filter.md](codec-filter.md) | `umilib::codec::filter`: Delta and BCJ filters |
+| [codec-fse.md](codec-fse.md) | `umilib::codec::fse`: Finite State Entropy (tANS) |
 | [codec-hpack.md](codec-hpack.md) | `umilib::codec::hpack`: HPACK, the field compression of HTTP/2 |
 | [codec-huffman.md](codec-huffman.md) | `umilib::codec::huffman`: canonical and adaptive Huffman coding |
 | [codec-lz4.md](codec-lz4.md) | `umilib::codec::lz4`: LZ4 blocks and frames |

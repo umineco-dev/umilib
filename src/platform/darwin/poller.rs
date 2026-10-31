@@ -1,3 +1,4 @@
+use core::ffi::c_long;
 use std::io;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
 use std::time::Duration;
@@ -14,19 +15,30 @@ use crate::platform::unix::{Interest, PollEvent, PollMode, Socket};
 #[derive(Debug)]
 pub struct Poller {
     queue: OwnedFd,
+    maximum_events: usize,
 }
 
 impl Poller {
-    /// The most events one wait returns.
-    pub const MAXIMUM_EVENTS: usize = 256;
+    /// The most events one wait returns, by default.
+    pub const DEFAULT_MAXIMUM_EVENTS: usize = 256;
     /// The identifier of the user event of notifications.
     pub const NOTIFY_IDENTIFIER: usize = 0;
 
+    /// A poller whose waits return at most [`Poller::DEFAULT_MAXIMUM_EVENTS`] events.
     pub fn new() -> io::Result<Poller> {
+        Poller::with_maximum_events(Poller::DEFAULT_MAXIMUM_EVENTS)
+    }
+
+    /// A poller whose waits return at most `maximum_events` events (1 to
+    /// `i32::MAX`, the range `kevent` takes; `InvalidInput` otherwise).
+    pub fn with_maximum_events(maximum_events: usize) -> io::Result<Poller> {
+        if maximum_events == 0 || i32::try_from(maximum_events).is_err() {
+            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+        }
         // SAFETY: no arguments; the result is checked.
         let queue = Socket::check(unsafe { sys::kqueue() })?;
         // SAFETY: the descriptor was just created and is owned by nothing else.
-        let poller = Poller { queue: unsafe { OwnedFd::from_raw_fd(queue) } };
+        let poller = Poller { queue: unsafe { OwnedFd::from_raw_fd(queue) }, maximum_events };
         // SAFETY: a valid descriptor; the result is checked.
         Socket::check(unsafe { unix::fcntl(poller.queue.as_raw_fd(), POSIX::F_SETFD, POSIX::FD_CLOEXEC) })?;
         let notify = Poller::change(
@@ -102,28 +114,31 @@ impl Poller {
         self.apply(&Poller::changes(descriptor, 0, Interest::default(), PollMode::Level), true)
     }
 
+    /// The most events one wait returns.
+    pub fn maximum_events(&self) -> usize {
+        self.maximum_events
+    }
+
     /// Waits at most `timeout` (forever if `None`) for events, and replaces
-    /// the contents of `events` with them (at most [`Poller::MAXIMUM_EVENTS`]);
+    /// the contents of `events` with them (at most [`Poller::maximum_events`]);
     /// a notification is one event of token [`PollEvent::NOTIFY`]. An
     /// interrupted wait returns no events.
     pub fn wait(&self, events: &mut Vec<PollEvent>, timeout: Option<Duration>) -> io::Result<usize> {
         events.clear();
-        let mut raw = [KEvent::default(); Poller::MAXIMUM_EVENTS];
+        let mut raw = Vec::new();
+        raw.try_reserve_exact(self.maximum_events).map_err(|_| io::Error::from(io::ErrorKind::OutOfMemory))?;
+        raw.resize(self.maximum_events, KEvent::default());
+        // The constructor checked that the count fits in an `i32`.
+        let capacity = i32::try_from(raw.len()).map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))?;
         let timespec = timeout.map(|timeout| TimeSpec {
-            seconds: i64::try_from(timeout.as_secs()).unwrap_or(i64::MAX),
-            nanoseconds: timeout.subsec_nanos() as i64,
+            seconds: c_long::try_from(timeout.as_secs()).unwrap_or(c_long::MAX),
+            // Below 10^9, which every `long` holds, so the cast keeps the value.
+            nanoseconds: timeout.subsec_nanos() as c_long,
         });
         let timeout_pointer = timespec.as_ref().map_or(core::ptr::null(), |timespec| timespec as *const TimeSpec);
         // SAFETY: the array is writable for the count given; the result is checked.
         let result = unsafe {
-            sys::kevent(
-                self.queue.as_raw_fd(),
-                core::ptr::null(),
-                0,
-                raw.as_mut_ptr(),
-                raw.len() as i32,
-                timeout_pointer,
-            )
+            sys::kevent(self.queue.as_raw_fd(), core::ptr::null(), 0, raw.as_mut_ptr(), capacity, timeout_pointer)
         };
         let count = match Socket::check(result) {
             Ok(count) => count as usize,

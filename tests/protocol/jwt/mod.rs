@@ -13,7 +13,7 @@ use umilib::crypto::random::HMACDRBG;
 use umilib::hash::sha::v2::SHA256;
 use umilib::protocol::jwt::JWK;
 
-use crate::{Json, RFC, Vectors};
+use crate::{JSON, RFC, Vectors};
 
 /// The generator of the tests (the same bytes on every run).
 pub fn random() -> HMACDRBG<SHA256> {
@@ -33,27 +33,27 @@ pub fn path(name: &str) -> String {
 }
 
 /// The JWK of the JSON value `value`.
-pub fn jwk(value: &Json) -> JWK {
+pub fn jwk(value: &JSON) -> JWK {
     JWK::from_json(value.encode().as_bytes()).unwrap_or_else(|error| panic!("{}: {error:?}", value.encode()))
 }
 
 /// The members of a JSON object, sorted at every depth, for comparisons
 /// that ignore the order of members.
-pub fn sorted(value: &Json) -> Vec<(String, String)> {
-    let Json::Object(members) = canonical(value) else { panic!("{value:?} is not an object") };
+pub fn sorted(value: &JSON) -> Vec<(String, String)> {
+    let JSON::Object(members) = canonical(value) else { panic!("{value:?} is not an object") };
     members.into_iter().map(|(key, value)| (key, value.encode())).collect()
 }
 
 /// `value` with the members of each object sorted by name.
-pub fn canonical(value: &Json) -> Json {
+pub fn canonical(value: &JSON) -> JSON {
     match value {
-        Json::Object(members) => {
-            let mut members: Vec<(String, Json)> =
+        JSON::Object(members) => {
+            let mut members: Vec<(String, JSON)> =
                 members.iter().map(|(key, value)| (key.clone(), canonical(value))).collect();
             members.sort_by(|first, second| first.0.cmp(&second.0));
-            Json::Object(members)
+            JSON::Object(members)
         }
-        Json::Array(items) => Json::Array(items.iter().map(canonical).collect()),
+        JSON::Array(items) => JSON::Array(items.iter().map(canonical).collect()),
         other => other.clone(),
     }
 }
@@ -78,7 +78,7 @@ pub fn folded(text: &str, marker: &str) -> String {
 
 /// The first JSON object of `text` from the line containing `marker`,
 /// folded lines joined and page breaks left out.
-pub fn object(text: &str, marker: &str) -> Json {
+pub fn object(text: &str, marker: &str) -> JSON {
     let joined: String = text
         .lines()
         .skip_while(|line| !line.contains(marker))
@@ -93,7 +93,7 @@ pub fn object(text: &str, marker: &str) -> Json {
             '}' => {
                 depth -= 1;
                 if depth == 0 {
-                    return Json::from_text(&joined[start..=start + index]);
+                    return JSON::from_text(&joined[start..=start + index]);
                 }
             }
             _ => {}

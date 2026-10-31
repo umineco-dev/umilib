@@ -201,7 +201,7 @@ fn the_fin_is_acknowledged_after_a_timeout() {
     network.now = network.a.poll_timeout().unwrap();
     network.a.expire(network.now);
     network.deliver(&ack);
-    assert_eq!(network.a.state, TCPState::FinWait2);
+    assert_eq!(network.a.state, TCPState::FINWait2);
     assert!(network.a.transmit(network.now, &mut Buffer::new()).unwrap().is_none());
 }
 

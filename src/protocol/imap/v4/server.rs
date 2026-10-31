@@ -502,13 +502,16 @@ impl IMAPServer {
         Ok(())
     }
 
-    /// Closes the connection with an untagged BYE (RFC 9051 §7.1.5): for shutting down.
-    pub fn shutdown(&mut self, text: &str) {
-        if !self.is_open() {
-            return;
+    /// Closes the connection with an untagged BYE and `text` (RFC 9051 §7.1.5): for shutting
+    /// down. Fails for a text that cannot be written, a line break in it.
+    pub fn shutdown(&mut self, text: &str) -> Result<(), IMAPError> {
+        let response = IMAPResponse::untagged(IMAPCondition::BYE, None, text);
+        response.check()?;
+        if self.is_open() {
+            self.write(&response);
+            self.close(None);
         }
-        self.write(&IMAPResponse::untagged(IMAPCondition::BYE, None, text));
-        self.close(None);
+        Ok(())
     }
 
     pub fn transmit(&mut self, out: &mut Vec<u8>) {

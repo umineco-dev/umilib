@@ -579,8 +579,13 @@ impl<'a> H3Session<'a> {
         if self.connection.role == HTTPRole::Client {
             let unprocessed: Vec<u64> =
                 self.connection.streams.keys().copied().filter(|stream| *stream >= identifier).collect();
+            // Each request the peer did not process is told apart, as rejected:
+            // it may be retried (§4.1.1, §5.2). `last` alone cannot say that
+            // none was processed when the identifier is 0.
             for stream in unprocessed {
                 self.connection.streams.remove(&stream);
+                let code = H3ErrorCode::REQUEST_REJECTED.0;
+                self.connection.push_event(HTTPEvent::Reset { stream: HTTPStreamID(stream), code });
             }
             let last = identifier.saturating_sub(4);
             self.connection.push_event(HTTPEvent::GoAway { last: HTTPStreamID(last) });

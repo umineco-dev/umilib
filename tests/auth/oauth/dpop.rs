@@ -4,9 +4,9 @@
 use umilib::auth::cert::key::{KeyAlgorithm, NamedCurve, PrivateKey};
 use umilib::auth::oauth::{
     DPoPConfig, DPoPProof, DPoPTarget, DPoPVerifier, OAuthAccessTokenFormat, OAuthChallenge, OAuthClientAuthentication,
-    OAuthClientMethod, OAuthClientRegistration, OAuthEndpointRequest, OAuthErrorCode, OAuthGrant, OAuthMetadata,
-    OAuthPresentedToken, OAuthResourceConfig, OAuthResourceServer, OAuthScope, OAuthServer, OAuthServerConfig,
-    OAuthTokenResponse, OAuthTokenScheme, OAuthTokenValidation,
+    OAuthClientMethod, OAuthClientRegistration, OAuthEndpointRequest, OAuthErrorCode, OAuthGrant,
+    OAuthIntrospectionResponse, OAuthMetadata, OAuthPresentedToken, OAuthResourceConfig, OAuthResourceServer,
+    OAuthScope, OAuthServer, OAuthServerConfig, OAuthTokenResponse, OAuthTokenScheme, OAuthTokenValidation,
 };
 use umilib::codec::json::JSONValue;
 use umilib::crypto::random::HMACDRBG;
@@ -14,7 +14,7 @@ use umilib::crypto::random::Random;
 use umilib::hash::sha::v2::SHA256;
 use umilib::protocol::jwt::{JOSEHeader, JWK, JWSAlgorithm, JWT, JWTClaims};
 
-use super::random;
+use super::{json_around, random};
 use crate::{RFC, Vectors};
 
 const RFC9449: &str = "auth/oauth/rfc9449.txt";
@@ -153,6 +153,37 @@ fn proofs_are_used_once_and_carry_the_nonce() {
     verifier.rotate_nonce(&mut random).unwrap();
     let proof = DPoPProof::create(&key, JWSAlgorithm::ES256, &target, 100, Some(&first), &mut random).unwrap();
     assert_eq!(verifier.check(&proof, &target, 100).unwrap_err().code, OAuthErrorCode::UseDPoPNonce);
+}
+
+#[test]
+fn how_many_previous_nonces_are_taken_is_configured() {
+    // §8.1 leaves to the server how long a nonce it made stays valid.
+    let mut random = random();
+    let key = key(&mut random);
+    let target = DPoPTarget { method: "POST", uri: "https://as.example/token", access_token: None };
+    assert_eq!(DPoPConfig::default().previous_nonces, 1);
+    for previous_nonces in [0, 1, 3] {
+        let config = DPoPConfig { require_nonce: true, previous_nonces, ..DPoPConfig::default() };
+        let mut verifier = DPoPVerifier::new(config);
+        let first = verifier.rotate_nonce(&mut random).unwrap().to_string();
+        for rotation in 1..=previous_nonces + 1 {
+            verifier.rotate_nonce(&mut random).unwrap();
+            let proof = DPoPProof::create(&key, JWSAlgorithm::ES256, &target, 100, Some(&first), &mut random).unwrap();
+            let checked = verifier.check(&proof, &target, 100);
+            if rotation <= previous_nonces {
+                assert!(checked.is_ok(), "{previous_nonces} previous nonces, rotation {rotation}");
+            } else {
+                assert_eq!(
+                    checked.unwrap_err().code,
+                    OAuthErrorCode::UseDPoPNonce,
+                    "{previous_nonces} previous nonces"
+                );
+            }
+        }
+        let current = verifier.nonce().unwrap().to_string();
+        let proof = DPoPProof::create(&key, JWSAlgorithm::ES256, &target, 100, Some(&current), &mut random).unwrap();
+        assert!(verifier.check(&proof, &target, 100).is_ok());
+    }
 }
 
 /// A server with a public client "app" and a confidential client "web", issuing JWT access
@@ -422,6 +453,84 @@ fn the_resource_server_takes_bearer_and_dpop_tokens() {
     let response = refusal.to_response();
     assert_eq!(response.status, 401);
     assert!(response.header("www-authenticate").unwrap().starts_with("DPoP "));
+}
+
+/// An access token of RFC 9068 §2.2 that `server` would issue to "web" at 0, signed with `signing`,
+/// with the confirmation `cnf` if any.
+fn access_token(signing: &JWK, cnf: Option<JSONValue>, random: &mut HMACDRBG<SHA256>) -> String {
+    let mut header = JOSEHeader::new();
+    header.set_string("typ", "at+jwt");
+    header.set_string("alg", "ES256");
+    let mut claims = JWTClaims::new();
+    claims.set_string("iss", "https://as.example");
+    claims.set_string("aud", "https://api.example");
+    claims.set_string("sub", "web");
+    claims.set_string("client_id", "web");
+    claims.set_numeric_date("iat", 0);
+    claims.set_numeric_date("exp", 600);
+    claims.set_string("jti", &format!("{}", random.next_u64().unwrap()));
+    if let Some(cnf) = cnf {
+        claims.set("cnf", cnf);
+    }
+    JWT::sign(&claims, &header, signing, random).unwrap()
+}
+
+#[test]
+fn tokens_bound_by_a_method_the_resource_cannot_check_are_refused() {
+    let mut random = random();
+    let (server, signing) = server(&mut random);
+    let mut api = resource(&server, false);
+    let json = |text: &str| JSONValue::decode(text.as_bytes(), Default::default()).unwrap();
+    let error = |api: &mut OAuthResourceServer, request: &OAuthEndpointRequest| {
+        api.accept_jwt(request, 1).unwrap_err().challenges[0].get("error").map(str::to_string)
+    };
+    // An unbound token is taken as a Bearer token (RFC 6750 §2.1).
+    let bearer = access_token(&signing, None, &mut random);
+    assert!(api.accept_jwt(&get(Some(format!("Bearer {bearer}")), None), 1).is_ok());
+    // RFC 8705 §3.1: a token bound to a client certificate (`x5t#S256`, the value of its example).
+    // RFC 7800 §3.1 lets a recipient ignore confirmation members it does not understand, but the
+    // token is bound all the same: taking it as a Bearer token would undo the binding.
+    let certificate = json(r#"{"x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg2"}"#);
+    let mtls = access_token(&signing, Some(certificate.clone()), &mut random);
+    assert_eq!(error(&mut api, &get(Some(format!("Bearer {mtls}")), None)).as_deref(), Some("invalid_token"));
+    let client_key = key(&mut random);
+    let target = DPoPTarget { method: "GET", uri: "https://api.example/items", access_token: Some(&mtls) };
+    let proof = DPoPProof::create(&client_key, JWSAlgorithm::ES256, &target, 1, None, &mut random).unwrap();
+    assert_eq!(error(&mut api, &get(Some(format!("DPoP {mtls}")), Some(proof))).as_deref(), Some("invalid_token"));
+    // A `cnf` that is not an object, an empty one, and a `jkt` that is not a string (RFC 9449 §6.1:
+    // a base64url thumbprint) are not confirmations either.
+    for cnf in [r#""x""#, "{}", r#"{"jkt": 1}"#, r#"{"jkt": ""}"#] {
+        let token = access_token(&signing, Some(json(cnf)), &mut random);
+        assert_eq!(
+            error(&mut api, &get(Some(format!("Bearer {token}")), None)).as_deref(),
+            Some("invalid_token"),
+            "{cnf}"
+        );
+    }
+    // A `jkt` beside a member this resource does not understand is checked (RFC 7800 §3.1).
+    let thumbprint = DPoPProof::thumbprint(&client_key.to_public().unwrap()).unwrap();
+    let mut both = certificate.as_object().unwrap().clone();
+    both.insert("jkt".into(), JSONValue::String(thumbprint));
+    let bound = access_token(&signing, Some(JSONValue::Object(both)), &mut random);
+    assert_eq!(error(&mut api, &get(Some(format!("Bearer {bound}")), None)).as_deref(), Some("invalid_token"));
+    let target = DPoPTarget { access_token: Some(&bound), ..target };
+    let proof = DPoPProof::create(&client_key, JWSAlgorithm::ES256, &target, 1, None, &mut random).unwrap();
+    assert!(api.accept_jwt(&get(Some(format!("DPoP {bound}")), Some(proof)), 1).is_ok());
+
+    // Introspection (RFC 7662 §2.2) reads `cnf` by the same rule: Figure 11 of RFC 9449 reads, and
+    // the response of RFC 8705 §3.2 for a certificate-bound token does not.
+    let figure = json_around(RFC9449, "\"active\": true");
+    let introspection = OAuthIntrospectionResponse::decode(200, figure.as_bytes()).unwrap();
+    assert_eq!(introspection.confirmation.as_deref(), Some("0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I"));
+    assert_eq!(OAuthIntrospectionResponse::decode(200, introspection.encode().as_bytes()).unwrap(), introspection);
+    let rfc8705 = r#"{"active": true, "iss": "https://server.example.com", "sub": "ty.webb@example.com",
+        "exp": 1493726400, "nbf": 1493722800,
+        "cnf": {"x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg2"}}"#;
+    assert!(OAuthIntrospectionResponse::decode(200, rfc8705.as_bytes()).is_err());
+    for cnf in [r#""x""#, "{}", r#"{"jkt": 1}"#, r#"{"jkt": ""}"#] {
+        let body = format!(r#"{{"active": true, "cnf": {cnf}}}"#);
+        assert!(OAuthIntrospectionResponse::decode(200, body.as_bytes()).is_err(), "{cnf}");
+    }
 }
 
 #[test]

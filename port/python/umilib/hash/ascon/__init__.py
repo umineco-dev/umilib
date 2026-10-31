@@ -8,8 +8,6 @@ import ctypes
 from umilib.ffi import Bytes, Handle, Library, Words
 from umilib.hash import CryptographicDigest, ExtendableOutput, XOFReader
 
-P = "umilib_hash_ascon"
-
 
 class AsconPermutation:
     """The permutation Ascon-p on 5 words, S0 to S4 (section 3)."""
@@ -20,33 +18,33 @@ class AsconPermutation:
     def permute(words: list[int], rounds: int) -> list[int]:
         """The 5 words of ``words`` after Ascon-p[``rounds``], 1 to 16 rounds."""
         state = Words.array(ctypes.c_uint64, words, 5)
-        Library.default().call(f"{P}_ascon_permutation_permute", state, rounds)
+        Library.default().call("umilib_hash_ascon_ascon_permutation_permute", state, rounds)
         return list(state)
 
 
 class AsconHash256(CryptographicDigest):
     """Ascon-Hash256: a 256-bit hash."""
 
-    PREFIX = f"{P}_ascon_hash256"
+    PREFIX = "umilib_hash_ascon_ascon_hash256"
 
 
 class AsconReader(XOFReader):
     """The output of Ascon-XOF128 or Ascon-CXOF128."""
 
-    PREFIX = f"{P}_ascon_reader"
+    PREFIX = "umilib_hash_ascon_ascon_reader"
 
 
 class AsconXOF128(ExtendableOutput):
     """Ascon-XOF128: output of any length."""
 
-    PREFIX = f"{P}_ascon_xof128"
+    PREFIX = "umilib_hash_ascon_ascon_xof128"
     READER = AsconReader
 
 
 class AsconCXOF128(ExtendableOutput):
     """Ascon-CXOF128: Ascon-XOF128 with a customization string of at most 256 bytes."""
 
-    PREFIX = f"{P}_ascon_cxof128"
+    PREFIX = "umilib_hash_ascon_ascon_cxof128"
     READER = AsconReader
     MAXIMUM_CUSTOMIZATION = 256
 

@@ -118,7 +118,12 @@ class PoolSpawner(Handle):
         """Spawns the task of ``poll`` (and ``drop``, called once when it is dropped); once the pool
         is gone or stopped, the task is dropped at once."""
         entry, key = self.tasks.entry(self.library, poll, drop)
-        return JoinHandle(Handle.create("umilib_platform_runtime_pool_spawner_spawn", self.handle, entry[0], entry[1], key))
+        try:
+            return JoinHandle(Handle.create("umilib_platform_runtime_pool_spawner_spawn", self.handle, entry[0], entry[1], key))
+        except BaseException:
+            # Not spawned: the pool never calls its drop callback.
+            self.tasks.callbacks.pop(key, None)
+            raise
 
 
 class ThreadPool(Handle):

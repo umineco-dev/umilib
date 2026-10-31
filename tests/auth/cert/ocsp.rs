@@ -186,9 +186,10 @@ fn responses_are_checked_as_rfc_6960_section_3_2_requires() {
     assert_eq!(status("no-next-update", "good", HashAlgorithm::SHA256, &at(2100, 1, 1)), Err(OCSPError::Time));
     let year = OCSPConfig { lifetime_without_next_update: 366 * 86400, ..at(2026, 12, 1) };
     assert_eq!(status("no-next-update", "good", HashAlgorithm::SHA256, &year), Ok(CertStatus::Good));
-    // The search of the signer verifies at most `maximum_signatures` signatures (two for a delegated responder).
+    // The search of the signer verifies at most `maximum_signatures` signatures (two for a delegated
+    // responder); running out is not a finding about the signer.
     let few = OCSPConfig { maximum_signatures: 1, ..now() };
-    assert_eq!(status("delegated", "good", HashAlgorithm::SHA256, &few), Err(OCSPError::Signer));
+    assert_eq!(status("delegated", "good", HashAlgorithm::SHA256, &few), Err(OCSPError::Work));
     let enough = OCSPConfig { maximum_signatures: 2, ..now() };
     assert_eq!(status("delegated", "good", HashAlgorithm::SHA256, &enough), Ok(CertStatus::Good));
 }
@@ -461,6 +462,30 @@ fn responses_are_revocation_sources_of_path_validation() {
     let revoked = Err(PathErrorReason::Revoked(CRLReason::KeyCompromise));
     assert_eq!(validate("revoked", &[&forged, &delegated]), revoked);
     assert_eq!(validate("revoked", &[&delegated, &forged]), revoked);
+    // The signatures of the responses are spent from the budget of the validation (two for each
+    // response of the delegated responder: its certificate's and the response's), so sources cannot
+    // multiply the work a configuration allows.
+    let budget = |sources: &[&dyn RevocationSource], signatures: usize| {
+        let config = PathConfig { maximum_signatures: signatures, ..config.clone() };
+        let target = certificate("good");
+        PathValidator::new(&config, &anchors, &[], &[])
+            .with_sources(sources)
+            .validate(&target)
+            .map(|_| ())
+            .map_err(|error| error.reason)
+    };
+    let unchecked = PathConfig { revocation: RevocationConfig::NONE, ..config.clone() };
+    let certificates = (0..=config.maximum_signatures)
+        .find(|&signatures| {
+            let config = PathConfig { maximum_signatures: signatures, ..unchecked.clone() };
+            PathValidator::new(&config, &anchors, &[], &[]).validate(&certificate("good")).is_ok()
+        })
+        .expect("the path validates without revocation");
+    assert_eq!(budget(&[&delegated], certificates + 2), Ok(()));
+    assert_eq!(budget(&[&delegated], certificates + 1), Err(PathErrorReason::Work));
+    let three: [&dyn RevocationSource; 3] = [&delegated, &delegated, &delegated];
+    assert_eq!(budget(&three, certificates + 6), Ok(()));
+    assert_eq!(budget(&three, certificates + 5), Err(PathErrorReason::Work));
     // A response that is not successful says nothing.
     let try_later = OCSPResponse { status: OCSPResponseStatus::TryLater, response: None };
     assert_eq!(validate("good", &[&try_later]), Err(PathErrorReason::RevocationUnknown));

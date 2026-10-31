@@ -18,8 +18,6 @@ import ctypes
 from umilib.ffi import Bytes, FFIError, Handle, Library, Preset, Text
 from umilib.secret import Choice
 
-P = "umilib_math_bigint_boxed_uint"
-
 
 class MathError(FFIError):
     """An error of big integer or modular arithmetic; ``name`` is the variant, such as ``Overflow``."""
@@ -37,37 +35,37 @@ class BoxedUint(Handle):
     the result; ``&``, ``|``, ``^`` and ``~`` are the bitwise operators.
     """
 
-    FREE = f"{P}_free"
-    PRECISION_UNIT = Preset(lambda: Library.default().value(f"{P}_precision_unit", ctypes.c_uint32))
-    MAXIMUM_PRECISION = Preset(lambda: Library.default().value(f"{P}_maximum_precision", ctypes.c_uint32))
+    FREE = "umilib_math_bigint_boxed_uint_free"
+    PRECISION_UNIT = Preset(lambda: Library.default().value("umilib_math_bigint_boxed_uint_precision_unit", ctypes.c_uint32))
+    MAXIMUM_PRECISION = Preset(lambda: Library.default().value("umilib_math_bigint_boxed_uint_maximum_precision", ctypes.c_uint32))
 
     @classmethod
     def zero(cls, precision: int) -> BoxedUint:
-        return cls(Handle.create(f"{P}_zero", precision))
+        return cls(Handle.create("umilib_math_bigint_boxed_uint_zero", precision))
 
     @classmethod
     def one(cls, precision: int) -> BoxedUint:
-        return cls(Handle.create(f"{P}_one", precision))
+        return cls(Handle.create("umilib_math_bigint_boxed_uint_one", precision))
 
     @classmethod
     def from_u64(cls, value: int, precision: int) -> BoxedUint:
-        return cls(Handle.create(f"{P}_from_u64", value, precision))
+        return cls(Handle.create("umilib_math_bigint_boxed_uint_from_u64", value, precision))
 
     @classmethod
     def from_be_bytes(cls, data: bytes | bytearray | memoryview, precision: int) -> BoxedUint:
         data, length = Bytes.readable(data)
-        return cls(Handle.create(f"{P}_from_be_bytes", data, length, precision))
+        return cls(Handle.create("umilib_math_bigint_boxed_uint_from_be_bytes", data, length, precision))
 
     @classmethod
     def from_le_bytes(cls, data: bytes | bytearray | memoryview, precision: int) -> BoxedUint:
         data, length = Bytes.readable(data)
-        return cls(Handle.create(f"{P}_from_le_bytes", data, length, precision))
+        return cls(Handle.create("umilib_math_bigint_boxed_uint_from_le_bytes", data, length, precision))
 
     @classmethod
     def from_hex_vartime(cls, text: str, precision: int) -> BoxedUint:
         """Reads big-endian hexadecimal digits; the time depends on them."""
         data, length = Text.encode(text)
-        return cls(Handle.create(f"{P}_from_hex_vartime", data, length, precision))
+        return cls(Handle.create("umilib_math_bigint_boxed_uint_from_hex_vartime", data, length, precision))
 
     @classmethod
     def from_int(cls, value: int, precision: int) -> BoxedUint:
@@ -80,112 +78,112 @@ class BoxedUint(Handle):
         return int.from_bytes(self.to_be_bytes(), "big")
 
     def clone(self) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_clone", self.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_clone", self.handle))
 
     def resize(self, precision: int) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_resize", self.handle, precision))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_resize", self.handle, precision))
 
     def precision(self) -> int:
-        return self.library.value(f"{P}_precision", ctypes.c_uint32, self.handle)
+        return self.library.value("umilib_math_bigint_boxed_uint_precision", ctypes.c_uint32, self.handle)
 
     def bytes(self) -> int:
         """The number of bytes of the precision."""
-        return self.library.value(f"{P}_bytes", ctypes.c_size_t, self.handle)
+        return self.library.value("umilib_math_bigint_boxed_uint_bytes", ctypes.c_size_t, self.handle)
 
     def to_be_bytes(self) -> bytes:
-        return self.library.output(f"{P}_to_be_bytes", self.handle)
+        return self.library.output("umilib_math_bigint_boxed_uint_to_be_bytes", self.handle)
 
     def to_le_bytes(self) -> bytes:
-        return self.library.output(f"{P}_to_le_bytes", self.handle)
+        return self.library.output("umilib_math_bigint_boxed_uint_to_le_bytes", self.handle)
 
     def write_be_bytes(self, out: bytearray) -> None:
         """Writes the value big-endian into all of ``out``, with leading zeros."""
-        self.library.call(f"{P}_write_be_bytes", self.handle, Bytes.mutable(out), len(out))
+        self.library.call("umilib_math_bigint_boxed_uint_write_be_bytes", self.handle, Bytes.mutable(out), len(out))
 
     def write_le_bytes(self, out: bytearray) -> None:
-        self.library.call(f"{P}_write_le_bytes", self.handle, Bytes.mutable(out), len(out))
+        self.library.call("umilib_math_bigint_boxed_uint_write_le_bytes", self.handle, Bytes.mutable(out), len(out))
 
     def is_zero(self) -> Choice:
-        return Choice(self.library.value(f"{P}_is_zero", ctypes.c_uint8, self.handle))
+        return Choice(self.library.value("umilib_math_bigint_boxed_uint_is_zero", ctypes.c_uint8, self.handle))
 
     def is_odd(self) -> Choice:
-        return Choice(self.library.value(f"{P}_is_odd", ctypes.c_uint8, self.handle))
+        return Choice(self.library.value("umilib_math_bigint_boxed_uint_is_odd", ctypes.c_uint8, self.handle))
 
     def ct_eq(self, other: BoxedUint) -> Choice:
-        return Choice(self.library.value(f"{P}_ct_eq", ctypes.c_uint8, self.handle, other.handle))
+        return Choice(self.library.value("umilib_math_bigint_boxed_uint_ct_eq", ctypes.c_uint8, self.handle, other.handle))
 
     def ct_lt(self, other: BoxedUint) -> Choice:
-        return Choice(self.library.value(f"{P}_ct_lt", ctypes.c_uint8, self.handle, other.handle))
+        return Choice(self.library.value("umilib_math_bigint_boxed_uint_ct_lt", ctypes.c_uint8, self.handle, other.handle))
 
     def ct_gt(self, other: BoxedUint) -> Choice:
-        return Choice(self.library.value(f"{P}_ct_gt", ctypes.c_uint8, self.handle, other.handle))
+        return Choice(self.library.value("umilib_math_bigint_boxed_uint_ct_gt", ctypes.c_uint8, self.handle, other.handle))
 
     def compare_vartime(self, other: BoxedUint) -> int:
         """-1, 0 or 1 as ``self`` is below, equal to or above ``other``; the time depends on the values."""
-        return self.library.value(f"{P}_compare_vartime", ctypes.c_int8, self.handle, other.handle)
+        return self.library.value("umilib_math_bigint_boxed_uint_compare_vartime", ctypes.c_int8, self.handle, other.handle)
 
     def bit(self, index: int) -> Choice:
-        return Choice(self.library.value(f"{P}_bit", ctypes.c_uint8, self.handle, index))
+        return Choice(self.library.value("umilib_math_bigint_boxed_uint_bit", ctypes.c_uint8, self.handle, index))
 
     def bit_length(self) -> int:
-        return self.library.value(f"{P}_bit_length", ctypes.c_uint32, self.handle)
+        return self.library.value("umilib_math_bigint_boxed_uint_bit_length", ctypes.c_uint32, self.handle)
 
     def overflowing_add(self, other: BoxedUint) -> tuple[BoxedUint, Choice]:
         out, carry = ctypes.c_void_p(), ctypes.c_uint8()
-        self.library.call(f"{P}_overflowing_add", self.handle, other.handle, ctypes.byref(out), ctypes.byref(carry))
+        self.library.call("umilib_math_bigint_boxed_uint_overflowing_add", self.handle, other.handle, ctypes.byref(out), ctypes.byref(carry))
         return BoxedUint(out.value), Choice(carry.value)
 
     def overflowing_sub(self, other: BoxedUint) -> tuple[BoxedUint, Choice]:
         out, borrow = ctypes.c_void_p(), ctypes.c_uint8()
-        self.library.call(f"{P}_overflowing_sub", self.handle, other.handle, ctypes.byref(out), ctypes.byref(borrow))
+        self.library.call("umilib_math_bigint_boxed_uint_overflowing_sub", self.handle, other.handle, ctypes.byref(out), ctypes.byref(borrow))
         return BoxedUint(out.value), Choice(borrow.value)
 
     def wrapping_add(self, other: BoxedUint) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_wrapping_add", self.handle, other.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_wrapping_add", self.handle, other.handle))
 
     def wrapping_sub(self, other: BoxedUint) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_wrapping_sub", self.handle, other.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_wrapping_sub", self.handle, other.handle))
 
     def wrapping_mul(self, other: BoxedUint) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_wrapping_mul", self.handle, other.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_wrapping_mul", self.handle, other.handle))
 
     def widening_mul(self, other: BoxedUint) -> tuple[BoxedUint, BoxedUint]:
         """The low and the high half of the full product."""
         low, high = ctypes.c_void_p(), ctypes.c_void_p()
-        self.library.call(f"{P}_widening_mul", self.handle, other.handle, ctypes.byref(low), ctypes.byref(high))
+        self.library.call("umilib_math_bigint_boxed_uint_widening_mul", self.handle, other.handle, ctypes.byref(low), ctypes.byref(high))
         return BoxedUint(low.value), BoxedUint(high.value)
 
     def div_rem(self, divisor: BoxedUint) -> tuple[BoxedUint, BoxedUint]:
         """The quotient, in the precision of ``self``, and the remainder, in that of the divisor."""
         quotient, remainder = ctypes.c_void_p(), ctypes.c_void_p()
-        self.library.call(f"{P}_div_rem", self.handle, divisor.handle, ctypes.byref(quotient), ctypes.byref(remainder))
+        self.library.call("umilib_math_bigint_boxed_uint_div_rem", self.handle, divisor.handle, ctypes.byref(quotient), ctypes.byref(remainder))
         return BoxedUint(quotient.value), BoxedUint(remainder.value)
 
     def rem(self, modulus: BoxedUint) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_rem", self.handle, modulus.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_rem", self.handle, modulus.handle))
 
     @staticmethod
     def rem_wide(low: BoxedUint, high: BoxedUint, modulus: BoxedUint) -> BoxedUint:
         """``(low + high * 2^precision(low)) mod modulus``."""
-        return BoxedUint(Handle.create(f"{P}_rem_wide", low.handle, high.handle, modulus.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_rem_wide", low.handle, high.handle, modulus.handle))
 
     def shl(self, bits: int) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_shl", self.handle, bits))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_shl", self.handle, bits))
 
     def shr(self, bits: int) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_shr", self.handle, bits))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_shr", self.handle, bits))
 
     def __and__(self, other: BoxedUint) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_bitand", self.handle, other.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_bitand", self.handle, other.handle))
 
     def __or__(self, other: BoxedUint) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_bitor", self.handle, other.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_bitor", self.handle, other.handle))
 
     def __xor__(self, other: BoxedUint) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_bitxor", self.handle, other.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_bitxor", self.handle, other.handle))
 
     def __invert__(self) -> BoxedUint:
-        return BoxedUint(Handle.create(f"{P}_not", self.handle))
+        return BoxedUint(Handle.create("umilib_math_bigint_boxed_uint_not", self.handle))
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, BoxedUint) and self.ct_eq(other).into_bool()
@@ -194,15 +192,15 @@ class BoxedUint(Handle):
 
     def conditional_assign(self, other: BoxedUint, choice: Choice) -> None:
         """Sets ``self`` to ``other`` if ``choice``; both must have the same precision."""
-        self.library.call(f"{P}_conditional_assign", self.handle, other.handle, choice.bit())
+        self.library.call("umilib_math_bigint_boxed_uint_conditional_assign", self.handle, other.handle, choice.bit())
 
     @staticmethod
     def conditional_swap(a: BoxedUint, b: BoxedUint, choice: Choice) -> None:
-        Library.default().call(f"{P}_conditional_swap", a.handle, b.handle, choice.bit())
+        Library.default().call("umilib_math_bigint_boxed_uint_conditional_swap", a.handle, b.handle, choice.bit())
 
     def zeroize(self) -> None:
         """Sets the value to zero, keeping the precision."""
-        self.library.call(f"{P}_zeroize", self.handle)
+        self.library.call("umilib_math_bigint_boxed_uint_zeroize", self.handle)
 
     def __format__(self, specification: str) -> str:
         """``x`` and ``X`` write every digit of the precision, as Rust's ``LowerHex`` and ``UpperHex`` do."""

@@ -113,12 +113,17 @@ impl WebSocketHandshake {
 
     /// A server's check of a request of `version` (RFC 6455 §4.2.1, RFC 8441
     /// §5, RFC 9220 §3). Fails with the response to send: 400 for a request
-    /// that is not a handshake, 426 with the version for another version (§4.4).
+    /// that is not a handshake (one over HTTP/1.0 included), 426 with the
+    /// WebSocket version for another WebSocket version (§4.4), and 505 for
+    /// a version of HTTP other than 1.0, 1.1, 2 and 3, whose handshake is
+    /// not known.
     pub fn check_request(request: &HTTPRequest, version: HTTPVersion) -> Result<WebSocketOffer, HTTPResponse> {
         let bad = || HTTPResponse::new(HTTPStatus::BAD_REQUEST);
         let fields = &request.fields;
-        let key = if version.major == 1 {
-            if request.method != HTTPMethod::GET || version < HTTPVersion::HTTP1_1 || request.host().is_none() {
+        let key = if version == HTTPVersion::HTTP1_0 {
+            return Err(bad());
+        } else if version == HTTPVersion::HTTP1_1 {
+            if request.method != HTTPMethod::GET || request.host().is_none() {
                 return Err(bad());
             }
             if !fields.contains_token(b"upgrade", b"websocket") || !fields.contains_token(b"connection", b"upgrade") {
@@ -130,13 +135,15 @@ impl WebSocketHandshake {
                 Ok(nonce) if nonce.len() == 16 => Some(key.to_vec()),
                 _ => return Err(bad()),
             }
-        } else {
+        } else if version == HTTPVersion::HTTP2 || version == HTTPVersion::HTTP3 {
             if request.method != HTTPMethod::CONNECT
                 || request.protocol.as_deref() != Some(WebSocketHandshake::PROTOCOL)
             {
                 return Err(bad());
             }
             None
+        } else {
+            return Err(HTTPResponse::new(HTTPStatus::HTTP_VERSION_NOT_SUPPORTED));
         };
         if fields.get(b"sec-websocket-version") != Some(WebSocketHandshake::VERSION) {
             let mut response = HTTPResponse::new(HTTPStatus::UPGRADE_REQUIRED);

@@ -91,8 +91,9 @@ crate::ffi_functions! {
     /// ones; only DPoP-bound ones if `require_dpop`; DPoP proofs signed by one of the
     /// `dpop_count` algorithms at `dpop_algorithms`, with an `iat` at most `dpop_maximum_age`
     /// seconds old and `dpop_leeway` ahead, a nonce if `dpop_require_nonce`, and at most
-    /// `dpop_maximum_proofs` identifiers kept; `leeway` seconds of clock skew on `exp`.
-    pub unsafe extern "C" fn umilib_auth_oauth_oauth_resource_server_new(resource: *const u8, resource_length: usize, realm: *const u8, realm_length: usize, resource_metadata: *const u8, resource_metadata_length: usize, issuer: *const u8, issuer_length: usize, keys: *const JWKSet, algorithms: *const u8, algorithm_count: usize, require_dpop: bool, dpop_algorithms: *const u8, dpop_count: usize, dpop_maximum_age: i64, dpop_leeway: i64, dpop_require_nonce: bool, dpop_maximum_proofs: usize, leeway: u64, out: *mut *mut OAuthResourceServer) -> *const Status {
+    /// `dpop_maximum_proofs` identifiers kept, `dpop_previous_nonces` nonces before the current
+    /// one taken; `leeway` seconds of clock skew on `exp`.
+    pub unsafe extern "C" fn umilib_auth_oauth_oauth_resource_server_new(resource: *const u8, resource_length: usize, realm: *const u8, realm_length: usize, resource_metadata: *const u8, resource_metadata_length: usize, issuer: *const u8, issuer_length: usize, keys: *const JWKSet, algorithms: *const u8, algorithm_count: usize, require_dpop: bool, dpop_algorithms: *const u8, dpop_count: usize, dpop_maximum_age: i64, dpop_leeway: i64, dpop_require_nonce: bool, dpop_maximum_proofs: usize, dpop_previous_nonces: usize, leeway: u64, out: *mut *mut OAuthResourceServer) -> *const Status {
         Status::from_result((|| {
             // SAFETY: the caller passes readable text and bytes or null, a key set or null and a writable pointer.
             let resource = unsafe { Pointer::text(resource, resource_length) }?;
@@ -113,6 +114,7 @@ crate::ffi_functions! {
                 leeway: dpop_leeway,
                 require_nonce: dpop_require_nonce,
                 maximum_proofs: dpop_maximum_proofs,
+                previous_nonces: dpop_previous_nonces,
             };
             let config = OAuthResourceConfig {
                 resource: resource.to_string(),

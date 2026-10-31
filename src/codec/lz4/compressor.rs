@@ -92,6 +92,12 @@ impl LZ4Compressor {
     }
 }
 
+impl Default for LZ4Compressor {
+    fn default() -> LZ4Compressor {
+        LZ4Compressor::new(LZ4Config::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for LZ4Compressor {
     fn compress(&mut self, input: &[u8], output: &mut [u8], flush: Flush) -> Result<Progress, CompressionError> {
         if !self.started {

@@ -56,7 +56,9 @@ let result = executor.block_on(handle);           // Ok(2)
   `core::time::Duration`) and `Clock` (`now()`), which the platform (or a
   test) provides.
 - `TimerQueue`: timers by deadline, each with a waker; `next_deadline()`
-  and `fire(now)` (wakes the expired timers) are what a driver calls.
+  and `fire(now)` (wakes the expired timers) are what a driver calls. A
+  removed timer leaves the queue at once (insertion, removal and expiry
+  take logarithmic time).
 - `Timer`: a timer queue and its clock, shared: `sleep(duration)`,
   `sleep_until(deadline)` and `timeout(duration, future)` (which gives
   `Err(Elapsed)` when time runs out) are futures that wait on it; `fire()`

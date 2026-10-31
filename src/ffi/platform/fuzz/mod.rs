@@ -73,12 +73,9 @@ macro_rules! optional_getters {
                     Status::from_result((|| {
                         // SAFETY: the caller passes a valid handle and writable pointers.
                         let $value = unsafe { Pointer::reference(handle) }?;
-                        if out_has_value.is_null() || out_value.is_null() {
-                            return Err(&Status::NULL_POINTER);
-                        }
                         let read: Option<$type> = $read;
-                        unsafe { Pointer::write(out_has_value, read.is_some()) }?;
-                        unsafe { Pointer::write(out_value, read.unwrap_or_default()) }
+                        // Checks both outputs (null, overlap) before writing either.
+                        unsafe { Pointer::write_optional(read, out_has_value, out_value) }
                     })())
                 }
             )*
@@ -200,6 +197,24 @@ crate::ffi_functions! {
         })())
     }
 
+    /// Sets the number of inputs in memory below which generated inputs are kept as material for mutations.
+    pub unsafe extern "C" fn umilib_platform_fuzz_fuzz_config_set_maximum_corpus_inputs(config: *mut FuzzConfig, maximum_corpus_inputs: usize) -> *const Status {
+        Status::from_result((|| {
+            // SAFETY: the caller passes a valid handle.
+            unsafe { Pointer::reference_mut(config) }?.maximum_corpus_inputs = maximum_corpus_inputs;
+            Ok(())
+        })())
+    }
+
+    /// Keeps about one generated input in `sample_interval` in memory; 0 keeps none.
+    pub unsafe extern "C" fn umilib_platform_fuzz_fuzz_config_set_sample_interval(config: *mut FuzzConfig, sample_interval: usize) -> *const Status {
+        Status::from_result((|| {
+            // SAFETY: the caller passes a valid handle.
+            unsafe { Pointer::reference_mut(config) }?.sample_interval = sample_interval;
+            Ok(())
+        })())
+    }
+
     /// Stops after `iterations` inputs if `has_iterations` is true, or removes the limit.
     pub unsafe extern "C" fn umilib_platform_fuzz_fuzz_config_set_iterations(config: *mut FuzzConfig, has_iterations: bool, iterations: u64) -> *const Status {
         Status::from_result((|| {
@@ -283,6 +298,24 @@ crate::ffi_functions! {
             // SAFETY: the caller passes a valid handle and a writable pointer.
             let config = unsafe { Pointer::reference(config) }?;
             unsafe { Pointer::write(out, config.maximum_length) }
+        })())
+    }
+
+    /// Writes the number of inputs in memory below which generated inputs are kept into `out`.
+    pub unsafe extern "C" fn umilib_platform_fuzz_fuzz_config_maximum_corpus_inputs(config: *const FuzzConfig, out: *mut usize) -> *const Status {
+        Status::from_result((|| {
+            // SAFETY: the caller passes a valid handle and a writable pointer.
+            let config = unsafe { Pointer::reference(config) }?;
+            unsafe { Pointer::write(out, config.maximum_corpus_inputs) }
+        })())
+    }
+
+    /// Writes the interval of the generated inputs kept in memory into `out` (0 keeps none).
+    pub unsafe extern "C" fn umilib_platform_fuzz_fuzz_config_sample_interval(config: *const FuzzConfig, out: *mut usize) -> *const Status {
+        Status::from_result((|| {
+            // SAFETY: the caller passes a valid handle and a writable pointer.
+            let config = unsafe { Pointer::reference(config) }?;
+            unsafe { Pointer::write(out, config.sample_interval) }
         })())
     }
 

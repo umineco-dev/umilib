@@ -169,10 +169,10 @@ fn hmac_minimum_truncated_length_follows_rfc2104() {
 
 /// One test of a Wycheproof MAC file: key, message, tag, tag size in bits
 /// and whether the tag is valid.
-type MacTest = (Vec<u8>, Vec<u8>, Vec<u8>, usize, bool);
+type MACTest = (Vec<u8>, Vec<u8>, Vec<u8>, usize, bool);
 
 /// The tests of a Wycheproof MAC file.
-fn wycheproof(name: &str) -> Vec<MacTest> {
+fn wycheproof(name: &str) -> Vec<MACTest> {
     let text = Vectors::read(&format!("crypto/hmac/wycheproof/{name}"));
     let value = |text: &str, key: &str| -> Option<String> {
         let start = text.find(&format!("\"{key}\": "))? + key.len() + 4;

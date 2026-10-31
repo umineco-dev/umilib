@@ -86,6 +86,12 @@ impl GzipCompressor {
     }
 }
 
+impl Default for GzipCompressor {
+    fn default() -> GzipCompressor {
+        GzipCompressor::new(GzipConfig::default()).expect("the default parameters are valid")
+    }
+}
+
 impl Compressor for GzipCompressor {
     fn compress(&mut self, input: &[u8], output: &mut [u8], flush: Flush) -> Result<Progress, CompressionError> {
         if !self.started {

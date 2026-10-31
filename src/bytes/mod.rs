@@ -4,11 +4,15 @@
 //! by [`Buffer`], which grows up to an optional limit, by [`SliceWriter`],
 //! which fills a caller-provided slice, and by [`ByteCounter`], which only
 //! counts. [`BitReader`] and [`BitWriter`] read and write bits, least
-//! significant first, as the compressed formats pack them; [`BitQueue`]
+//! significant first, as the compressed formats pack them, and
+//! [`BackwardBitReader`] and [`BackwardBitWriter`] the backward bitstreams
+//! of Finite State Entropy and Zstandard; [`BitQueue`]
 //! holds the bits a streaming decoder takes from successive inputs, in
 //! either [`BitOrder`]. [`LineBuffer`] holds received bytes and reads them
 //! as CRLF-ended lines or counted bytes, as line protocols do.
 
+mod backward_bit_reader;
+mod backward_bit_writer;
 mod bit_order;
 mod bit_queue;
 mod bit_reader;
@@ -22,6 +26,8 @@ mod reader;
 mod slice_writer;
 mod writer;
 
+pub use backward_bit_reader::BackwardBitReader;
+pub use backward_bit_writer::BackwardBitWriter;
 pub use bit_order::BitOrder;
 pub use bit_queue::BitQueue;
 pub use bit_reader::BitReader;

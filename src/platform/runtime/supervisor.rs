@@ -46,10 +46,14 @@ pub struct SupervisorConfig {
     pub restart: RestartPolicy,
     /// The time between the exit of a worker and its restart.
     pub restart_delay: Duration,
-    /// The time workers are given to exit after they are asked to stop, before they are killed.
+    /// The time workers are given to exit after they are asked to stop, before they are killed
+    /// (without limit if the clock cannot represent the deadline, such as for `Duration::MAX`).
     pub stop_timeout: Duration,
     /// The interval at which [`Supervisor::run`] checks the workers.
     pub check_interval: Duration,
+    /// The interval at which [`Supervisor::stop`] checks whether the workers exited: shorter than
+    /// `check_interval`, so that stopping does not wait for nothing.
+    pub stop_check_interval: Duration,
 }
 
 impl Default for SupervisorConfig {
@@ -63,6 +67,7 @@ impl Default for SupervisorConfig {
             restart_delay: Duration::from_secs(1),
             stop_timeout: Duration::from_secs(10),
             check_interval: Duration::from_millis(100),
+            stop_check_interval: Duration::from_millis(10),
         }
     }
 }
@@ -301,7 +306,8 @@ impl Supervisor {
     pub fn stop(&mut self) -> io::Result<()> {
         self.stopped = true;
         self.workers.iter_mut().for_each(WorkerProcess::stop);
-        let deadline = Instant::now() + self.config.stop_timeout;
+        // A timeout past what the clock can represent is no deadline.
+        let deadline = Instant::now().checked_add(self.config.stop_timeout);
         loop {
             for worker in &mut self.workers {
                 worker.reap()?;
@@ -309,10 +315,10 @@ impl Supervisor {
             if !self.workers.iter().any(WorkerProcess::is_running) {
                 return Ok(());
             }
-            if Instant::now() >= deadline {
+            if deadline.is_some_and(|deadline| Instant::now() >= deadline) {
                 break;
             }
-            std::thread::sleep(self.config.check_interval.min(Duration::from_millis(10)));
+            std::thread::sleep(self.config.stop_check_interval);
         }
         // Every worker is killed even if one fails; the first failure is reported.
         let killed: Vec<io::Result<()>> = self.workers.iter_mut().map(WorkerProcess::kill).collect();

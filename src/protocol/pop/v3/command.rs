@@ -42,7 +42,7 @@ pub enum POP3Command {
         initial: Option<Vec<u8>>,
     },
     /// RFC 6856 §2.1.
-    Utf8,
+    UTF8,
     /// A language range, or none for the list of languages (RFC 6856 §3).
     Lang(Option<String>),
     /// A command this type does not know: its keyword in upper case and its parameters.
@@ -71,7 +71,7 @@ impl POP3Command {
             POP3Command::Capa => "CAPA",
             POP3Command::Stls => "STLS",
             POP3Command::Auth { .. } => "AUTH",
-            POP3Command::Utf8 => "UTF8",
+            POP3Command::UTF8 => "UTF8",
             POP3Command::Lang(_) => "LANG",
             POP3Command::Other { keyword, .. } => keyword,
         }
@@ -155,7 +155,7 @@ impl POP3Command {
                     "RSET" => POP3Command::Rset,
                     "CAPA" => POP3Command::Capa,
                     "STLS" => POP3Command::Stls,
-                    _ => POP3Command::Utf8,
+                    _ => POP3Command::UTF8,
                 }
             }
             "LIST" | "UIDL" => {

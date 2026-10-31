@@ -13,13 +13,11 @@ from umilib.crypto import Primitive, Specialization
 from umilib.ffi import Bytes, Handle, Library, Preset, Text
 from umilib.hash import CryptographicDigest
 
-P = "umilib_crypto_hkdf_hkdf"
-
 
 class HKDF(Primitive):
     """HKDF over the hash function ``HKDF[H]``, keyed with a pseudorandom key (PRK)."""
 
-    PREFIX = P
+    PREFIX = "umilib_crypto_hkdf_hkdf"
     HASH: ClassVar[type[CryptographicDigest] | None] = None
     #: The longest output: 255 × HashLen bytes (section 2.3).
     MAXIMUM_OUTPUT: ClassVar[Any]
@@ -37,7 +35,7 @@ class HKDF(Primitive):
         """HKDF with ``prk``, of at least HashLen bytes."""
         name, name_length = self.name()
         data, length = Bytes.readable(prk)
-        super().__init__(Handle.create(f"{P}_new", name, name_length, data, length))
+        super().__init__(Handle.create("umilib_crypto_hkdf_hkdf_new", name, name_length, data, length))
 
     @classmethod
     def from_secret(cls, salt: bytes | bytearray | memoryview, ikm: bytes | bytearray | memoryview) -> Any:
@@ -45,7 +43,7 @@ class HKDF(Primitive):
         name, name_length = cls.name()
         salt_data, salt_length = Bytes.readable(salt)
         ikm_data, ikm_length = Bytes.readable(ikm)
-        return cls.from_pointer(Handle.create(f"{P}_from_secret", name, name_length, salt_data, salt_length, ikm_data, ikm_length))
+        return cls.from_pointer(Handle.create("umilib_crypto_hkdf_hkdf_from_secret", name, name_length, salt_data, salt_length, ikm_data, ikm_length))
 
     @classmethod
     def extract(cls, salt: bytes | bytearray | memoryview, ikm: bytes | bytearray | memoryview) -> bytes:
@@ -54,14 +52,14 @@ class HKDF(Primitive):
         salt_data, salt_length = Bytes.readable(salt)
         ikm_data, ikm_length = Bytes.readable(ikm)
         out = (ctypes.c_uint8 * Specialization.require(cls.HASH, "HKDF").OUTPUT_SIZE)()
-        Library.default().call(f"{P}_extract", name, name_length, salt_data, salt_length, ikm_data, ikm_length, out, len(out))
+        Library.default().call("umilib_crypto_hkdf_hkdf_extract", name, name_length, salt_data, salt_length, ikm_data, ikm_length, out, len(out))
         return bytes(out)
 
     def expand(self, info: bytes | bytearray | memoryview, length: int) -> bytes:
         """HKDF-Expand(PRK, info, L) (section 2.3): ``length`` bytes of output keying material."""
         data, info_length = Bytes.readable(info)
         out = (ctypes.c_uint8 * length)()
-        self.library.call(f"{P}_expand", self.handle, data, info_length, out, length)
+        self.library.call("umilib_crypto_hkdf_hkdf_expand", self.handle, data, info_length, out, length)
         return bytes(out)
 
     @classmethod
@@ -78,7 +76,7 @@ class HKDF(Primitive):
         for data in (salt, ikm, info):
             arguments.extend(Bytes.readable(data))
         out = (ctypes.c_uint8 * length)()
-        Library.default().call(f"{P}_derive", name, name_length, *arguments, out, length)
+        Library.default().call("umilib_crypto_hkdf_hkdf_derive", name, name_length, *arguments, out, length)
         return bytes(out)
 
 

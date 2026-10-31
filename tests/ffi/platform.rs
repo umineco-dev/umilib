@@ -126,6 +126,36 @@ fn fuzzer_runs_a_c_target_and_reports_failures() {
         Check::ok(umilib_platform_fuzz_fuzz_config_set_iterations(config, true, 10_000));
         Check::ok(umilib_platform_fuzz_fuzz_config_set_seed(config, 1));
         Check::ok(umilib_platform_fuzz_fuzz_config_set_maximum_length(config, 64));
+        // The sampling of generated inputs is configurable; its defaults are those of `FuzzConfig`.
+        let mut value = 0usize;
+        Check::ok(umilib_platform_fuzz_fuzz_config_maximum_corpus_inputs(config, &mut value));
+        assert_eq!(value, FuzzConfig::default().maximum_corpus_inputs);
+        Check::ok(umilib_platform_fuzz_fuzz_config_sample_interval(config, &mut value));
+        assert_eq!(value, FuzzConfig::default().sample_interval);
+        Check::ok(umilib_platform_fuzz_fuzz_config_set_maximum_corpus_inputs(config, 16));
+        Check::ok(umilib_platform_fuzz_fuzz_config_set_sample_interval(config, 0));
+        Check::ok(umilib_platform_fuzz_fuzz_config_maximum_corpus_inputs(config, &mut value));
+        assert_eq!(value, 16);
+        Check::ok(umilib_platform_fuzz_fuzz_config_sample_interval(config, &mut value));
+        assert_eq!(value, 0);
+        // An optional getter checks both outputs before writing either.
+        let (mut has, mut iterations) = (false, 0u64);
+        Check::fails(
+            umilib_platform_fuzz_fuzz_config_iterations(config, &mut has, ptr::null_mut()),
+            "ffi",
+            "NullPointer",
+        );
+        assert!(!has);
+        let mut shared = 5u64;
+        let shared_pointer: *mut u64 = &mut shared;
+        Check::fails(
+            umilib_platform_fuzz_fuzz_config_iterations(config, shared_pointer.cast(), shared_pointer),
+            "ffi",
+            "InvalidArgument",
+        );
+        assert_eq!(shared, 5);
+        Check::ok(umilib_platform_fuzz_fuzz_config_iterations(config, &mut has, &mut iterations));
+        assert_eq!((has, iterations), (true, 10_000));
         let mut fuzzer: *mut Fuzzer = ptr::null_mut();
         Check::ok(umilib_platform_fuzz_fuzzer_new(config, &mut fuzzer));
         umilib_platform_fuzz_fuzz_config_free(config);
@@ -187,5 +217,22 @@ fn the_native_layer_gives_random_bytes_and_the_system_name() {
         Check::ok(umilib_platform_native_system_name(&mut name));
         let name = CStr::from_ptr(name.cast()).to_str().unwrap();
         assert_eq!(name, umilib::platform::native::System::NAME);
+    }
+}
+
+#[cfg(umilib_feature = "platform-runtime")]
+#[test]
+fn thread_pools_refuse_a_number_of_threads_beyond_memory() {
+    use umilib::ffi::platform::runtime::*;
+
+    unsafe {
+        let mut pool: *mut ThreadPool = ptr::null_mut();
+        let status = umilib_platform_runtime_thread_pool_new(usize::MAX, &mut pool);
+        if cfg!(any(target_os = "linux", target_os = "android", target_vendor = "apple", windows)) {
+            Check::fails(status, "ffi", "InvalidArgument");
+        } else {
+            Check::fails(status, "platform", "Unsupported");
+        }
+        assert!(pool.is_null());
     }
 }

@@ -1,10 +1,10 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use super::{
-    FSEDecodingTable, FSEDistribution, FSEEncodingTable, ZstandardBitReader, ZstandardBitWriter, ZstandardFormat,
-};
+use super::ZstandardFormat;
+use crate::bytes::{BackwardBitReader, BackwardBitWriter};
 use crate::codec::CompressionError;
+use crate::codec::fse::{FSEDecodingTable, FSEDistribution, FSEEncodingTable};
 use crate::codec::huffman::canonical::HuffmanCode;
 
 /// The prefix code of Zstandard literals (RFC 8878 section 4.2): weights
@@ -115,7 +115,8 @@ impl ZstandardHuffman {
         let data = bytes.get(1..1 + header).ok_or(invalid("truncated Huffman description"))?;
         let (distribution, used) = FSEDistribution::read(data, ZstandardFormat::WEIGHTS_MAXIMUM_LOG, 16)?;
         let table = FSEDecodingTable::new(&distribution);
-        let mut reader = ZstandardBitReader::new(&data[used..])?;
+        let mut reader = BackwardBitReader::new(&data[used..])
+            .ok_or(CompressionError::InvalidData { reason: "bitstream without its final bit" })?;
         let mut states = [table.initial_state(&mut reader), table.initial_state(&mut reader)];
         let mut weights = Vec::new();
         // The two states take turns; when an update reads past the start, the other state's symbol ends the series.
@@ -155,9 +156,9 @@ impl ZstandardHuffman {
         if counts.iter().filter(|count| **count > 0).count() < 2 {
             return None;
         }
-        let distribution = FSEDistribution::normalize(&counts, ZstandardFormat::WEIGHTS_MAXIMUM_LOG);
+        let distribution = FSEDistribution::normalize(&counts, ZstandardFormat::WEIGHTS_MAXIMUM_LOG).ok()?;
         let table = FSEEncodingTable::new(&distribution);
-        let mut writer = ZstandardBitWriter::new();
+        let mut writer = BackwardBitWriter::new();
         // As the reference encoder: the last symbols initialize the states, the others are encoded in pairs from the end.
         let mut symbols = listed.iter().rev().map(|weight| *weight as usize);
         let mut states = [0u32; 2];
@@ -176,7 +177,7 @@ impl ZstandardHuffman {
         table.flush(states[1], &mut writer);
         table.flush(states[0], &mut writer);
         let mut description = Vec::new();
-        distribution.write(&mut description);
+        distribution.write(&mut description).ok()?;
         description.extend(writer.finish());
         if description.len() > 127 {
             return None;
@@ -189,11 +190,15 @@ impl ZstandardHuffman {
     /// Decodes `count` symbols of the backward stream `stream` into `out`;
     /// fails with `InvalidData` unless the stream is consumed exactly.
     pub fn decode_stream(&self, stream: &[u8], count: usize, out: &mut Vec<u8>) -> Result<(), CompressionError> {
-        let mut reader = ZstandardBitReader::new(stream)?;
+        let mut reader = BackwardBitReader::new(stream)
+            .ok_or(CompressionError::InvalidData { reason: "bitstream without its final bit" })?;
         for _ in 0..count {
             let (symbol, length) = self.table[reader.peek(self.maximum_bits) as usize];
             out.push(symbol);
             reader.read(length as u32);
+            if reader.overflowed() {
+                return Err(CompressionError::InvalidData { reason: "Huffman stream shorter than its symbols" });
+            }
         }
         if !reader.is_finished() {
             return Err(CompressionError::InvalidData { reason: "Huffman stream not consumed exactly" });
@@ -203,7 +208,7 @@ impl ZstandardHuffman {
 
     /// Encodes `data` as a backward stream.
     pub fn encode_stream(codes: &[(u32, u32)], data: &[u8]) -> Vec<u8> {
-        let mut writer = ZstandardBitWriter::new();
+        let mut writer = BackwardBitWriter::new();
         for byte in data.iter().rev() {
             let (code, length) = codes[*byte as usize];
             writer.write(code, length);
